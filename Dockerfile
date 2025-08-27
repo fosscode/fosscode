@@ -1,6 +1,11 @@
 # Use Bun as the base image
 FROM oven/bun:1.2.21
 
+# Add metadata labels for GitHub Container Registry
+LABEL org.opencontainers.image.source=https://github.com/fosscode/fosscode
+LABEL org.opencontainers.image.description="A lightweight, fast command-line application with a text user interface (TUI) for performing code agent interactions with Large Language Models (LLMs)."
+LABEL org.opencontainers.image.licenses=MIT
+
 # Set working directory
 WORKDIR /app
 
