@@ -223,3 +223,97 @@ The script handles everything automatically:
 - **Package Config:** `package.json` (build scripts)
 - **Workflow:** `.github/workflows/release.yml`
 - **Documentation:** `AGENTS.md` (this file)
+
+## Reproducible Builds
+
+### Overview
+
+fosscode implements reproducible builds to ensure that the same source code produces identical build artifacts across different environments and build times. This is crucial for security, debugging, and deployment consistency.
+
+### Implementation
+
+#### Build Environment Standardization
+
+- **Bun Version Pinning:** All build environments use Bun version 1.2.21
+  - CI/CD workflows: Pinned in `.github/workflows/*.yml`
+  - Local development: Specified in `.bun-version`
+  - Docker: Uses `oven/bun:1.2.21` base image
+
+- **Dependency Locking:** Dependencies are locked using `bun.lock`
+- **Build Flags:** Consistent use of `--production` flag for optimization
+
+#### Package Configuration
+
+- **Exact Versions:** `package.json` uses exact dependency versions instead of ranges
+- **Build Scripts:** Standardized build commands with consistent flags
+
+### Verification
+
+#### Local Verification
+
+Run reproducible build verification locally:
+
+```bash
+# Verify regular builds
+./scripts/verify-reproducible-builds.sh
+
+# Verify binary reproducibility (may have limitations)
+./scripts/verify-binary-reproducibility.sh
+```
+
+#### CI/CD Verification
+
+The CI pipeline includes automated reproducible build verification:
+
+1. **Reproducible Builds Job:** Builds the project twice and compares checksums
+2. **Failure Prevention:** CI fails if builds are not identical
+3. **Dependency:** Test matrix only runs after reproducible builds are verified
+
+### Current Status
+
+- ✅ **Regular Builds:** Fully reproducible (dist/ directory)
+- ⚠️ **Binary Executables:** Limited reproducibility due to Bun compilation metadata
+- ✅ **CI/CD Integration:** Automated verification in place
+
+### Troubleshooting
+
+#### Build Not Reproducible
+
+1. **Check Bun Version:**
+
+   ```bash
+   bun --version  # Should be 1.2.21
+   ```
+
+2. **Verify Dependencies:**
+
+   ```bash
+   bun install --frozen-lockfile
+   ```
+
+3. **Check Environment Variables:**
+   - Ensure no environment-specific variables affect the build
+   - Use `SOURCE_DATE_EPOCH=0` for timestamp control (limited effect with Bun)
+
+4. **Clean Build:**
+   ```bash
+   bun run clean
+   bun run build
+   ```
+
+#### Binary Reproducibility Issues
+
+Binary executables compiled with Bun may not be fully reproducible due to:
+
+- Internal metadata timestamps
+- Compilation environment differences
+- Non-deterministic optimization choices
+
+**Workaround:** Use the regular build artifacts (`dist/` directory) for deployment, which are fully reproducible.
+
+### Files
+
+- **Verification Scripts:** `scripts/verify-reproducible-builds.sh`, `scripts/verify-binary-reproducibility.sh`
+- **Build Configuration:** `package.json`, `.bun-version`
+- **CI/CD:** `.github/workflows/ci.yml`
+- **Docker:** `Dockerfile`

@@ -64,6 +64,8 @@ jobs:
       # or others). This is typically only required for manual builds.
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: '1.2.21'
 
       - name: Install dependencies
         run: bun install

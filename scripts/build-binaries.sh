@@ -82,23 +82,23 @@ echo "🔨 Building binaries for all platforms..."
 
 # Build Linux x64
 echo "Building Linux x64..."
-bun build src/binary.ts --target node --compile --outfile fosscode-linux-x64
+bun build src/binary.ts --target node --compile --production --outfile fosscode-linux-x64
 
 # Build Linux ARM64
 echo "Building Linux ARM64..."
-bun build src/binary.ts --target node --compile --outfile fosscode-linux-arm64
+bun build src/binary.ts --target node --compile --production --outfile fosscode-linux-arm64
 
 # Build macOS Intel
 echo "Building macOS Intel..."
-bun build src/binary.ts --target node --compile --outfile fosscode-macos-x64
+bun build src/binary.ts --target node --compile --production --outfile fosscode-macos-x64
 
 # Build macOS ARM64
 echo "Building macOS ARM64..."
-bun build src/binary.ts --target node --compile --outfile fosscode-macos-arm64
+bun build src/binary.ts --target node --compile --production --outfile fosscode-macos-arm64
 
 # Build Windows x64
 echo "Building Windows x64..."
-bun build src/binary.ts --target node --compile --outfile fosscode-windows-x64.exe
+bun build src/binary.ts --target node --compile --production --outfile fosscode-windows-x64.exe
 
 echo "📦 All binaries built successfully!"
 echo ""
