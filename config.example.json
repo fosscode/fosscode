@@ -1,0 +1,84 @@
+{
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-3.5-turbo",
+  "maxConversations": 100,
+  "theme": "dark",
+  "providers": {
+    "openai": {
+      "apiKey": "your-openai-api-key-here",
+      "organization": "your-org-id-optional",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "model": "gpt-3.5-turbo",
+      "verbose": false
+    },
+    "grok": {
+      "apiKey": "your-grok-api-key-here",
+      "baseURL": "https://api.x.ai/v1",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "model": "sonic-fast-1",
+      "verbose": false
+    },
+    "lmstudio": {
+      "baseURL": "http://localhost:1234",
+      "timeout": 60000,
+      "maxRetries": 2,
+      "model": "local-model",
+      "verbose": true
+    },
+    "openrouter": {
+      "apiKey": "your-openrouter-api-key-here",
+      "baseURL": "https://openrouter.ai/api/v1",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "model": "anthropic/claude-3-haiku",
+      "verbose": false
+    },
+    "sonicfree": {
+      "baseURL": "https://gateway.opencode.ai/v1",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "model": "sonic",
+      "verbose": false
+    },
+    "mcp": {
+      "mcpServerCommand": "npx",
+      "mcpServerArgs": ["@playwright/mcp@latest"],
+      "timeout": 30000,
+      "verbose": true
+    }
+  },
+  "cachedModels": {
+    "openai": {
+      "models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"],
+      "lastUpdated": "2024-01-01T00:00:00.000Z",
+      "expiresAt": "2024-01-02T00:00:00.000Z"
+    },
+    "grok": {
+      "models": ["sonic-fast-1", "sonic-medium-1"],
+      "lastUpdated": "2024-01-01T00:00:00.000Z",
+      "expiresAt": "2024-01-02T00:00:00.000Z"
+    },
+    "lmstudio": {
+      "models": ["local-model"],
+      "lastUpdated": "2024-01-01T00:00:00.000Z",
+      "expiresAt": "2024-01-02T00:00:00.000Z"
+    },
+    "openrouter": {
+      "models": ["anthropic/claude-3-haiku", "openai/gpt-3.5-turbo"],
+      "lastUpdated": "2024-01-01T00:00:00.000Z",
+      "expiresAt": "2024-01-02T00:00:00.000Z"
+    },
+    "sonicfree": {
+      "models": ["sonic"],
+      "lastUpdated": "2024-01-01T00:00:00.000Z",
+      "expiresAt": "2024-01-02T00:00:00.000Z"
+    },
+    "mcp": {
+      "models": ["mcp-server"],
+      "lastUpdated": "2024-01-01T00:00:00.000Z",
+      "expiresAt": "2024-01-02T00:00:00.000Z"
+    }
+  }
+}

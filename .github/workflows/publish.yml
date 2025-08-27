@@ -1,0 +1,52 @@
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+name: Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@v3.90.5
+        with:
+          path: ./
+          extra_args: --debug --only-verified
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run linter
+        run: bun run lint
+
+      - name: Run typecheck
+        run: bun run typecheck
+
+      - name: Run tests
+        run: bun run test
+
+      - name: Build
+        run: bun run build
+
+        # Temporarily disabled due to npm 24-hour republish restriction
+        # - name: Setup npm registry
+        #   run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+        #   env:
+        #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+        # - name: Publish to npm
+        #   run: bunx npm publish
