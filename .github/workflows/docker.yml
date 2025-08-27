@@ -11,67 +11,67 @@ jobs:
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-     permissions:
-       contents: read
-       packages: write
-       id-token: write
-       actions: read
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      actions: read
 
-     steps:
-       - name: Checkout code
-         uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-       - name: Set up Docker Buildx
-         uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-       - name: Log in to GitHub Container Registry
-         if: github.event_name != 'pull_request'
-         uses: docker/login-action@v3
-         with:
-           registry: ghcr.io
-           username: ${{ github.actor }}
-           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-       - name: Debug package permissions
-         if: github.event_name != 'pull_request'
-         run: |
-           echo "Repository: ${{ github.repository }}"
-           echo "Actor: ${{ github.actor }}"
-           echo "Checking package permissions..."
-           curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                -H "Accept: application/vnd.github.v3+json" \
-                https://api.github.com/repos/${{ github.repository }}/packages \
-                | head -20
+      - name: Debug package permissions
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Checking package permissions..."
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/repos/${{ github.repository }}/packages \
+               | head -20
 
-       - name: Extract metadata
-         id: meta
-         uses: docker/metadata-action@v5
-         with:
-           images: ghcr.io/${{ github.repository }}
-           tags: |
-             type=ref,event=branch
-             type=ref,event=pr
-             type=semver,pattern={{version}}
-             type=semver,pattern={{major}}.{{minor}}
-             type=raw,value=latest,enable={{is_default_branch}}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
 
-       - name: Build Docker image
-         id: push
-         uses: docker/build-push-action@v5
-         with:
-           context: .
-           platforms: linux/amd64,linux/arm64
-           push: true
-           tags: ${{ steps.meta.outputs.tags }}
-           labels: ${{ steps.meta.outputs.labels }}
-           cache-from: type=gha
-           cache-to: type=gha,mode=max
+      - name: Build Docker image
+        id: push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-       - name: Generate artifact attestation
-         if: github.event_name != 'pull_request'
-         uses: actions/attest-build-provenance@v1
-         with:
-           subject-name: ghcr.io/${{ github.repository }}
-           subject-digest: ${{ steps.push.outputs.digest }}
-           push-to-registry: true
-         continue-on-error: true
+      - name: Generate artifact attestation
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+        continue-on-error: true
