@@ -1,0 +1,45 @@
+# Development files
+src/
+.github/
+scripts/
+tasks/
+tasks/
+__tests__/
+*.test.ts
+*.test.js
+
+# Development dependencies and config
+.eslintrc.json
+.prettierrc
+tsconfig.json
+jest.config.js
+
+# Docker files
+Dockerfile
+docker-compose.yml
+
+# Development artifacts
+bun.lock
+test-demo.txt
+test-demo.txt.backup.*
+*.log
+*.tmp
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts (keep only dist/)
+!dist/
+dist/**/*.map
+dist/**/*.d.ts

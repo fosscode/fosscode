@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  fosscode:
+    build: .
+    container_name: fosscode-app
+    stdin_open: true
+    tty: true
+    volumes:
+      # Mount the config directory to persist API keys
+      - ~/.config/fosscode:/home/nodejs/.config/fosscode
+    environment:
+      - NODE_ENV=production
+    command: ["bun", "run", "src/index.ts"]
+    restart: unless-stopped

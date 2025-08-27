@@ -1,0 +1,105 @@
+permissions:
+  contents: read
+name: Performance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly performance checks
+    - cron: '0 0 * * 0'
+
+jobs:
+  bundle-analysis:
+    name: Bundle Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build project
+        run: bun run build
+
+      - name: Analyze bundle size
+        run: |
+          echo "📊 Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get dist directory size
+          DIST_SIZE=$(du -sh dist | cut -f1)
+          echo "📦 Dist directory size: $DIST_SIZE" >> $GITHUB_STEP_SUMMARY
+
+          # Count files in dist
+          FILE_COUNT=$(find dist -type f | wc -l)
+          echo "📄 Files in dist: $FILE_COUNT" >> $GITHUB_STEP_SUMMARY
+
+          # Get main bundle size
+          if [ -f "dist/index.js" ]; then
+            BUNDLE_SIZE=$(du -h dist/index.js | cut -f1)
+            echo "🎯 Main bundle size: $BUNDLE_SIZE" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Performance Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Bundle size tracking" >> $GITHUB_STEP_SUMMARY
+          echo "- File count monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- Build size optimization" >> $GITHUB_STEP_SUMMARY
+
+  startup-time:
+    name: Startup Time Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build project
+        run: bun run build
+
+      - name: Test startup time
+        run: |
+          echo "⚡ Startup Time Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Test startup time multiple times and average
+          STARTUP_TIMES=()
+          for i in {1..5}; do
+            START_TIME=$(date +%s%N)
+            timeout 10s bun run start --help > /dev/null 2>&1
+            END_TIME=$(date +%s%N)
+            STARTUP_TIME=$(( (END_TIME - START_TIME) / 1000000 ))
+            STARTUP_TIMES+=($STARTUP_TIME)
+            echo "Run $i: ${STARTUP_TIME}ms"
+          done
+
+          # Calculate average
+          SUM=0
+          for time in "${STARTUP_TIMES[@]}"; do
+            SUM=$((SUM + time))
+          done
+          AVERAGE=$((SUM / ${#STARTUP_TIMES[@]}))
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📈 Average startup time: ${AVERAGE}ms" >> $GITHUB_STEP_SUMMARY
+          echo "🎯 Target: < 2000ms" >> $GITHUB_STEP_SUMMARY
+
+          if [ $AVERAGE -gt 2000 ]; then
+            echo "⚠️  Warning: Startup time exceeds 2 second target" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Startup time within acceptable range" >> $GITHUB_STEP_SUMMARY
+          fi
