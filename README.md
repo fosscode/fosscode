@@ -176,7 +176,11 @@ src/
 
 ## Donations
 
-0x861A5b09A58AAB7B89fc1d138f6f82fF3471E489
+If you find fosscode helpful, consider supporting the project with a donation! 🚀
+
+**Ethereum (ETH):** [`0x861A5b09A58AAB7B89fc1d138f6f82fF3471E489`](https://etherscan.io/address/0x861A5b09A58AAB7B89fc1d138f6f82fF3471E489)
+
+_Copy the address above or click the link to view on Etherscan_
 
 ## Contributing
 
@@ -195,4 +199,4 @@ MIT License - see LICENSE file for details.
 
 ---
 
-[![GitHub stars](https://img.shields.io/github/stars/fosscode/fosscode.svg)](https://github.com/fosscode/fosscode/stargazers)
+[![Star History Chart](https://api.star-history.com/svg?repos=fosscode/fosscode&type=Date)](https://star-history.com/#fosscode/fosscode&Date)
