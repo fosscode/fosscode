@@ -14,15 +14,13 @@ Before we can accept your contributions, you must sign our Contributor License A
 
 ### How to Sign the CLA
 
-1. **Individual Contributors**: Download and sign the [Individual CLA](https://example.com/individual-cla.pdf) (PDF format)
-2. **Corporate Contributors**: Download and sign the [Corporate CLA](https://example.com/corporate-cla.pdf) (PDF format)
+To contribute, you must agree to the Contributor License Agreement. Comment on the relevant pull request or issue with the following text:
 
-**Note**: These are placeholder links. Please contact the maintainers to obtain the actual CLA documents.
+"I have read and agree to the Contributor License Agreement as outlined in the [CONTRIBUTING.md](CONTRIBUTING.md)."
 
-3. **Submit the Signed CLA**:
-   - Email the signed CLA to: [cla@fosscode.dev](mailto:cla@fosscode.dev)
-   - Include your GitHub username in the email
-   - Reference the PR or issue number if applicable
+This serves as your electronic signature agreeing to the terms.
+
+The CLA terms are based on the [Google Individual Contributor License Agreement](https://cla.developers.google.com/about/google-individual) for individuals and [Google Corporate Contributor License Agreement](https://cla.developers.google.com/about/google-corporate) for corporations.
 
 ### CLA Status Check
 
