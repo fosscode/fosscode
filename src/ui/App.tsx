@@ -114,13 +114,8 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     };
   }, [ctrlCTimer]);
 
-  // Force immediate re-render when messages change to prevent buffering
-  useEffect(() => {
-    if (messages.length > 0) {
-      // Force stdout flush to ensure immediate visibility
-      process.stdout.write('\r');
-    }
-  }, [messages]);
+  // Removed forced stdout flush to prevent screen flashing during typing
+  // The React/Ink framework handles rendering optimization automatically
 
   // Handle input and arrow key navigation for command history
   useInput((inputChar, key) => {
@@ -529,7 +524,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     [input, cursorPosition]
   );
 
-  // Helper function to render input with cursor
+  // Helper function to render input with cursor - memoized to prevent unnecessary re-renders
   const renderInputWithCursor = useCallback((text: string, cursorPos: number) => {
     if (text.length === 0) return '';
 
@@ -537,6 +532,11 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     const afterCursor = text.slice(cursorPos);
     return `${beforeCursor}█${afterCursor}`;
   }, []);
+
+  // Memoize the input display to prevent flashing
+  const inputDisplay = useMemo(() => {
+    return input ? renderInputWithCursor(input, cursorPosition) : null;
+  }, [input, cursorPosition, renderInputWithCursor]);
 
   // Calculate context size based on messages (fallback when no API usage data)
   const calculateContextSize = useCallback((messages: Message[]) => {
@@ -555,7 +555,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     }
   }, [messages, calculateContextSize, contextSize, lastResponseTokens]);
 
-  // Monitor context size and show warnings
+  // Monitor context size and show warnings - throttled to reduce re-renders
   useEffect(() => {
     const contextPercentage = (contextSize / maxContextSize) * 100;
 
@@ -584,7 +584,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     } else {
       setContextWarning(null);
     }
-  }, [contextSize, maxContextSize, messages.length]);
+  }, [contextSize, maxContextSize]); // Removed messages.length dependency to reduce re-renders
 
   // Generate chat topic summary
   const generateChatTopic = useCallback((messages: Message[]) => {
@@ -698,8 +698,8 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
       <Box alignItems="flex-start">
         <Text color={themeColors.inputPrompt}>{isVerySmallScreen ? '$ ' : '> '}</Text>
         <Text>
-          {input ? (
-            <Text>{renderInputWithCursor(input, cursorPosition)}</Text>
+          {inputDisplay ? (
+            <Text>{inputDisplay}</Text>
           ) : (
             <Text color={themeColors.footer}>
               {isVerySmallScreen

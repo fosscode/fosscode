@@ -27,8 +27,8 @@ export function InteractiveLoading() {
     return process.env.TMUX !== undefined;
   }, []);
 
-  // Much slower message updates to reduce redraws
-  const messageInterval = isInTmux ? 3000 : 2000;
+  // Much slower message updates to reduce redraws and debounce
+  const messageInterval = isInTmux ? 5000 : 3000;
 
   useEffect(() => {
     const messageTimer = setInterval(() => {

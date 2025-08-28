@@ -12,7 +12,7 @@ const rainbowColors = ['red', 'yellow', 'green', 'cyan', 'blue', 'magenta'];
 const neonColors = ['cyan', 'magenta', 'yellow', 'green', 'blue', 'red'];
 const gradientColors = ['blue', 'cyan', 'green', 'yellow', 'red', 'magenta'];
 
-export function FlashyText({ children, type = 'rainbow', speed = 260, colors }: FlashyTextProps) {
+export function FlashyText({ children, type = 'rainbow', speed = 500, colors }: FlashyTextProps) {
   const [colorIndex, setColorIndex] = useState(0);
   const [waveOffset, setWaveOffset] = useState(0);
   const [flashState, setFlashState] = useState(true);

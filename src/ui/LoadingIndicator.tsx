@@ -52,8 +52,8 @@ export function LoadingIndicator({ messages = defaultMessages }: LoadingIndicato
     return process.env.TMUX !== undefined;
   }, []);
 
-  // Slower animation in tmux to reduce flickering
-  const intervalDuration = isInTmux ? 1600 : 800;
+  // Slower animation in tmux to reduce flickering and debounce
+  const intervalDuration = isInTmux ? 2500 : 1200;
 
   useEffect(() => {
     const interval = setInterval(() => {
