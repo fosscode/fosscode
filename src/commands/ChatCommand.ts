@@ -242,4 +242,387 @@ export class ChatCommand {
       });
     });
   }
+<<<<<<< HEAD
+=======
+
+  private async handleCommand(
+    message: MessagingPlatformMessage,
+    platformType: MessagingPlatformType
+  ): Promise<void> {
+    const command = message.content.toLowerCase().trim();
+
+    switch (command) {
+      case '/clear':
+        // Clear conversation history for this chat
+        this.conversationHistory.delete(message.chatId);
+        // Reset first message flag so ready message shows again
+        this.firstMessageSent.delete(message.chatId);
+        await this.messagingManager.sendMessage(
+          platformType,
+          message.chatId,
+          '🧹 Conversation history cleared! Starting fresh.'
+        );
+        console.log(chalk.yellow(`🧹 Conversation cleared for chat ${message.chatId}`));
+        break;
+
+      case '/help': {
+        const helpMessage =
+          `🤖 *Available Commands:*\n\n` +
+          `• /clear - Clear conversation history\n` +
+          `• /compress - Compress conversation history to save space\n` +
+          `• /help - Show this help message\n` +
+          `• /status - Check bot health and status\n` +
+          `• /timeouts - Show timeout settings\n\n` +
+          `Just type your message normally to chat with me!`;
+        await this.messagingManager.sendMessage(platformType, message.chatId, helpMessage);
+        break;
+      }
+
+      case '/status': {
+        try {
+          const healthCheck = await this.messagingManager
+            .getPlatform(platformType)
+            ?.healthCheck?.();
+          if (healthCheck) {
+            const statusMessage = healthCheck.healthy
+              ? `✅ *Bot Status: Healthy*\n\n${healthCheck.message}\n\n${healthCheck.details ? JSON.stringify(healthCheck.details, null, 2) : ''}`
+              : `❌ *Bot Status: Unhealthy*\n\n${healthCheck.message}`;
+            await this.messagingManager.sendMessage(platformType, message.chatId, statusMessage);
+          } else {
+            await this.messagingManager.sendMessage(
+              platformType,
+              message.chatId,
+              '❓ Health check not available for this platform'
+            );
+          }
+        } catch (error) {
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            `❌ Error checking status: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+        break;
+      }
+
+      case '/timeouts': {
+        const timeoutInfo =
+          `⏱️ *Timeout Settings:*\n\n` +
+          `• Message Processing: 120 seconds\n` +
+          `• Test Commands: 60 seconds default\n` +
+          `• Other Commands: 10 seconds default\n` +
+          `• Max Test Timeout: 120 seconds\n\n` +
+          `💡 For long-running operations, the bot will send a "processing" message to keep you updated.`;
+        await this.messagingManager.sendMessage(platformType, message.chatId, timeoutInfo);
+        break;
+      }
+
+      case '/compress': {
+        const chatId = message.chatId;
+        const history = this.conversationHistory.get(chatId) || [];
+
+        if (history.length === 0) {
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            '📝 No conversation history to compress.'
+          );
+          return;
+        }
+
+        try {
+          // Send processing message
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            '🗜️ Compressing conversation history... Please wait.'
+          );
+
+          // Create a summary prompt
+          const conversationText = history
+            .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+            .join('\n\n');
+
+          const summaryPrompt = `Please provide a concise summary of the following conversation. Focus on the key points, decisions made, and current context. Keep it brief but comprehensive enough to maintain continuity:
+
+${conversationText}
+
+Summary:`;
+
+          const summaryMessage: Message = {
+            role: 'user',
+            content: summaryPrompt,
+            timestamp: new Date(),
+          };
+
+          // Get current provider and model from the session
+          const config = this.configManager.getConfig();
+          const provider = config.defaultProvider || 'openai';
+          const model = config.defaultModel || 'gpt-3.5-turbo';
+
+          const response = await this.providerManager.sendMessage(
+            provider as ProviderType,
+            [summaryMessage],
+            model,
+            false
+          );
+
+          // Replace conversation history with the summary
+          const summaryAssistantMessage: Message = {
+            role: 'assistant',
+            content: `🗜️ Conversation compressed. Previous context summarized:\n\n${response.content}`,
+            timestamp: new Date(),
+          };
+
+          this.conversationHistory.set(chatId, [summaryAssistantMessage]);
+
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            `✅ Conversation compressed successfully! The chat history has been summarized to save space.`
+          );
+
+          console.log(chalk.yellow(`🗜️ Conversation compressed for chat ${message.chatId}`));
+        } catch (error) {
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            `❌ Failed to compress conversation: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+          console.log(
+            chalk.red(
+              `❌ Error compressing conversation for chat ${message.chatId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            )
+          );
+        }
+        break;
+      }
+
+      default:
+        await this.messagingManager.sendMessage(
+          platformType,
+          message.chatId,
+          `❓ Unknown command: ${command}\n\nType /help to see available commands.`
+        );
+        break;
+    }
+  }
+
+  private async handleMessagingMode(options: {
+    provider: string;
+    model: string;
+    messagingPlatform: MessagingPlatformType;
+    verbose?: boolean;
+  }): Promise<void> {
+    await this.configManager.loadConfig();
+    const config = this.configManager.getConfig();
+    const platformConfig = config.messagingPlatforms[options.messagingPlatform];
+
+    if (!platformConfig?.enabled) {
+      console.log(chalk.red(`❌ Messaging platform ${options.messagingPlatform} is not enabled`));
+      console.log(chalk.yellow(`\n📝 To enable it, update your config.json:`));
+      console.log(chalk.cyan(`  "messagingPlatforms": {`));
+      console.log(chalk.cyan(`    "${options.messagingPlatform}": {`));
+      console.log(chalk.cyan(`      "enabled": true,`));
+      console.log(chalk.cyan(`      "botToken": "your-bot-token"`));
+      console.log(chalk.cyan(`    }`));
+      console.log(chalk.cyan(`  }`));
+      process.exit(1);
+    }
+
+    // Initialize logger and start session for messaging mode
+    await this.chatLogger.initialize();
+    await this.chatLogger.startSession(options.provider as ProviderType, options.model);
+
+    console.log(
+      chalk.blue(
+        `🤖 fosscode - ${options.provider} (${options.model}) via ${options.messagingPlatform}`
+      )
+    );
+    console.log(chalk.yellow(`📱 Listening for messages on ${options.messagingPlatform}...`));
+    console.log(chalk.gray('Press Ctrl+C to stop'));
+
+    // Initialize the messaging platform with error handling
+    try {
+      await this.messagingManager.initializePlatform(options.messagingPlatform, platformConfig);
+      console.log(chalk.green(`✅ ${options.messagingPlatform} platform initialized successfully`));
+    } catch (error) {
+      console.log(
+        chalk.red(
+          `❌ Failed to initialize ${options.messagingPlatform} platform: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      );
+      await this.chatLogger.endSession('error');
+      process.exit(1);
+    }
+
+    // Start listening for messages
+    await this.messagingManager.startListening(
+      options.messagingPlatform,
+      platformConfig,
+      async message => {
+        console.log(chalk.cyan(`👤 ${message.userName}: ${message.content}`));
+        console.log(
+          chalk.gray(
+            `   Message ID: ${message.id}, Chat ID: ${message.chatId}, Platform: ${message.platform}`
+          )
+        );
+
+        // Handle commands
+        if (message.content.startsWith('/')) {
+          await this.handleCommand(message, options.messagingPlatform);
+          return;
+        }
+
+        // Get or initialize conversation history for this chat
+        const chatId = message.chatId;
+        if (!this.conversationHistory.has(chatId)) {
+          this.conversationHistory.set(chatId, []);
+        }
+        const history = this.conversationHistory.get(chatId)!;
+
+        // Add user message to history
+        const chatMessage: Message = {
+          role: 'user',
+          content: message.content,
+          timestamp: message.timestamp,
+        };
+        history.push(chatMessage);
+
+        // Log the incoming message
+        await this.chatLogger.logMessageSent(chatMessage);
+
+        try {
+          // Send a "processing" message for long operations
+          if (
+            message.content.toLowerCase().includes('test') ||
+            message.content.toLowerCase().includes('jest')
+          ) {
+            await this.messagingManager.sendMessage(
+              options.messagingPlatform,
+              message.chatId,
+              '⏳ Running tests... This may take a minute or two. Please wait...'
+            );
+          }
+
+          const response = await this.providerManager.sendMessage(
+            options.provider as ProviderType,
+            history,
+            options.model,
+            options.verbose ?? false
+          );
+
+          // Add assistant response to history
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: response.content,
+            timestamp: new Date(),
+          };
+          history.push(assistantMessage);
+
+          // Log the response
+          await this.chatLogger.logMessageReceived(response);
+
+          // Check if this is the first message for this chat
+          const isFirstMessage = !this.firstMessageSent.get(message.chatId);
+          if (isFirstMessage) {
+            this.firstMessageSent.set(message.chatId, true);
+          }
+
+          // Prepare response message with ready notification for first message
+          let responseMessage = response.content;
+
+          // Check if response is empty and provide fallback
+          if (!responseMessage || responseMessage.trim().length === 0) {
+            console.warn(
+              `⚠️ Empty response detected from ${options.provider}. Usage: ${response.usage ? JSON.stringify(response.usage) : 'N/A'}`
+            );
+            responseMessage = `🤖 I received your request but couldn't generate a proper response. This might be due to:\n\n• The request being too complex or filtered\n• A temporary service issue\n• Network connectivity problems\n\nPlease try rephrasing your question or breaking it into smaller parts.`;
+          }
+
+          if (isFirstMessage) {
+            responseMessage = `🤖 *Bot is ready and connected!*\n\nI'm now set up and ready to help you. Feel free to ask me anything!\n\n---\n\n${responseMessage}`;
+          }
+
+          // Send response back to the messaging platform
+          const platformResponse = await this.messagingManager.sendMessage(
+            options.messagingPlatform,
+            message.chatId,
+            responseMessage
+          );
+
+          if (platformResponse.success) {
+            console.log(chalk.green(`🤖 Response sent to ${message.userName}`));
+          } else {
+            console.log(chalk.red(`❌ Failed to send response: ${platformResponse.error}`));
+          }
+
+          if (response.usage) {
+            console.log(
+              chalk.gray(
+                `📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
+              )
+            );
+          }
+        } catch (error) {
+          let errorMessage = `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+
+          // Provide more helpful error messages for common issues
+          if (error instanceof Error) {
+            if (error.message.includes('timeout')) {
+              errorMessage = `⏰ The operation timed out. This usually happens with long-running tasks like test execution.\n\n💡 Try:\n• Breaking your request into smaller parts\n• Running tests with specific patterns (e.g., "run tests for User component")\n• Using shorter test commands`;
+            } else if (error.message.includes('jest') || error.message.includes('test')) {
+              errorMessage = `🧪 Test execution failed. This might be due to:\n• Tests taking too long to run\n• Test configuration issues\n• Missing dependencies\n\nTry running a specific test file or checking the test setup.`;
+            }
+          }
+
+          await this.messagingManager.sendMessage(
+            options.messagingPlatform,
+            message.chatId,
+            errorMessage
+          );
+          console.log(
+            chalk.red(
+              `❌ Error processing message: ${error instanceof Error ? error.message : 'Unknown error'}`
+            )
+          );
+        }
+      }
+    );
+
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      console.log(chalk.yellow('\n🛑 Shutting down...'));
+      try {
+        await this.chatLogger.endSession('completed');
+        await this.messagingManager.stopAllListeners();
+      } catch (error) {
+        console.error('Error during shutdown:', error);
+      }
+      process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+      console.log(chalk.yellow('\n🛑 Shutting down...'));
+      try {
+        await this.chatLogger.endSession('completed');
+        await this.messagingManager.stopAllListeners();
+      } catch (error) {
+        console.error('Error during shutdown:', error);
+      }
+      process.exit(0);
+    });
+
+    // Handle uncaught exceptions and unhandled rejections
+    process.on('uncaughtException', error => {
+      console.error('Uncaught Exception:', error);
+      process.exit(1);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      process.exit(1);
+    });
+  }
+>>>>>>> 42c7f43 (feat: update context utils, chat command, telegram platform, and sonic free provider)
 }
