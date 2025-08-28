@@ -40,6 +40,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const [contextSize, setContextSize] = useState(0);
   const [maxContextSize] = useState(128000); // Default max context for GPT-4
   const [lastResponseTokens, setLastResponseTokens] = useState(0);
+  const [showContextWindow, setShowContextWindow] = useState(true);
 
   // Ctrl+C handling state
   const [ctrlCCount, setCtrlCCount] = useState(0);
@@ -296,112 +297,19 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         return;
       }
 
-      if (trimmedInput === '/themes') {
-        const newTheme = theme === 'dark' ? 'light' : 'dark';
-        setTheme(newTheme);
-        const configManager = new ConfigManager();
-        configManager.setConfig('theme', newTheme);
-        await chatLogger.logCommand('/themes', { from: theme, to: newTheme });
+      if (trimmedInput === '/context') {
+        setShowContextWindow(!showContextWindow);
+        await chatLogger.logCommand('/context', { enabled: !showContextWindow });
         setMessages(prev => [
           ...prev,
           {
             role: 'assistant',
-            content: `Theme switched to: ${newTheme}`,
+            content: `Context window display ${!showContextWindow ? 'enabled' : 'disabled'}`,
             timestamp: new Date(),
           },
         ]);
         setInput('');
         setCursorPosition(0);
-        return;
-      }
-
-      if (trimmedInput === '/clear') {
-        await chatLogger.logCommand('/clear', { messageCount: messages.length });
-        setMessages([]);
-        setInput('');
-        setCursorPosition(0);
-        return;
-      }
-
-      if (trimmedInput === '/mode' || trimmedInput === '/thinking') {
-        const newMode = currentMode === 'code' ? 'thinking' : 'code';
-        await chatLogger.logModeChanged(currentMode, newMode);
-        await chatLogger.logCommand(trimmedInput, { from: currentMode, to: newMode });
-        setCurrentMode(newMode);
-        setMessages(prev => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: `Switched to ${newMode} mode`,
-            timestamp: new Date(),
-          },
-        ]);
-        setInput('');
-        setCursorPosition(0);
-        return;
-      }
-
-      if (trimmedInput === '/compress') {
-        if (messages.length === 0) {
-          setMessages(prev => [
-            ...prev,
-            {
-              role: 'assistant',
-              content: 'No conversation history to compress.',
-              timestamp: new Date(),
-            },
-          ]);
-          setInput('');
-          return;
-        }
-
-        await chatLogger.logCommand('/compress', { messageCount: messages.length });
-        setInput('');
-        setCursorPosition(0);
-        setIsLoading(true);
-        setError(null);
-
-        try {
-          // Create a summary prompt
-          const conversationText = messages
-            .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-            .join('\n\n');
-
-          const summaryPrompt = `Please provide a concise summary of the following conversation. Focus on the key points, decisions made, and current context. Keep it brief but comprehensive enough to maintain continuity:
-
-${conversationText}
-
-Summary:`;
-
-          const summaryMessage: Message = {
-            role: 'user',
-            content: summaryPrompt,
-            timestamp: new Date(),
-          };
-
-          const response = await providerManager.sendMessage(
-            provider,
-            [summaryMessage],
-            model,
-            isVerbose
-          );
-
-          // Replace all messages with the summary
-          const summaryAssistantMessage: Message = {
-            role: 'assistant',
-            content: `🗜️ Conversation compressed. Previous context summarized:\n\n${response.content}`,
-            timestamp: new Date(),
-          };
-
-          setMessages([summaryAssistantMessage]);
-        } catch (err) {
-          await chatLogger.logError(
-            err instanceof Error ? err : new Error('Failed to compress conversation')
-          );
-          setError(err instanceof Error ? err.message : 'Failed to compress conversation');
-        } finally {
-          setIsLoading(false);
-        }
         return;
       }
 
@@ -577,7 +485,7 @@ Summary:`;
       <Box marginBottom={isVerySmallScreen ? 0 : 1}>
         <Box justifyContent="space-between" alignItems="center">
           <Text color={themeColors.header}>{headerText}</Text>
-          {!isVerySmallScreen && (
+          {!isVerySmallScreen && showContextWindow && (
             <Box>
               <Text
                 color={
@@ -647,13 +555,17 @@ Summary:`;
           )}
         </Text>
         {/* Context window indicator for small screens */}
-        {isVerySmallScreen && (
+        {isVerySmallScreen && showContextWindow && (
           <Box marginLeft={1}>
-            <Text color={
-              contextSize > maxContextSize * 0.8 ? 'red' :
-              contextSize > maxContextSize * 0.6 ? 'yellow' :
-              themeColors.footer
-            }>
+            <Text
+              color={
+                contextSize > maxContextSize * 0.8
+                  ? 'red'
+                  : contextSize > maxContextSize * 0.6
+                    ? 'yellow'
+                    : themeColors.footer
+              }
+            >
               {Math.round((contextSize / maxContextSize) * 100)}%
             </Text>
           </Box>
@@ -675,7 +587,8 @@ Summary:`;
               {!isSmallScreen && (
                 <Text color={themeColors.footer}>
                   Commands: /verbose (toggle), /clear (clear), /compress (summarize), /themes
-                  (switch), /mode (toggle) | Tab to toggle mode | ↑↓ for history
+                  (switch), /mode (toggle), /context (toggle display) | Tab to toggle mode | ↑↓ for
+                  history
                 </Text>
               )}
             </>
