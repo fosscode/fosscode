@@ -97,7 +97,7 @@ export class TelegramPlatform implements MessagingPlatform {
       throw new Error('Already listening for messages');
     }
 
-    // Set up message handler
+    // Set up message handler with improved error handling
     this.bot.on('message:text', async ctx => {
       const msg = ctx.message;
       if (!msg.text) {
@@ -115,15 +115,47 @@ export class TelegramPlatform implements MessagingPlatform {
       };
 
       try {
-        await callback(messagingMessage);
+        // Add timeout to prevent hanging (increased for complex operations like test running)
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(
+            () =>
+              reject(
+                new Error(
+                  'Message processing timeout - the operation is taking too long. Try breaking down your request into smaller parts.'
+                )
+              ),
+            120000
+          ); // 2 minute timeout
+        });
+
+        await Promise.race([callback(messagingMessage), timeoutPromise]);
       } catch (error) {
         console.error('Error processing Telegram message:', error);
+
+        // Send error message back to user
+        try {
+          const errorMessage = `❌ Sorry, I encountered an error processing your message: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          await ctx.reply(errorMessage, { parse_mode: 'Markdown' });
+        } catch (replyError) {
+          console.error('Failed to send error message:', replyError);
+        }
       }
     });
 
-    // Start the bot
-    this.bot.start();
-    this.isListening = true;
+    // Add error handler for bot-level errors
+    this.bot.catch(err => {
+      console.error('Telegram bot error:', err);
+    });
+
+    // Start the bot with error handling
+    try {
+      await this.bot.start();
+      this.isListening = true;
+      console.log('✅ Telegram bot started successfully');
+    } catch (error) {
+      console.error('Failed to start Telegram bot:', error);
+      throw error;
+    }
   }
 
   async stopListening(): Promise<void> {
@@ -150,6 +182,34 @@ export class TelegramPlatform implements MessagingPlatform {
       return true;
     } catch (error) {
       return false;
+    }
+  }
+
+  /**
+   * Health check for the bot
+   */
+  async healthCheck(): Promise<{ healthy: boolean; message: string; details?: any }> {
+    if (!this.bot) {
+      return { healthy: false, message: 'Bot not initialized' };
+    }
+
+    try {
+      const botInfo = await this.bot.api.getMe();
+      return {
+        healthy: true,
+        message: 'Bot is healthy',
+        details: {
+          botName: botInfo.first_name,
+          botUsername: botInfo.username,
+          isListening: this.isListening,
+        },
+      };
+    } catch (error) {
+      return {
+        healthy: false,
+        message: `Bot health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: { error },
+      };
     }
   }
 

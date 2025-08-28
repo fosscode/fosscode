@@ -40,7 +40,7 @@ export class BashTool implements Tool {
     {
       name: 'timeout',
       type: 'number',
-      description: 'Command timeout in milliseconds (max 30000ms)',
+      description: 'Command timeout in milliseconds (max 120000ms for tests, 30000ms for others)',
       required: false,
       defaultValue: 10000,
     },
@@ -55,7 +55,11 @@ export class BashTool implements Tool {
 
   async execute(params: Record<string, any>): Promise<ToolResult> {
     try {
-      const { command, cwd = process.cwd(), timeout = 10000, shell = 'bash' } = params;
+      const { command, cwd = process.cwd(), shell = 'bash' } = params;
+
+      // Use higher default timeout for test commands
+      const defaultTimeout = command.includes('jest') || command.includes('test') ? 60000 : 10000;
+      const timeout = params.timeout ?? defaultTimeout;
 
       // Validate inputs
       const validation = await BashCommandValidator.validateCommand(command, cwd, timeout, shell);

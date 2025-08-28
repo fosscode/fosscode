@@ -342,9 +342,50 @@ export class ChatCommand {
         const helpMessage =
           `🤖 *Available Commands:*\n\n` +
           `• /clear - Clear conversation history\n` +
-          `• /help - Show this help message\n\n` +
+          `• /help - Show this help message\n` +
+          `• /status - Check bot health and status\n` +
+          `• /timeouts - Show timeout settings\n\n` +
           `Just type your message normally to chat with me!`;
         await this.messagingManager.sendMessage(platformType, message.chatId, helpMessage);
+        break;
+      }
+
+      case '/status': {
+        try {
+          const healthCheck = await this.messagingManager
+            .getPlatform(platformType)
+            ?.healthCheck?.();
+          if (healthCheck) {
+            const statusMessage = healthCheck.healthy
+              ? `✅ *Bot Status: Healthy*\n\n${healthCheck.message}\n\n${healthCheck.details ? JSON.stringify(healthCheck.details, null, 2) : ''}`
+              : `❌ *Bot Status: Unhealthy*\n\n${healthCheck.message}`;
+            await this.messagingManager.sendMessage(platformType, message.chatId, statusMessage);
+          } else {
+            await this.messagingManager.sendMessage(
+              platformType,
+              message.chatId,
+              '❓ Health check not available for this platform'
+            );
+          }
+        } catch (error) {
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            `❌ Error checking status: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+        break;
+      }
+
+      case '/timeouts': {
+        const timeoutInfo =
+          `⏱️ *Timeout Settings:*\n\n` +
+          `• Message Processing: 120 seconds\n` +
+          `• Test Commands: 60 seconds default\n` +
+          `• Other Commands: 10 seconds default\n` +
+          `• Max Test Timeout: 120 seconds\n\n` +
+          `💡 For long-running operations, the bot will send a "processing" message to keep you updated.`;
+        await this.messagingManager.sendMessage(platformType, message.chatId, timeoutInfo);
         break;
       }
 
@@ -392,8 +433,19 @@ export class ChatCommand {
     console.log(chalk.yellow(`📱 Listening for messages on ${options.messagingPlatform}...`));
     console.log(chalk.gray('Press Ctrl+C to stop'));
 
-    // Initialize the messaging platform
-    await this.messagingManager.initializePlatform(options.messagingPlatform, platformConfig);
+    // Initialize the messaging platform with error handling
+    try {
+      await this.messagingManager.initializePlatform(options.messagingPlatform, platformConfig);
+      console.log(chalk.green(`✅ ${options.messagingPlatform} platform initialized successfully`));
+    } catch (error) {
+      console.log(
+        chalk.red(
+          `❌ Failed to initialize ${options.messagingPlatform} platform: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      );
+      await this.chatLogger.endSession('error');
+      process.exit(1);
+    }
 
     // Start listening for messages
     await this.messagingManager.startListening(
@@ -401,6 +453,11 @@ export class ChatCommand {
       platformConfig,
       async message => {
         console.log(chalk.cyan(`👤 ${message.userName}: ${message.content}`));
+        console.log(
+          chalk.gray(
+            `   Message ID: ${message.id}, Chat ID: ${message.chatId}, Platform: ${message.platform}`
+          )
+        );
 
         // Handle commands
         if (message.content.startsWith('/')) {
@@ -427,6 +484,18 @@ export class ChatCommand {
         await this.chatLogger.logMessageSent(chatMessage);
 
         try {
+          // Send a "processing" message for long operations
+          if (
+            message.content.toLowerCase().includes('test') ||
+            message.content.toLowerCase().includes('jest')
+          ) {
+            await this.messagingManager.sendMessage(
+              options.messagingPlatform,
+              message.chatId,
+              '⏳ Running tests... This may take a minute or two. Please wait...'
+            );
+          }
+
           const response = await this.providerManager.sendMessage(
             options.provider as ProviderType,
             history,
@@ -478,7 +547,17 @@ export class ChatCommand {
             );
           }
         } catch (error) {
-          const errorMessage = `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          let errorMessage = `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+
+          // Provide more helpful error messages for common issues
+          if (error instanceof Error) {
+            if (error.message.includes('timeout')) {
+              errorMessage = `⏰ The operation timed out. This usually happens with long-running tasks like test execution.\n\n💡 Try:\n• Breaking your request into smaller parts\n• Running tests with specific patterns (e.g., "run tests for User component")\n• Using shorter test commands`;
+            } else if (error.message.includes('jest') || error.message.includes('test')) {
+              errorMessage = `🧪 Test execution failed. This might be due to:\n• Tests taking too long to run\n• Test configuration issues\n• Missing dependencies\n\nTry running a specific test file or checking the test setup.`;
+            }
+          }
+
           await this.messagingManager.sendMessage(
             options.messagingPlatform,
             message.chatId,
@@ -496,16 +575,35 @@ export class ChatCommand {
     // Handle graceful shutdown
     process.on('SIGINT', async () => {
       console.log(chalk.yellow('\n🛑 Shutting down...'));
-      await this.chatLogger.endSession('completed');
-      await this.messagingManager.stopAllListeners();
+      try {
+        await this.chatLogger.endSession('completed');
+        await this.messagingManager.stopAllListeners();
+      } catch (error) {
+        console.error('Error during shutdown:', error);
+      }
       process.exit(0);
     });
 
     process.on('SIGTERM', async () => {
       console.log(chalk.yellow('\n🛑 Shutting down...'));
-      await this.chatLogger.endSession('completed');
-      await this.messagingManager.stopAllListeners();
+      try {
+        await this.chatLogger.endSession('completed');
+        await this.messagingManager.stopAllListeners();
+      } catch (error) {
+        console.error('Error during shutdown:', error);
+      }
       process.exit(0);
+    });
+
+    // Handle uncaught exceptions and unhandled rejections
+    process.on('uncaughtException', error => {
+      console.error('Uncaught Exception:', error);
+      process.exit(1);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      process.exit(1);
     });
   }
 }

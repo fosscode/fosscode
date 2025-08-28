@@ -189,4 +189,5 @@ export interface MessagingPlatform {
   stopListening(): Promise<void>;
   validateConfig(config: MessagingPlatformConfig): Promise<boolean>;
   getPlatformType(): MessagingPlatformType;
+  healthCheck?(): Promise<{ healthy: boolean; message: string; details?: any }>;
 }

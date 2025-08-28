@@ -16,11 +16,12 @@ export class BashCommandValidator {
       };
     }
 
-    // Validate timeout
-    if (typeof timeout !== 'number' || timeout < 0 || timeout > 30000) {
+    // Validate timeout - allow longer timeouts for complex operations
+    const maxTimeout = command.includes('jest') || command.includes('test') ? 120000 : 30000; // 2 minutes for tests, 30 seconds for others
+    if (typeof timeout !== 'number' || timeout < 0 || timeout > maxTimeout) {
       return {
         isValid: false,
-        error: 'Timeout must be a number between 0 and 30000 milliseconds',
+        error: `Timeout must be a number between 0 and ${maxTimeout} milliseconds`,
       };
     }
 
