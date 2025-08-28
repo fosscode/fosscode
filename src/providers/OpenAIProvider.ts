@@ -124,22 +124,12 @@ export class OpenAIProvider implements LLMProvider {
           );
 
           let currentContent = '';
-          let hasStarted = false;
 
           for await (const chunk of stream) {
             const delta = chunk.choices[0]?.delta;
             if (delta?.content) {
               currentContent += delta.content;
-              if (!hasStarted) {
-                process.stdout.write('🤖 ');
-                hasStarted = true;
-              }
-              process.stdout.write(delta.content);
             }
-          }
-
-          if (hasStarted) {
-            process.stdout.write('\n');
           }
 
           // Create a mock response object for compatibility with existing code

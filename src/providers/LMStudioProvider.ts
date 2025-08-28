@@ -285,7 +285,6 @@ export class LMStudioProvider implements LLMProvider {
     }
 
     let currentContent = '';
-    let hasStarted = false;
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
 
@@ -314,11 +313,6 @@ export class LMStudioProvider implements LLMProvider {
               const delta = parsed.choices[0]?.delta;
               if (delta?.content) {
                 currentContent += delta.content;
-                if (!hasStarted) {
-                  process.stdout.write('🤖 ');
-                  hasStarted = true;
-                }
-                process.stdout.write(delta.content);
               }
             } catch (parseError) {
               // Log parse errors in verbose mode but don't fail the request
@@ -335,10 +329,6 @@ export class LMStudioProvider implements LLMProvider {
       );
     } finally {
       reader.releaseLock();
-    }
-
-    if (hasStarted) {
-      process.stdout.write('\n');
     }
 
     // Create a mock response object for compatibility

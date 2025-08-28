@@ -6,6 +6,14 @@ export class ConfigValidator {
    */
   static async validateProvider(provider: ProviderType, providerConfig: LLMConfig): Promise<void> {
     console.log(`Validating provider ${provider} with config:`, providerConfig);
+
+    // Check if providerConfig is undefined or null
+    if (!providerConfig) {
+      throw new Error(
+        `No configuration found for provider ${provider}. Please run: fosscode auth login ${provider}`
+      );
+    }
+
     // For LMStudio, we only need a baseURL (no API key required)
     if (provider === 'lmstudio') {
       if (!providerConfig.baseURL) {
@@ -77,11 +85,16 @@ export class ConfigValidator {
    */
   static validateConfigHasProviders(config: Record<ProviderType, LLMConfig>): void {
     const configuredProviders = Object.entries(config)
-      .filter(([provider, config]) => {
+      .filter(([provider, providerConfig]) => {
+        // Skip if config is null or undefined
+        if (!providerConfig) {
+          return false;
+        }
+
         if (provider === 'mcp') {
           // MCP is configured if it has either a URL or command+args, or multiple servers
-          if (config.mcpServers && Object.keys(config.mcpServers).length > 0) {
-            return Object.values(config.mcpServers).some(
+          if (providerConfig.mcpServers && Object.keys(providerConfig.mcpServers).length > 0) {
+            return Object.values(providerConfig.mcpServers).some(
               s =>
                 s.enabled !== false &&
                 (s.mcpServerUrl ??
@@ -89,12 +102,14 @@ export class ConfigValidator {
             );
           }
           return (
-            config.mcpServerUrl ??
-            (config.mcpServerCommand && config.mcpServerArgs && config.mcpServerArgs.length > 0)
+            providerConfig.mcpServerUrl ??
+            (providerConfig.mcpServerCommand &&
+              providerConfig.mcpServerArgs &&
+              providerConfig.mcpServerArgs.length > 0)
           );
         }
         // Other providers need apiKey or baseURL
-        return config.apiKey ?? config.baseURL;
+        return providerConfig.apiKey ?? providerConfig.baseURL;
       })
       .map(([provider]) => provider as ProviderType);
 

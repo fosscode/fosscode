@@ -49,7 +49,19 @@ export class ConfigManager {
       const mcpConfigs = await this.loadMCPConfigs(configDir);
 
       // Merge with default config to ensure all properties exist
-      this.config = { ...ConfigDefaults.getDefaultConfig(), ...loadedConfig };
+      const defaultConfig = ConfigDefaults.getDefaultConfig();
+      this.config = { ...defaultConfig, ...loadedConfig };
+
+      // Deep merge providers to ensure all providers exist with their defaults
+      if (loadedConfig.providers) {
+        this.config.providers = { ...defaultConfig.providers, ...loadedConfig.providers };
+      }
+
+      // Deep merge cachedModels to ensure all providers have model caches
+      if (loadedConfig.cachedModels) {
+        this.config.cachedModels = { ...defaultConfig.cachedModels, ...loadedConfig.cachedModels };
+      }
+
       console.log('Final merged config:', this.config);
 
       // Merge MCP server configs into the main config
