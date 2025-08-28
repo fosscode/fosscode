@@ -3,6 +3,9 @@
   "defaultModel": "gpt-3.5-turbo",
   "maxConversations": 100,
   "theme": "dark",
+  "showContextPercentage": true,
+  "contextDisplayFormat": "both",
+  "contextWarningThreshold": 80,
   "providers": {
     "openai": {
       "apiKey": "your-openai-api-key-here",

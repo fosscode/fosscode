@@ -88,6 +88,10 @@ export interface AppConfig {
   defaultModel: string;
   maxConversations: number;
   theme: 'dark' | 'light';
+  // Context display configuration
+  showContextPercentage?: boolean;
+  contextDisplayFormat?: 'percentage' | 'tokens' | 'both';
+  contextWarningThreshold?: number;
   providers: Record<ProviderType, LLMConfig>;
   cachedModels: Record<ProviderType, CachedModels>;
   messagingPlatforms: Record<MessagingPlatformType, MessagingPlatformConfig>;

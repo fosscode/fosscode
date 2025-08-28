@@ -10,6 +10,10 @@ export class ConfigDefaults {
       defaultModel: 'gpt-3.5-turbo',
       maxConversations: 100,
       theme: 'dark',
+      // Context display defaults
+      showContextPercentage: true,
+      contextDisplayFormat: 'both',
+      contextWarningThreshold: 80,
       providers: {
         openai: {},
         grok: {},

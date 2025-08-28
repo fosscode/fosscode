@@ -244,17 +244,22 @@ export class BinaryChatCommand {
         console.log(usageInfo);
         output += '\n' + usageInfo;
 
-        // Display context percentage if available
-        if (enhancedResponse.context) {
-          const contextDisplay = formatContextDisplay(enhancedResponse.context, 'both');
+        // Display context percentage if enabled in config
+        const config = this.configManager.getConfig();
+        const showContext = config.showContextPercentage !== false; // Default to true
+
+        if (showContext && enhancedResponse.context) {
+          const displayFormat = config.contextDisplayFormat || 'both';
+          const contextDisplay = formatContextDisplay(enhancedResponse.context, displayFormat);
           if (contextDisplay) {
             const contextInfo = chalk.gray(`\n🧠 Context: ${contextDisplay}`);
             console.log(contextInfo);
             output += '\n' + contextInfo;
 
-            // Show context warning if needed
+            // Show context warning if usage exceeds threshold
+            const warningThreshold = config.contextWarningThreshold || 80;
             const warningMessage = getContextWarningMessage(enhancedResponse.context);
-            if (warningMessage) {
+            if (warningMessage && (enhancedResponse.context.percentage || 0) >= warningThreshold) {
               console.log(chalk.yellow(warningMessage));
               output += '\n' + warningMessage;
             }

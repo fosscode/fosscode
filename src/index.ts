@@ -41,6 +41,9 @@ program
     '--mcp <servers>',
     'Enable specific MCP servers (comma-separated, e.g., "playwright,context7")'
   )
+  .option('--show-context', 'Show context usage percentage in output')
+  .option('--context-format <format>', 'Context display format (percentage, tokens, both)', 'both')
+  .option('--context-threshold <threshold>', 'Context warning threshold percentage', parseInt)
   .action(async (message, options) => {
     try {
       // Initialize tools with verbose setting

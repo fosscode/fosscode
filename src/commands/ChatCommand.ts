@@ -20,6 +20,7 @@ export class ChatCommand {
   private chatLogger: ChatLogger;
   private messagingManager: MessagingPlatformManager;
   private conversationHistory: Map<string, Message[]> = new Map();
+  private firstMessageSent: Map<string, boolean> = new Map();
 
   constructor(verbose: boolean = false) {
     this.configManager = new ConfigManager(verbose);
@@ -40,6 +41,9 @@ export class ChatCommand {
       verbose?: boolean;
       messagingPlatform?: MessagingPlatformType;
       mcp?: string;
+      showContext?: boolean;
+      contextFormat?: string;
+      contextThreshold?: number;
     }
   ): Promise<void> {
     // Handle provider selection if not specified
@@ -84,6 +88,9 @@ export class ChatCommand {
         provider: options.provider!,
         model: options.model!,
         verbose: options.verbose ?? false,
+        showContext: options.showContext ?? undefined,
+        contextFormat: options.contextFormat ?? undefined,
+        contextThreshold: options.contextThreshold ?? undefined,
       });
       return;
     }
@@ -140,7 +147,10 @@ export class ChatCommand {
     options: {
       provider: string;
       model: string;
-      verbose?: boolean;
+      verbose?: boolean | undefined;
+      showContext?: boolean | undefined;
+      contextFormat?: string | undefined;
+      contextThreshold?: number | undefined;
     }
   ): Promise<void> {
     // Initialize logger and start session
@@ -318,6 +328,8 @@ export class ChatCommand {
       case '/clear':
         // Clear conversation history for this chat
         this.conversationHistory.delete(message.chatId);
+        // Reset first message flag so ready message shows again
+        this.firstMessageSent.delete(message.chatId);
         await this.messagingManager.sendMessage(
           platformType,
           message.chatId,
@@ -433,11 +445,23 @@ export class ChatCommand {
           // Log the response
           await this.chatLogger.logMessageReceived(response);
 
+          // Check if this is the first message for this chat
+          const isFirstMessage = !this.firstMessageSent.get(message.chatId);
+          if (isFirstMessage) {
+            this.firstMessageSent.set(message.chatId, true);
+          }
+
+          // Prepare response message with ready notification for first message
+          let responseMessage = response.content;
+          if (isFirstMessage) {
+            responseMessage = `🤖 *Bot is ready and connected!*\n\nI'm now set up and ready to help you. Feel free to ask me anything!\n\n---\n\n${response.content}`;
+          }
+
           // Send response back to the messaging platform
           const platformResponse = await this.messagingManager.sendMessage(
             options.messagingPlatform,
             message.chatId,
-            response.content
+            responseMessage
           );
 
           if (platformResponse.success) {

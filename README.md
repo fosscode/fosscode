@@ -19,6 +19,7 @@ A lightweight, fast command-line application with a text user interface (TUI) fo
 - 📦 **NPM Installable**: Install globally with `npm install -g fosscode`
 - 🔍 **Verbose Mode**: Toggle detailed tool execution output for debugging
 - 🛠️ **Tool Ecosystem**: Integrated tool system with MCP server support
+- 📊 **Context Monitoring**: Real-time context window usage tracking and warnings
 - 🔒 **Reproducible Builds**: Consistent build artifacts across environments
 
 ## Installation
@@ -289,6 +290,50 @@ fosscode chat
 
 # Clear conversation history
 /clear
+```
+
+### Context Usage Monitoring
+
+Monitor LLM context window usage to optimize your conversations:
+
+```bash
+# Show context percentage with default settings
+fosscode chat "Tell me about TypeScript" --non-interactive --show-context
+
+# Customize context display format
+fosscode chat "Explain React hooks" --non-interactive --show-context --context-format percentage
+
+# Show detailed context information
+fosscode chat "Write a function to sort an array" --non-interactive --show-context --context-format both
+
+# Set custom warning threshold
+fosscode chat "Long programming question..." --non-interactive --show-context --context-threshold 70
+```
+
+**Context Display Options:**
+
+- `--show-context`: Enable context usage display
+- `--context-format`: Display format (`percentage`, `tokens`, `both`)
+- `--context-threshold`: Warning threshold percentage (default: 80%)
+
+**Configuration (config.json):**
+
+```json
+{
+  "showContextPercentage": true,
+  "contextDisplayFormat": "both",
+  "contextWarningThreshold": 80
+}
+```
+
+**Sample Output:**
+
+```
+🤖 fosscode - openai (gpt-4)
+
+Context: 45.2% (2,260/5,000 tokens)
+
+⚠️ Context usage moderate (45.2%). Consider summarizing or starting fresh.
 ```
 
 ## Troubleshooting
