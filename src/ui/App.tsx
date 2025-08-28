@@ -728,7 +728,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         )}
       </Box>
 
-      {/* Footer - conditionally rendered based on screen size and chat state */}
+      {/* Help text - moved below input */}
       {messages.length === 0 && (
         <Box marginTop={1}>
           {isVerySmallScreen ? (
