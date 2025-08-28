@@ -13,10 +13,18 @@ import { toolRegistry } from '../tools/ToolRegistry.js';
 export class ProviderManager {
   private providers: Map<ProviderType, LLMProvider>;
   private configManager: ConfigManager;
+  private mcpServersFilter: string[] | null = null;
 
   constructor(configManager: ConfigManager) {
     this.configManager = configManager;
     this.providers = new Map();
+  }
+
+  /**
+   * Set filter for MCP servers to enable/disable at runtime
+   */
+  setMCPServersFilter(servers: string[]): void {
+    this.mcpServersFilter = servers;
   }
 
   /**
@@ -187,8 +195,27 @@ export class ProviderManager {
       // Initialize MCP provider and discover tools
       const mcpProvider = this.getProvider('mcp') as MCPProvider;
 
+      // Apply runtime filter to MCP config if specified
+      let filteredConfig = mcpConfig;
+      if (this.mcpServersFilter && mcpConfig.mcpServers) {
+        const filteredServers: any = {};
+        for (const serverName of this.mcpServersFilter) {
+          if (mcpConfig.mcpServers[serverName]) {
+            filteredServers[serverName] = { ...mcpConfig.mcpServers[serverName], enabled: true };
+          }
+        }
+
+        if (Object.keys(filteredServers).length > 0) {
+          filteredConfig = { ...mcpConfig, mcpServers: filteredServers };
+          console.log(`🔧 Enabling MCP servers: ${this.mcpServersFilter.join(', ')}`);
+        } else {
+          console.log(`⚠️ No matching MCP servers found for: ${this.mcpServersFilter.join(', ')}`);
+          return;
+        }
+      }
+
       // Connect to MCP server and discover tools
-      await mcpProvider.initializeMCPTools(mcpConfig);
+      await mcpProvider.initializeMCPTools(filteredConfig);
 
       console.log('✅ MCP tools initialized and registered for AI provider use');
     } catch (error) {

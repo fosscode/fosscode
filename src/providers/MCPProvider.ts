@@ -189,6 +189,29 @@ export class MCPProvider implements LLMProvider {
 
   // Public method to initialize MCP tools for AI provider access
   async initializeMCPTools(config: LLMConfig, serverName?: string): Promise<void> {
+    // If multiple servers are enabled and no specific server requested,
+    // connect to all enabled servers
+    if (config.mcpServers && !serverName) {
+      const enabledServers = Object.entries(config.mcpServers).filter(
+        ([, server]) => server.enabled !== false
+      );
+
+      if (enabledServers.length > 1) {
+        console.log(`🔧 Connecting to ${enabledServers.length} MCP servers...`);
+        for (const [name, serverConfig] of enabledServers) {
+          try {
+            console.log(`🔧 Connecting to MCP server: ${name}`);
+            await this.connectToMCPServer({ ...config, ...serverConfig }, name);
+          } catch (error) {
+            console.warn(`⚠️ Failed to connect to MCP server '${name}':`, error);
+            // Continue with other servers
+          }
+        }
+        return;
+      }
+    }
+
+    // Single server connection (existing logic)
     await this.connectToMCPServer(config, serverName);
     // Tools are automatically registered during connection
   }
