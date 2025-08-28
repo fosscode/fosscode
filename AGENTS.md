@@ -601,3 +601,14 @@ cat test-results/e2e/Interactive_Chat.log
 5. **CI Speed:** Keeps the main CI pipeline fast and focused
 
 The E2E tests provide **comprehensive coverage** of interactive features while maintaining **CI simplicity** and **reliability**.
+
+## Code Style Guidelines
+
+### File Size Limits
+
+- **Keep code files under 300 lines when possible**
+  - Break large files into smaller, focused modules
+  - Use logical separation of concerns
+  - Consider extracting utility functions or classes
+  - Improves maintainability and readability
+  - Makes code easier to review and test
