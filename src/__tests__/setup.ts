@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom';
 import { jest } from '@jest/globals';
 
+// Make jest global for ESM compatibility
+(global as any).jest = jest;
+
 // Add OpenAI shim for Node.js environment
 import 'openai/shims/node';
 

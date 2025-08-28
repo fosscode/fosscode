@@ -16,54 +16,213 @@ describe('Tool Execution E2E Tests', () => {
     fs.writeFileSync(path.join(tempDir, 'test.txt'), 'Hello, world!\nThis is a test file.\n');
     fs.writeFileSync(path.join(tempDir, 'script.js'), 'console.log("Hello from script!");');
 
-    // Start mock API server that returns tool calls
+    // Start enhanced mock API server that supports complex tool execution
     mockServerProcess = spawn('node', [
       '-e',
       `
       const http = require('http');
+      const fs = require('fs');
+      const path = require('path');
+
       let requestCount = 0;
+      const toolExecutionHistory = new Map();
+
       const server = http.createServer((req, res) => {
         if (req.url === '/v1/chat/completions') {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          
-          if (requestCount === 0) {
-            // First request - return a bash tool call
-            res.end(JSON.stringify({
-              choices: [{
-                message: {
-                  content: 'I will list the files for you.',
-                  tool_calls: [{
-                    id: 'test-call-1',
-                    type: 'function',
-                    function: {
-                      name: 'bash',
-                      arguments: JSON.stringify({ 
-                        command: 'ls -la "${tempDir}"', 
-                        description: 'List files in test directory' 
-                      })
+          let body = '';
+          req.on('data', chunk => body += chunk);
+          req.on('end', () => {
+            try {
+              const data = JSON.parse(body);
+              const messages = data.messages || [];
+              const lastMessage = messages[messages.length - 1];
+              const conversationId = data.conversation_id || 'default';
+
+              // Initialize tool history for this conversation
+              if (!toolExecutionHistory.has(conversationId)) {
+                toolExecutionHistory.set(conversationId, []);
+              }
+              const history = toolExecutionHistory.get(conversationId);
+
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+
+              let response = {};
+
+              if (lastMessage && lastMessage.content.includes('list files')) {
+                response = {
+                  choices: [{
+                    message: {
+                      content: 'I\\'ll list the files in the directory for you.',
+                      tool_calls: [{
+                        id: 'list-call-1',
+                        type: 'function',
+                        function: {
+                          name: 'bash',
+                          arguments: JSON.stringify({
+                            command: 'ls -la "${tempDir}"',
+                            description: 'List all files in the test directory with details'
+                          })
+                        }
+                      }]
                     }
                   }]
-                }
-              }]
-            }));
-          } else {
-            // Subsequent requests - just return text response
-            res.end(JSON.stringify({
-              choices: [{
-                message: {
-                  content: 'Files have been listed successfully.'
-                }
-              }]
-            }));
-          }
-          requestCount++;
+                };
+              } else if (lastMessage && lastMessage.content.includes('create') && lastMessage.content.includes('file')) {
+                response = {
+                  choices: [{
+                    message: {
+                      content: 'I\\'ll create a test file for you.',
+                      tool_calls: [{
+                        id: 'write-call-1',
+                        type: 'function',
+                        function: {
+                          name: 'write',
+                          arguments: JSON.stringify({
+                            filePath: '${tempDir}/created-file.txt',
+                            content: 'This is a test file created by the tool execution test.\\nIt contains multiple lines.\\nLine 3: End of file.'
+                          })
+                        }
+                      }]
+                    }
+                  }]
+                };
+              } else if (lastMessage && lastMessage.content.includes('read') && lastMessage.content.includes('file')) {
+                response = {
+                  choices: [{
+                    message: {
+                      content: 'I\\'ll read the content of the test file for you.',
+                      tool_calls: [{
+                        id: 'read-call-1',
+                        type: 'function',
+                        function: {
+                          name: 'read',
+                          arguments: JSON.stringify({
+                            filePath: '${tempDir}/test.txt'
+                          })
+                        }
+                      }]
+                    }
+                  }]
+                };
+              } else if (lastMessage && lastMessage.content.includes('run') || lastMessage.content.includes('execute')) {
+                response = {
+                  choices: [{
+                    message: {
+                      content: 'I\\'ll execute the script for you.',
+                      tool_calls: [{
+                        id: 'bash-call-1',
+                        type: 'function',
+                        function: {
+                          name: 'bash',
+                          arguments: JSON.stringify({
+                            command: 'cd "${tempDir}" && node script.js',
+                            description: 'Execute the JavaScript script'
+                          })
+                        }
+                      }]
+                    }
+                  }]
+                };
+              } else if (lastMessage && lastMessage.content.includes('complex') && lastMessage.content.includes('task')) {
+                // Multi-step tool execution
+                response = {
+                  choices: [{
+                    message: {
+                      content: 'This is a complex task that requires multiple steps. Let me break it down.',
+                      tool_calls: [
+                        {
+                          id: 'step1-call',
+                          type: 'function',
+                          function: {
+                            name: 'write',
+                            arguments: JSON.stringify({
+                              filePath: '${tempDir}/step1.txt',
+                              content: 'Step 1: Initial setup completed'
+                            })
+                          }
+                        },
+                        {
+                          id: 'step2-call',
+                          type: 'function',
+                          function: {
+                            name: 'bash',
+                            arguments: JSON.stringify({
+                              command: 'echo "Step 2: Processing data" > "${tempDir}/step2.txt"',
+                              description: 'Create step 2 output file'
+                            })
+                          }
+                        },
+                        {
+                          id: 'step3-call',
+                          type: 'function',
+                          function: {
+                            name: 'read',
+                            arguments: JSON.stringify({
+                              filePath: '${tempDir}/step1.txt'
+                            })
+                          }
+                        }
+                      ]
+                    }
+                  }]
+                };
+              } else if (lastMessage && lastMessage.content.includes('error') || lastMessage.content.includes('fail')) {
+                // Test error handling
+                response = {
+                  choices: [{
+                    message: {
+                      content: 'I\\'ll test error handling by trying to access a non-existent file.',
+                      tool_calls: [{
+                        id: 'error-call-1',
+                        type: 'function',
+                        function: {
+                          name: 'read',
+                          arguments: JSON.stringify({
+                            filePath: '${tempDir}/non-existent-file.txt'
+                          })
+                        }
+                      }]
+                    }
+                  }]
+                };
+              } else {
+                response = {
+                  choices: [{
+                    message: {
+                      content: 'I understand your request. What specific tool operation would you like me to perform?'
+                    }
+                  }]
+                };
+              }
+
+              // Track tool execution in history
+              history.push({
+                request: lastMessage.content,
+                response: response,
+                timestamp: Date.now()
+              });
+
+              res.end(JSON.stringify(response));
+              requestCount++;
+            } catch (error) {
+              console.error('Mock server error:', error);
+              res.writeHead(500);
+              res.end(JSON.stringify({ error: 'Internal server error' }));
+            }
+          });
+        } else if (req.url === '/v1/tool-results') {
+          // Endpoint to check tool execution results
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          const conversationId = req.headers['x-conversation-id'] || 'default';
+          const history = toolExecutionHistory.get(conversationId) || [];
+          res.end(JSON.stringify({ history }));
         } else {
           res.writeHead(404);
           res.end();
         }
       });
-      server.listen(3001, () => console.log('Mock tool server running on 3001'));
-    `.replace('${tempDir}', tempDir),
+      server.listen(3001, () => console.log('Enhanced mock tool server running on 3001'));
+    `.replace(/\${tempDir}/g, tempDir),
     ]);
 
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -93,13 +252,8 @@ describe('Tool Execution E2E Tests', () => {
     }
   });
 
-  test.skip('should execute tool calls in non-interactive mode', async () => {
+  test('should execute tool calls in non-interactive mode', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Tool execution test timed out'));
-      }, 15000);
-
       const child = spawn(
         'bun',
         [
@@ -121,6 +275,11 @@ describe('Tool Execution E2E Tests', () => {
           },
         }
       );
+
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Tool execution test timed out'));
+      }, 15000);
 
       let output = '';
       let errorOutput = '';
@@ -149,13 +308,8 @@ describe('Tool Execution E2E Tests', () => {
     });
   }, 20000);
 
-  test.skip('should handle verbose mode with tool execution', async () => {
+  test('should handle verbose mode with tool execution', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Verbose test timed out'));
-      }, 10000);
-
       const writeTestFile = path.join(tempDir, 'verbose-test.txt');
 
       const child = spawn(
@@ -182,6 +336,11 @@ describe('Tool Execution E2E Tests', () => {
         }
       );
 
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Verbose test timed out'));
+      }, 10000);
+
       let output = '';
 
       child.stdout?.on('data', data => {
@@ -204,16 +363,16 @@ describe('Tool Execution E2E Tests', () => {
 
   test('should validate CLI tool availability', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('CLI validation test timed out'));
-      }, 5000);
-
       const child = spawn('bun', ['run', 'src/index.ts', '--help'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd(),
         env: { ...process.env, FORCE_COLOR: '0' },
       });
+
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('CLI validation test timed out'));
+      }, 5000);
 
       let output = '';
 
@@ -235,13 +394,8 @@ describe('Tool Execution E2E Tests', () => {
     });
   }, 10000);
 
-  test.skip('should handle file operations', async () => {
+  test('should handle file operations', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('File operation test timed out'));
-      }, 10000);
-
       const testFile = path.join(tempDir, 'read-test.txt');
       fs.writeFileSync(testFile, 'Content to read\nLine 2\nLine 3');
 
@@ -268,6 +422,11 @@ describe('Tool Execution E2E Tests', () => {
         }
       );
 
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('File operation test timed out'));
+      }, 10000);
+
       let output = '';
 
       child.stdout?.on('data', data => {
@@ -287,4 +446,70 @@ describe('Tool Execution E2E Tests', () => {
       });
     });
   }, 15000);
+
+  test('should handle complex multi-step tool chains', async () => {
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Complex tool chain test timed out'));
+      }, 25000);
+
+      const child = spawn(
+        'bun',
+        [
+          'run',
+          'src/index.ts',
+          'chat',
+          'perform a complex multi-step task',
+          '--non-interactive',
+          '--config',
+          testConfigPath,
+          '--verbose',
+        ],
+        {
+          stdio: ['pipe', 'pipe', 'pipe'],
+          cwd: process.cwd(),
+          env: {
+            ...process.env,
+            NODE_ENV: 'test',
+            FORCE_COLOR: '0',
+            FOSSCODE_CONFIG_PATH: testConfigPath,
+            CONVERSATION_ID: 'complex-tool-test',
+          },
+        }
+      );
+
+      let output = '';
+
+      child.stdout?.on('data', data => {
+        output += data.toString();
+      });
+
+      child.on('exit', code => {
+        clearTimeout(timeout);
+        expect(code).toBe(0);
+        expect(output.length).toBeGreaterThan(0);
+
+        // Verify all steps of the complex task were completed
+        const step1File = path.join(tempDir, 'step1.txt');
+        const step2File = path.join(tempDir, 'step2.txt');
+
+        expect(fs.existsSync(step1File)).toBe(true);
+        expect(fs.existsSync(step2File)).toBe(true);
+
+        const step1Content = fs.readFileSync(step1File, 'utf8');
+        const step2Content = fs.readFileSync(step2File, 'utf8');
+
+        expect(step1Content).toContain('Step 1');
+        expect(step2Content).toContain('Step 2');
+
+        resolve();
+      });
+
+      child.on('error', error => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+    });
+  }, 30000);
 });

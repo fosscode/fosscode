@@ -98,6 +98,12 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   useInput((inputChar, key) => {
     if (isLoading) return;
 
+    // Handle file search mode input
+    if (isFileSearchMode) {
+      // FileSearch handles its own input via useInput hook
+      return;
+    }
+
     // Handle Ctrl+C with double-tap detection
     if (key.ctrl && inputChar === 'c') {
       setCtrlCCount(prev => {
@@ -126,6 +132,12 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
 
         return newCount;
       });
+      return;
+    }
+
+    // Handle @ key to enter file search mode
+    if (inputChar === '@' && !isFileSearchMode) {
+      setIsFileSearchMode(true);
       return;
     }
 

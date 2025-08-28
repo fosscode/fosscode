@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import { BashTool } from '../tools/BashTool.js';
 import { ReadTool } from '../tools/ReadTool.js';
 
@@ -234,8 +234,8 @@ export function FileSearch({ isActive, onFileAttach, onExit, themeColors }: File
     [searchResults, selectedIndex, searchQuery, attachFile, onExit]
   );
 
-  // Expose input handler for parent component
-  (FileSearch as any).handleInput = handleInput;
+  // Handle input when component is active
+  useInput(handleInput, { isActive });
 
   if (!isActive) return null;
 

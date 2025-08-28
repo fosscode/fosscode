@@ -1,13 +1,4 @@
-/**
- * @jest-environment node
- */
-import { jest } from '@jest/globals';
-import { BinaryChatCommand } from '../binary-chat.js';
-import { MessageQueue } from '../utils/MessageQueue.js';
-import { ConfigManager } from '../config/ConfigManager.js';
-import { ProviderManager } from '../providers/ProviderManager.js';
-
-// Mock dependencies
+// Mock dependencies before imports
 jest.mock('../config/ConfigManager.js');
 jest.mock('../providers/ProviderManager.js');
 jest.mock('../utils/MessageQueue.js');
@@ -16,6 +7,11 @@ jest.mock('../config/ConfigDefaults.js', () => ({
     getDefaultModelForProvider: jest.fn().mockReturnValue('gpt-3.5-turbo'),
   },
 }));
+
+import { BinaryChatCommand } from '../binary-chat.js';
+import { MessageQueue } from '../utils/MessageQueue.js';
+import { ConfigManager } from '../config/ConfigManager.js';
+import { ProviderManager } from '../providers/ProviderManager.js';
 
 describe('BinaryChatCommand', () => {
   let binaryChatCommand: BinaryChatCommand;

@@ -126,11 +126,6 @@ describe('Interactive Chat E2E Tests', () => {
 
   test('should handle non-interactive mode correctly', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Non-interactive test timed out'));
-      }, 10000);
-
       const child = spawn('bun', ['run', 'src/index.ts', 'chat', 'hello', '--non-interactive'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd(),
@@ -141,6 +136,11 @@ describe('Interactive Chat E2E Tests', () => {
           FOSSCODE_CONFIG_PATH: testConfigPath,
         },
       });
+
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Non-interactive test timed out'));
+      }, 10000);
 
       let output = '';
       let errorOutput = '';
@@ -172,16 +172,16 @@ describe('Interactive Chat E2E Tests', () => {
 
   test('should show help information', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Help test timed out'));
-      }, 5000);
-
       const child = spawn('bun', ['run', 'src/index.ts', '--help'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd(),
         env: { ...process.env, FORCE_COLOR: '0' },
       });
+
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Help test timed out'));
+      }, 5000);
 
       let output = '';
 
@@ -207,16 +207,16 @@ describe('Interactive Chat E2E Tests', () => {
 
   test('should list providers', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Providers test timed out'));
-      }, 5000);
-
       const child = spawn('bun', ['run', 'src/index.ts', 'providers'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd(),
         env: { ...process.env, FORCE_COLOR: '0' },
       });
+
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Providers test timed out'));
+      }, 5000);
 
       let output = '';
 
@@ -240,16 +240,16 @@ describe('Interactive Chat E2E Tests', () => {
 
   test('should handle theme commands', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Themes test timed out'));
-      }, 5000);
-
       const child = spawn('bun', ['run', 'src/index.ts', 'themes'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd(),
         env: { ...process.env, FORCE_COLOR: '0' },
       });
+
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Themes test timed out'));
+      }, 5000);
 
       let output = '';
 
@@ -273,16 +273,16 @@ describe('Interactive Chat E2E Tests', () => {
 
   test('should display version', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Version test timed out'));
-      }, 5000);
-
       const child = spawn('bun', ['run', 'src/index.ts', '--version'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd(),
         env: { ...process.env, FORCE_COLOR: '0' },
       });
+
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Version test timed out'));
+      }, 5000);
 
       let output = '';
 

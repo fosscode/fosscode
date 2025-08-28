@@ -31,7 +31,7 @@ describe('Interactive CLI Testing with CLI Testing Library', () => {
     const { findByText, userEvent, cleanup } = await render('bun', ['run', 'src/index.ts', 'chat']);
 
     // Wait for initial prompt
-    const prompt = await findByText('🤖 fosscode');
+    const prompt = await findByText('🚀 fosscode');
     expect(prompt).toBeInTheConsole();
 
     // Simulate user typing a message
