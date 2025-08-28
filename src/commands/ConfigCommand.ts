@@ -4,8 +4,8 @@ import { ConfigManager } from '../config/ConfigManager.js';
 export class ConfigCommand {
   private configManager: ConfigManager;
 
-  constructor() {
-    this.configManager = new ConfigManager();
+  constructor(verbose: boolean = false) {
+    this.configManager = new ConfigManager(verbose);
   }
 
   async set(key: string, value: string): Promise<void> {

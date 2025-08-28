@@ -6,7 +6,7 @@ describe('ConfigManager', () => {
 
   beforeEach(() => {
     // Create a fresh instance for each test
-    configManager = new ConfigManager();
+    configManager = new ConfigManager(false);
   });
 
   describe('constructor', () => {

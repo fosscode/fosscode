@@ -11,15 +11,19 @@ export class ConfigManager {
   private configPath: string;
   private config: AppConfig;
   private modelCacheManager: ModelCacheManager;
+  private verbose: boolean;
 
-  constructor() {
+  constructor(verbose: boolean = false) {
+    this.verbose = verbose;
     // Use XDG config directory: ~/.config/fosscode/
     // Allow override via FOSSCODE_CONFIG_PATH for testing
     const xdgConfigDir = process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), '.config');
     this.configPath =
       process.env.FOSSCODE_CONFIG_PATH ?? path.join(xdgConfigDir, 'fosscode', 'config.json');
-    console.log('ConfigManager using config path:', this.configPath);
-    console.log('FOSSCODE_CONFIG_PATH env var:', process.env.FOSSCODE_CONFIG_PATH);
+    if (this.verbose) {
+      console.log('ConfigManager using config path:', this.configPath);
+      console.log('FOSSCODE_CONFIG_PATH env var:', process.env.FOSSCODE_CONFIG_PATH);
+    }
     this.config = ConfigDefaults.getDefaultConfig();
     this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);
     this.initializeConfig();
@@ -36,14 +40,20 @@ export class ConfigManager {
 
   async loadConfig(): Promise<void> {
     try {
-      console.log('Loading config from:', this.configPath);
+      if (this.verbose) {
+        console.log('Loading config from:', this.configPath);
+      }
       const configDir = path.dirname(this.configPath);
       await fs.mkdir(configDir, { recursive: true });
 
       const configData = await fs.readFile(this.configPath, 'utf-8');
-      console.log('Config data loaded:', configData);
+      if (this.verbose) {
+        console.log('Config data loaded:', configData);
+      }
       const loadedConfig = JSON.parse(configData);
-      console.log('Parsed config:', loadedConfig);
+      if (this.verbose) {
+        console.log('Parsed config:', loadedConfig);
+      }
 
       // Load MCP server configurations from mcp.d directory
       const mcpConfigs = await this.loadMCPConfigs(configDir);
@@ -62,7 +72,9 @@ export class ConfigManager {
         this.config.cachedModels = { ...defaultConfig.cachedModels, ...loadedConfig.cachedModels };
       }
 
-      console.log('Final merged config:', this.config);
+      if (this.verbose) {
+        console.log('Final merged config:', this.config);
+      }
 
       // Merge MCP server configs into the main config
       if (mcpConfigs && Object.keys(mcpConfigs).length > 0) {
@@ -77,7 +89,9 @@ export class ConfigManager {
 
       this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);
     } catch (error) {
-      console.log('Error loading config:', error);
+      if (this.verbose) {
+        console.log('Error loading config:', error);
+      }
       // If config doesn't exist or is invalid, use defaults
       this.config = ConfigDefaults.getDefaultConfig();
       this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);

@@ -35,7 +35,7 @@ describe('AuthCommand', () => {
     mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
     mockLoginHandler.mockImplementation(() => mockLoginHandlerInstance as any);
 
-    authCommand = new AuthCommand();
+    authCommand = new AuthCommand(false);
     consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
     exitSpy = jest.spyOn(process, 'exit').mockImplementation();

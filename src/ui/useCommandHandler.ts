@@ -60,7 +60,7 @@ export function useCommandHandler({
       if (trimmedInput === '/themes') {
         const newTheme = theme === 'dark' ? 'light' : 'dark';
         setTheme(newTheme);
-        const configManager = new ConfigManager();
+        const configManager = new ConfigManager(false);
         configManager.setConfig('theme', newTheme);
         await chatLogger.logCommand('/themes', { from: theme, to: newTheme });
         setMessages(prev => [

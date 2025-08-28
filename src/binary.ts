@@ -45,7 +45,7 @@ program
       // Initialize tools with verbose setting
       initializeTools(options.verbose);
 
-      const chatCommand = new BinaryChatCommand();
+      const chatCommand = new BinaryChatCommand(options.verbose);
       await chatCommand.execute(message, options);
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
@@ -62,7 +62,7 @@ program
   .command('set <key> <value>')
   .description('Set configuration value')
   .action(async (key: string, value: string) => {
-    const configCommand = new ConfigCommand();
+    const configCommand = new ConfigCommand(false);
     await configCommand.set(key, value);
   });
 
@@ -79,7 +79,7 @@ program
   .description('List available models for a provider (or all providers if none specified)')
   .option('-p, --provider <provider>', 'Filter by specific provider')
   .action(async (providerArg?: string, options?: { provider?: string }) => {
-    const modelsCommand = new ModelsCommand();
+    const modelsCommand = new ModelsCommand(false);
     await modelsCommand.execute(providerArg, options);
   });
 
@@ -89,7 +89,7 @@ program
   .command('login <provider>')
   .description('Login to a provider and store API credentials')
   .action(async (provider: string) => {
-    const authCommand = new AuthCommand();
+    const authCommand = new AuthCommand(false);
     await authCommand.login(provider);
   });
 
@@ -97,7 +97,7 @@ program
   .command('themes [theme]')
   .description('Manage themes (dark/light) or list available themes if no theme specified')
   .action(async (theme?: string) => {
-    const themesCommand = new ThemesCommand();
+    const themesCommand = new ThemesCommand(false);
     await themesCommand.execute(theme);
   });
 

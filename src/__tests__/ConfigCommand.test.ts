@@ -36,7 +36,7 @@ describe('ConfigCommand', () => {
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
       // Create a new instance after mocking
-      const configCommand = new ConfigCommand();
+      const configCommand = new ConfigCommand(false);
 
       await configCommand.set(key, value);
 
@@ -56,7 +56,7 @@ describe('ConfigCommand', () => {
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
       // Create a new instance after mocking
-      const configCommand = new ConfigCommand();
+      const configCommand = new ConfigCommand(false);
 
       await configCommand.set(key, value);
 
@@ -75,7 +75,7 @@ describe('ConfigCommand', () => {
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
       // Create a new instance after mocking
-      const configCommand = new ConfigCommand();
+      const configCommand = new ConfigCommand(false);
 
       await configCommand.set(key, value);
 

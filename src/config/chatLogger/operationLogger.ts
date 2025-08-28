@@ -1,4 +1,5 @@
 import { Message, ProviderResponse } from '../../types/index.js';
+import { randomUUID } from 'crypto';
 import { ChatLogEntry } from './types.js';
 import { ChatSessionManager } from './sessionManager.js';
 
@@ -147,6 +148,8 @@ export class ChatOperationLogger {
   }
 
   private generateEntryId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+    const timestamp = Date.now().toString(36);
+    const random = randomUUID().substring(0, 7);
+    return `${timestamp}_${random}`;
   }
 }

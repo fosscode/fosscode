@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { randomUUID } from 'crypto';
 import { QueuedMessage, MessageQueueState } from '../types/index.js';
 import chalk from 'chalk';
 import { cancellationManager } from './CancellationManager.js';
@@ -148,7 +149,9 @@ export class MessageQueue extends EventEmitter {
    * Generate a unique ID for messages
    */
   private generateId(): string {
-    return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    const timestamp = Date.now();
+    const random = randomUUID().substring(0, 11);
+    return `msg_${timestamp}_${random}`;
   }
 
   /**

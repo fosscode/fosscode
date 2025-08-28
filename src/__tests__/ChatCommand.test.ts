@@ -69,7 +69,7 @@ describe('ChatCommand', () => {
     mockProviderManager.mockImplementation(() => mockProviderManagerInstance as any);
     mockChatLogger.mockImplementation(() => mockChatLoggerInstance as any);
 
-    chatCommand = new ChatCommand();
+    chatCommand = new ChatCommand(false);
     consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     jest.spyOn(console, 'error').mockImplementation();
     exitSpy = jest.spyOn(process, 'exit').mockImplementation();

@@ -76,7 +76,7 @@ describe('MCPCommand', () => {
       mockFs.stat.mockResolvedValue({ isDirectory: () => true } as any);
       mockFs.readdir.mockResolvedValue(['server1.json', 'server2.json', 'other.txt'] as any);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.list();
 
       expect(mockConfigManagerInstance.getConfig).toHaveBeenCalled();
@@ -98,7 +98,7 @@ describe('MCPCommand', () => {
       };
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.list();
 
       expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Error:'), errorMessage);
@@ -128,7 +128,7 @@ describe('MCPCommand', () => {
       };
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.add(name, command, args, options);
 
       expect(mockConfigManagerInstance.loadConfig).toHaveBeenCalled();
@@ -158,7 +158,7 @@ describe('MCPCommand', () => {
       };
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.add(name, command, args);
 
       expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Error:'), errorMessage);

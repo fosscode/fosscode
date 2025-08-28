@@ -13,8 +13,8 @@ export class BinaryChatCommand {
   private currentProvider?: string;
   private currentModel?: string;
 
-  constructor() {
-    this.configManager = new ConfigManager();
+  constructor(verbose: boolean = false) {
+    this.configManager = new ConfigManager(verbose);
     this.providerManager = new ProviderManager(this.configManager);
     this.messageQueue = new MessageQueue();
     this.setupQueueListeners();

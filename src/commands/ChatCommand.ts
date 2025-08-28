@@ -12,8 +12,8 @@ export class ChatCommand {
   private providerManager: ProviderManager;
   private chatLogger: ChatLogger;
 
-  constructor() {
-    this.configManager = new ConfigManager();
+  constructor(verbose: boolean = false) {
+    this.configManager = new ConfigManager(verbose);
     this.providerManager = new ProviderManager(this.configManager);
     this.chatLogger = new ChatLogger();
   }

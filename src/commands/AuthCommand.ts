@@ -5,8 +5,8 @@ import { ProviderType } from '../types/index.js';
 export class AuthCommand {
   private configManager: ConfigManager;
 
-  constructor() {
-    this.configManager = new ConfigManager();
+  constructor(verbose: boolean = false) {
+    this.configManager = new ConfigManager(verbose);
   }
 
   async login(provider: string): Promise<void> {

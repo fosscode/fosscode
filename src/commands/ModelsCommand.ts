@@ -7,8 +7,8 @@ export class ModelsCommand {
   private configManager: ConfigManager;
   private providerManager: ProviderManager;
 
-  constructor() {
-    this.configManager = new ConfigManager();
+  constructor(verbose: boolean = false) {
+    this.configManager = new ConfigManager(verbose);
     this.providerManager = new ProviderManager(this.configManager);
   }
 

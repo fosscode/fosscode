@@ -7,7 +7,7 @@ export function useTheme() {
   // Load initial theme from config
   useEffect(() => {
     const initializeTheme = async () => {
-      const configManager = new ConfigManager();
+      const configManager = new ConfigManager(false);
       await configManager.loadConfig();
       const config = configManager.getConfig();
       setTheme(config.theme);
@@ -30,7 +30,7 @@ export function useTheme() {
 
   const updateTheme = (newTheme: 'dark' | 'light') => {
     setTheme(newTheme);
-    const configManager = new ConfigManager();
+    const configManager = new ConfigManager(false);
     configManager.setConfig('theme', newTheme);
   };
 

@@ -8,8 +8,8 @@ import { MCPServerConfig } from '../types/index.js';
 export class MCPCommand {
   private configManager: ConfigManager;
 
-  constructor() {
-    this.configManager = new ConfigManager();
+  constructor(verbose: boolean = false) {
+    this.configManager = new ConfigManager(verbose);
   }
 
   async list(): Promise<void> {
