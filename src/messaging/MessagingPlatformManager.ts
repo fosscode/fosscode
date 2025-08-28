@@ -15,7 +15,7 @@ export class MessagingPlatformManager {
   }
 
   registerPlatform(platform: any): void {
-    this.platforms.set(platform.getType(), platform);
+    this.platforms.set(platform.getPlatformType(), platform);
   }
 
   unregisterPlatform(type: MessagingPlatformType): void {
