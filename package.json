@@ -63,53 +63,6 @@
     "ts-jest": "29.4.1",
     "typescript": "5.9.2"
   },
-  "jest": {
-    "preset": "ts-jest/presets/default-esm",
-    "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": [
-      "<rootDir>/src/__tests__/setup.ts"
-    ],
-    "roots": [
-      "<rootDir>/src"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.ts",
-      "**/__tests__/**/*.test.tsx",
-      "**/?(*.)+(spec|test).ts",
-      "**/?(*.)+(spec|test).tsx"
-    ],
-    "transform": {
-      "^.+\\.ts$": [
-        "ts-jest",
-        {
-          "useESM": true
-        }
-      ],
-      "^.+\\.tsx$": [
-        "ts-jest",
-        {
-          "useESM": true
-        }
-      ]
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!(cheerio|@modelcontextprotocol|chalk|ink|react|yoga-wasm-web)/)"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.ts",
-      "src/**/*.tsx",
-      "!src/**/*.d.ts",
-      "!src/index.ts"
-    ],
-    "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1",
-      "^cheerio$": "<rootDir>/src/__mocks__/cheerio.js"
-    },
-    "extensionsToTreatAsEsm": [
-      ".ts",
-      ".tsx"
-    ]
-  },
   "dependencies": {
     "@anthropic-ai/sdk": "0.60.0",
     "@modelcontextprotocol/sdk": "1.17.4",
