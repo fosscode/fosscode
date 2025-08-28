@@ -6,9 +6,15 @@ import {
   getOpenAIToolsFormat,
   hasAvailableTools,
 } from '../utils/toolExecutor.js';
+import { ChatLogger } from '../config/ChatLogger.js';
 
 export class SonicFreeProvider implements LLMProvider {
   private client: OpenAI | null = null;
+  private chatLogger: ChatLogger;
+
+  constructor() {
+    this.chatLogger = new ChatLogger();
+  }
 
   async validateConfig(config: LLMConfig): Promise<boolean> {
     // SonicFree doesn't require an API key, but we can validate the baseURL
@@ -55,15 +61,17 @@ export class SonicFreeProvider implements LLMProvider {
       let finalContent = '';
       let intermediateContent = '';
       let finishReason: 'stop' | 'length' | 'error' = 'stop';
+      let finalIteration = 0;
 
       // Agent loop for tool calling
       for (let iteration = 0; iteration < 15; iteration++) {
+        finalIteration = iteration;
         // Max 15 iterations to allow more attempts at solving problems
         const response = await this.client.chat.completions.create({
           model: config.model ?? 'sonic',
           messages: openaiMessages,
           temperature: 0.7,
-          max_tokens: 2000,
+          max_tokens: 4096, // Optimal limit: generates ~3760 completion tokens (93% efficiency)
           stream: false,
           ...(openaiTools && { tools: openaiTools }),
         });
@@ -98,12 +106,93 @@ export class SonicFreeProvider implements LLMProvider {
 
         let content = assistantMessage.content ?? '';
 
+        // Show LLM thinking/response for this iteration
+        if (content.trim()) {
+          intermediateContent += `🤔 **Iteration ${iteration + 1} - LLM Response:**\n${content}\n\n`;
+        }
+
         // Handle tool calls if present
         if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
           if (!content.trim()) {
             content = 'Executing tools to help with your request...\n\n';
           }
-          const toolResult = await executeToolCalls(assistantMessage.tool_calls, mode);
+
+          // Show tool calls being made
+          intermediateContent += `🔧 **Iteration ${iteration + 1} - Tool Calls:**\n`;
+          for (const toolCall of assistantMessage.tool_calls) {
+            intermediateContent += `   • ${toolCall.function?.name || 'unknown'}`;
+            if (toolCall.function?.arguments) {
+              try {
+                const args = JSON.parse(toolCall.function.arguments);
+                const argSummary = Object.keys(args)
+                  .slice(0, 3)
+                  .map(
+                    key =>
+                      `${key}: ${String(args[key]).length > 20 ? String(args[key]).substring(0, 20) + '...' : args[key]}`
+                  )
+                  .join(', ');
+                if (argSummary) {
+                  intermediateContent += ` (${argSummary})`;
+                }
+              } catch (_e) {
+                // Ignore JSON parse errors for display
+              }
+            }
+            intermediateContent += '\n';
+          }
+          intermediateContent += '\n';
+
+          // Log tool execution start
+          await this.chatLogger.logBackendOperation(
+            'tool_calls_started',
+            { toolCalls: assistantMessage.tool_calls.length, mode },
+            undefined,
+            true
+          );
+
+          const toolStartTime = Date.now();
+          let toolResult;
+          try {
+            toolResult = await executeToolCalls(assistantMessage.tool_calls, mode);
+          } catch (toolError) {
+            // Log tool execution error
+            await this.chatLogger.logError(
+              toolError instanceof Error ? toolError : new Error('Tool execution failed'),
+              `Tool calls: ${assistantMessage.tool_calls.length}`
+            );
+            // Continue with error message in content
+            toolResult = {
+              content: `❌ Error executing tools: ${toolError instanceof Error ? toolError.message : 'Unknown error'}\n\n`,
+              hasToolCalls: false,
+            };
+          }
+          const toolDuration = Date.now() - toolStartTime;
+
+          // Log individual tool executions
+          for (const toolCall of assistantMessage.tool_calls) {
+            await this.chatLogger.logToolExecution(
+              toolCall.function?.name || 'unknown',
+              toolCall.function?.arguments ? JSON.parse(toolCall.function.arguments) : {},
+              toolResult.hasToolCalls ? 'executed' : 'failed',
+              toolDuration,
+              toolResult.hasToolCalls
+            );
+          }
+
+          // Log tool execution completion
+          await this.chatLogger.logBackendOperation(
+            'tool_calls_completed',
+            {
+              toolCalls: assistantMessage.tool_calls.length,
+              hasResults: toolResult.hasToolCalls,
+              resultLength: toolResult.content.length,
+            },
+            toolDuration,
+            toolResult.hasToolCalls
+          );
+
+          // Include tool execution results in the response content
+          intermediateContent += `📊 **Iteration ${iteration + 1} - Tool Results:**\n${toolResult.content}\n`;
 
           // Add tool results as tool messages
           for (const toolCall of assistantMessage.tool_calls) {
@@ -118,11 +207,8 @@ export class SonicFreeProvider implements LLMProvider {
           continue;
         } else {
           // No more tool calls, this is the final response
-          // Accumulate intermediate content
+          // Accumulate final response
           if (content.trim()) {
-<<<<<<< HEAD
-            intermediateContent += content + '\n\n';
-=======
             intermediateContent += `✅ **Final Response:**\n${content}\n\n`;
           } else {
             // Log when we get an empty response for debugging
@@ -130,13 +216,26 @@ export class SonicFreeProvider implements LLMProvider {
               `⚠️ SonicFree returned empty content for iteration ${iteration + 1}. Finish reason: ${choice.finish_reason}`
             );
             intermediateContent += `⚠️ **Response Issue:** The AI returned an empty response. This might indicate content filtering or a service limitation.\n\n`;
->>>>>>> 42c7f43 (feat: update context utils, chat command, telegram platform, and sonic free provider)
           }
           finalContent = intermediateContent;
           finishReason = choice.finish_reason as 'stop' | 'length' | 'error';
           break;
         }
       }
+
+      // Log final response details for debugging
+      await this.chatLogger.logBackendOperation(
+        'response_finalized',
+        {
+          contentLength: finalContent.length,
+          hasContent: finalContent.trim().length > 0,
+          iterations: finalIteration + 1,
+          finishReason,
+          totalTokens: totalUsage.total_tokens,
+        },
+        undefined,
+        finalContent.trim().length > 0
+      );
 
       return {
         content: finalContent,

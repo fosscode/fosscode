@@ -1,18 +1,35 @@
-import chalk from 'chalk';
 import { render } from 'ink';
 import React from 'react';
+import chalk from 'chalk';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ProviderManager } from '../providers/ProviderManager.js';
-import { ProviderType, Message } from '../types/index.js';
+import {
+  ProviderType,
+  Message,
+  MessagingPlatformType,
+  MessagingPlatformMessage,
+} from '../types/index.js';
 import { App } from '../ui/App.js';
 import { ConfigDefaults } from '../config/ConfigDefaults.js';
+import { ChatLogger } from '../config/ChatLogger.js';
+import { MessagingPlatformManager } from '../messaging/MessagingPlatformManager.js';
+import { TelegramPlatform } from '../messaging/platforms/TelegramPlatform.js';
 export class ChatCommand {
   private configManager: ConfigManager;
   private providerManager: ProviderManager;
+  private chatLogger: ChatLogger;
+  private messagingManager: MessagingPlatformManager;
+  private conversationHistory: Map<string, Message[]> = new Map();
+  private firstMessageSent: Map<string, boolean> = new Map();
 
-  constructor() {
-    this.configManager = new ConfigManager();
+  constructor(verbose: boolean = false) {
+    this.configManager = new ConfigManager(verbose);
     this.providerManager = new ProviderManager(this.configManager);
+    this.chatLogger = new ChatLogger();
+    this.messagingManager = new MessagingPlatformManager();
+
+    // Register available messaging platforms
+    this.messagingManager.registerPlatform(new TelegramPlatform());
   }
 
   async execute(
@@ -22,6 +39,11 @@ export class ChatCommand {
       model?: string;
       nonInteractive?: boolean;
       verbose?: boolean;
+      messagingPlatform?: MessagingPlatformType;
+      mcp?: string;
+      showContext?: boolean;
+      contextFormat?: string;
+      contextThreshold?: number;
     }
   ): Promise<void> {
     // Handle provider selection if not specified
@@ -34,9 +56,25 @@ export class ChatCommand {
       options.model = ConfigDefaults.getDefaultModelForProvider(options.provider);
     }
 
+    // Set MCP servers filter if provided
+    if (options.mcp) {
+      this.providerManager.setMCPServersFilter(options.mcp.split(',').map(s => s.trim()));
+    }
+
     // Validate specific provider configuration
     await this.configManager.validateProvider(options.provider as ProviderType);
     await this.providerManager.initializeProvider(options.provider as ProviderType);
+
+    // Handle messaging platform mode
+    if (options.messagingPlatform) {
+      await this.handleMessagingMode({
+        provider: options.provider!,
+        model: options.model!,
+        messagingPlatform: options.messagingPlatform,
+        verbose: options.verbose ?? false,
+      });
+      return;
+    }
 
     // Non-interactive mode: send single message and exit
     if (options.nonInteractive ?? !!message) {
@@ -50,6 +88,9 @@ export class ChatCommand {
         provider: options.provider!,
         model: options.model!,
         verbose: options.verbose ?? false,
+        showContext: options.showContext ?? undefined,
+        contextFormat: options.contextFormat ?? undefined,
+        contextThreshold: options.contextThreshold ?? undefined,
       });
       return;
     }
@@ -106,9 +147,16 @@ export class ChatCommand {
     options: {
       provider: string;
       model: string;
-      verbose?: boolean;
+      verbose?: boolean | undefined;
+      showContext?: boolean | undefined;
+      contextFormat?: string | undefined;
+      contextThreshold?: number | undefined;
     }
   ): Promise<void> {
+    // Initialize logger and start session
+    await this.chatLogger.initialize();
+    await this.chatLogger.startSession(options.provider as ProviderType, options.model);
+
     console.log(chalk.blue(`🤖 fosscode - ${options.provider} (${options.model})`));
     console.log(chalk.cyan(`👤 ${message}`));
 
@@ -131,37 +179,64 @@ export class ChatCommand {
       timestamp: new Date(),
     };
 
-    const response = await this.providerManager.sendMessage(
-      options.provider as ProviderType,
-      [chatMessage],
-      options.model!,
-      options.verbose ?? false
-    );
+    // Log the message being sent
+    await this.chatLogger.logMessageSent(chatMessage);
 
-    // For verbose mode, the response is already streamed to stdout
-    // For non-verbose mode, show the response
-    if (!options.verbose) {
-      if (response.content.includes('Executing tools')) {
-        // Show tool execution details
-        console.log(chalk.green('🤖'), response.content);
-      } else {
-        console.log(chalk.green('🤖'), response.content);
-      }
-    }
+    const startTime = Date.now();
 
-    if (response.usage) {
-      console.log(
-        chalk.gray(
-          `\n📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
-        )
+    try {
+      const response = await this.providerManager.sendMessage(
+        options.provider as ProviderType,
+        [chatMessage],
+        options.model!,
+        options.verbose ?? false
       );
+
+      const responseTime = Date.now() - startTime;
+
+      // Log the response received
+      await this.chatLogger.logMessageReceived(response, responseTime);
+
+      // For verbose mode, the response is already streamed to stdout
+      // For non-verbose mode, show the response
+      if (!options.verbose) {
+        if (response.content.includes('Executing tools')) {
+          // Show tool execution details
+          console.log(chalk.green('🤖'), response.content);
+        } else {
+          console.log(chalk.green('🤖'), response.content);
+        }
+      }
+
+      if (response.usage) {
+        console.log(
+          chalk.gray(
+            `\n📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
+          )
+        );
+      }
+
+      // End session successfully
+      await this.chatLogger.endSession('completed');
+    } catch (error) {
+      // Log the error and end session with error status
+      await this.chatLogger.logError(error instanceof Error ? error : new Error('Unknown error'));
+      await this.chatLogger.endSession('error');
+      throw error;
     }
 
     process.exit(0);
   }
 
   private async selectProvider(isNonInteractive: boolean): Promise<string> {
-    const availableProviders = ['openai', 'grok', 'lmstudio', 'openrouter', 'sonicfree'];
+    const availableProviders = [
+      'openai',
+      'grok',
+      'lmstudio',
+      'openrouter',
+      'sonicfree',
+      'anthropic',
+    ];
     const configuredProviders: string[] = [];
 
     console.log(chalk.blue('🔍 Checking configured providers...'));
@@ -173,7 +248,7 @@ export class ChatCommand {
         await this.providerManager.initializeProvider(provider as ProviderType);
         configuredProviders.push(provider);
         console.log(chalk.green(`  ✅ ${provider}`));
-      } catch (error) {
+      } catch (_error) {
         console.log(chalk.gray(`  ❌ ${provider} (not configured)`));
       }
     }
@@ -242,8 +317,6 @@ export class ChatCommand {
       });
     });
   }
-<<<<<<< HEAD
-=======
 
   private async handleCommand(
     message: MessagingPlatformMessage,
@@ -624,5 +697,4 @@ Summary:`;
       process.exit(1);
     });
   }
->>>>>>> 42c7f43 (feat: update context utils, chat command, telegram platform, and sonic free provider)
 }
