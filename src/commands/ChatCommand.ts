@@ -3,7 +3,12 @@ import React from 'react';
 import chalk from 'chalk';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ProviderManager } from '../providers/ProviderManager.js';
-import { ProviderType, Message, MessagingPlatformType } from '../types/index.js';
+import {
+  ProviderType,
+  Message,
+  MessagingPlatformType,
+  MessagingPlatformMessage,
+} from '../types/index.js';
 import { App } from '../ui/App.js';
 import { ConfigDefaults } from '../config/ConfigDefaults.js';
 import { ChatLogger } from '../config/ChatLogger.js';
@@ -14,6 +19,7 @@ export class ChatCommand {
   private providerManager: ProviderManager;
   private chatLogger: ChatLogger;
   private messagingManager: MessagingPlatformManager;
+  private conversationHistory: Map<string, Message[]> = new Map();
 
   constructor(verbose: boolean = false) {
     this.configManager = new ConfigManager(verbose);
@@ -296,6 +302,44 @@ export class ChatCommand {
     });
   }
 
+  private async handleCommand(
+    message: MessagingPlatformMessage,
+    platformType: MessagingPlatformType
+  ): Promise<void> {
+    const command = message.content.toLowerCase().trim();
+
+    switch (command) {
+      case '/clear':
+        // Clear conversation history for this chat
+        this.conversationHistory.delete(message.chatId);
+        await this.messagingManager.sendMessage(
+          platformType,
+          message.chatId,
+          '🧹 Conversation history cleared! Starting fresh.'
+        );
+        console.log(chalk.yellow(`🧹 Conversation cleared for chat ${message.chatId}`));
+        break;
+
+      case '/help': {
+        const helpMessage =
+          `🤖 *Available Commands:*\n\n` +
+          `• /clear - Clear conversation history\n` +
+          `• /help - Show this help message\n\n` +
+          `Just type your message normally to chat with me!`;
+        await this.messagingManager.sendMessage(platformType, message.chatId, helpMessage);
+        break;
+      }
+
+      default:
+        await this.messagingManager.sendMessage(
+          platformType,
+          message.chatId,
+          `❓ Unknown command: ${command}\n\nType /help to see available commands.`
+        );
+        break;
+    }
+  }
+
   private async handleMessagingMode(options: {
     provider: string;
     model: string;
@@ -336,20 +380,42 @@ export class ChatCommand {
       async message => {
         console.log(chalk.cyan(`👤 ${message.userName}: ${message.content}`));
 
-        // Process the message with the AI provider
+        // Handle commands
+        if (message.content.startsWith('/')) {
+          await this.handleCommand(message, options.messagingPlatform);
+          return;
+        }
+
+        // Get or initialize conversation history for this chat
+        const chatId = message.chatId;
+        if (!this.conversationHistory.has(chatId)) {
+          this.conversationHistory.set(chatId, []);
+        }
+        const history = this.conversationHistory.get(chatId)!;
+
+        // Add user message to history
         const chatMessage: Message = {
           role: 'user',
           content: message.content,
           timestamp: message.timestamp,
         };
+        history.push(chatMessage);
 
         try {
           const response = await this.providerManager.sendMessage(
             options.provider as ProviderType,
-            [chatMessage],
+            history,
             options.model,
             options.verbose ?? false
           );
+
+          // Add assistant response to history
+          const assistantMessage: Message = {
+            role: 'assistant',
+            content: response.content,
+            timestamp: new Date(),
+          };
+          history.push(assistantMessage);
 
           // Send response back to the messaging platform
           const platformResponse = await this.messagingManager.sendMessage(

@@ -1,0 +1,94 @@
+{
+  "defaultProvider": "sonicfree",
+  "defaultModel": "mcp-server",
+  "maxConversations": 100,
+  "theme": "dark",
+  "providers": {
+    "openai": {
+      "apiKey": "test-key"
+    },
+    "grok": {},
+    "lmstudio": {
+      "baseURL": "http://localhost:1234"
+    },
+    "openrouter": {},
+    "sonicfree": {
+      "baseURL": "https://gateway.opencode.ai/v1"
+    },
+    "mcp": {
+      "mcpServerCommand": "npx",
+      "mcpServerArgs": ["-y", "@upstash/context7-mcp@latest"],
+      "timeout": 30000,
+      "verbose": true
+    },
+    "anthropic": {}
+  },
+  "cachedModels": {
+    "openai": {
+      "models": [],
+      "lastUpdated": "1970-01-01T00:00:00.000Z",
+      "expiresAt": "1970-01-01T00:00:00.000Z"
+    },
+    "grok": {
+      "models": [],
+      "lastUpdated": "1970-01-01T00:00:00.000Z",
+      "expiresAt": "1970-01-01T00:00:00.000Z"
+    },
+    "lmstudio": {
+      "models": [],
+      "lastUpdated": "1970-01-01T00:00:00.000Z",
+      "expiresAt": "1970-01-01T00:00:00.000Z"
+    },
+    "openrouter": {
+      "models": [],
+      "lastUpdated": "1970-01-01T00:00:00.000Z",
+      "expiresAt": "1970-01-01T00:00:00.000Z"
+    },
+    "sonicfree": {
+      "models": [],
+      "lastUpdated": "1970-01-01T00:00:00.000Z",
+      "expiresAt": "1970-01-01T00:00:00.000Z"
+    },
+    "mcp": {
+      "models": ["mcp-server"],
+      "lastUpdated": "2024-01-01T00:00:00.000Z",
+      "expiresAt": "2024-01-02T00:00:00.000Z"
+    },
+    "anthropic": {
+      "models": [],
+      "lastUpdated": "1970-01-01T00:00:00.000Z",
+      "expiresAt": "1970-01-01T00:00:00.000Z"
+    }
+  },
+  "messagingPlatforms": {
+    "telegram": {
+      "enabled": true,
+      "botToken": "7878145542:AAHYiAGnxF9tD7GaeyHQgjnWL_5t3HVJEzQ",
+      "botName": "fosscode_bot",
+      "chatId": "8032387234",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "verbose": false
+    },
+    "discord": {
+      "enabled": false,
+      "botToken": "",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "verbose": false
+    },
+    "slack": {
+      "enabled": false,
+      "botToken": "",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "verbose": false
+    },
+    "terminal": {
+      "enabled": true
+    }
+  },
+  "newSection": {
+    "newKey": "value"
+  }
+}

@@ -6,6 +6,9 @@ import {
   MessagingPlatformResponse,
 } from '../../types/index.js';
 
+// Import TelegramBot at the top level to avoid dynamic import issues
+import TelegramBot from 'node-telegram-bot-api';
+
 export class TelegramPlatform implements MessagingPlatform {
   private bot: any = null;
   private isListening = false;
@@ -20,9 +23,6 @@ export class TelegramPlatform implements MessagingPlatform {
     }
 
     try {
-      // Dynamic import to avoid requiring the dependency if not used
-      const TelegramBot = (await import('node-telegram-bot-api')).default;
-
       this.bot = new TelegramBot(config.botToken, {
         polling: false, // We'll handle polling manually
         webHook: false, // We'll use polling for simplicity
@@ -31,14 +31,6 @@ export class TelegramPlatform implements MessagingPlatform {
       // Test the connection
       await this.bot.getMe();
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.includes("Cannot find module 'node-telegram-bot-api'")
-      ) {
-        throw new Error(
-          'Telegram platform requires node-telegram-bot-api dependency. Install it with: npm install node-telegram-bot-api'
-        );
-      }
       throw new Error(
         `Failed to initialize Telegram bot: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -55,10 +47,27 @@ export class TelegramPlatform implements MessagingPlatform {
       const chunks = this.splitMessage(message, 4000);
 
       for (const chunk of chunks) {
-        await this.bot.sendMessage(chatId, chunk, {
-          parse_mode: 'Markdown',
-          disable_web_page_preview: true,
-        });
+        // Try sending with Markdown parsing first
+        try {
+          await this.bot.sendMessage(chatId, chunk, {
+            parse_mode: 'Markdown',
+            disable_web_page_preview: true,
+          });
+        } catch (markdownError) {
+          // If Markdown parsing fails, retry without parsing mode
+          if (
+            markdownError instanceof Error &&
+            (markdownError.message.includes('parse entities') ||
+              markdownError.message.includes('parse_mode'))
+          ) {
+            await this.bot.sendMessage(chatId, chunk, {
+              disable_web_page_preview: true,
+            });
+          } else {
+            // Re-throw if it's a different error
+            throw markdownError;
+          }
+        }
       }
 
       return {
@@ -86,8 +95,8 @@ export class TelegramPlatform implements MessagingPlatform {
     }
 
     this.bot.on('message', async (msg: any) => {
-      if (!msg.text || msg.text.startsWith('/')) {
-        return; // Ignore non-text messages and commands
+      if (!msg.text) {
+        return; // Ignore non-text messages
       }
 
       const messagingMessage: MessagingPlatformMessage = {

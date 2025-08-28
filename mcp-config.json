@@ -6,7 +6,7 @@
   "providers": {
     "mcp": {
       "mcpServerCommand": "npx",
-      "mcpServerArgs": ["-y", "@upstash/context7-mcp@latest"],
+      "mcpServerArgs": ["@playwright/mcp@latest"],
       "timeout": 30000,
       "verbose": true
     }
