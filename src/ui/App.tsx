@@ -728,7 +728,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         )}
       </Box>
 
-      {/* Help text - moved below input */}
+      {/* Help text - moved below input for better UX */}
       {messages.length === 0 && (
         <Box marginTop={1}>
           {isVerySmallScreen ? (
