@@ -8,6 +8,7 @@ import { SonicFreeProvider } from './SonicFreeProvider.js';
 import { MCPProvider } from './MCPProvider.js';
 import { AnthropicProvider } from './AnthropicProvider.js';
 import { cancellationManager } from '../utils/CancellationManager.js';
+import { toolRegistry } from '../tools/ToolRegistry.js';
 
 export class ProviderManager {
   private providers: Map<ProviderType, LLMProvider>;
@@ -93,11 +94,8 @@ export class ProviderManager {
       config.verbose = verbose;
     }
 
-    // Check if message contains MCP tool calls
-    const mcpResponse = await this.handleMCPToolsIfNeeded(messages, config);
-    if (mcpResponse) {
-      return mcpResponse;
-    }
+    // Initialize MCP tools if configured (makes them available to AI providers)
+    await this.initializeMCPToolsIfConfigured();
 
     try {
       return await provider.sendMessage(messages, config, mode);
@@ -162,35 +160,40 @@ export class ProviderManager {
   }
 
   /**
-   * Check if message contains MCP tool calls and handle them
+   * Initialize MCP tools if MCP is configured
+   * This makes MCP tools available to AI providers through the global tool registry
    */
-  private async handleMCPToolsIfNeeded(
-    messages: Message[],
-    _config: any
-  ): Promise<ProviderResponse | null> {
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage || lastMessage.role !== 'user') return null;
-
-    // Check if MCP is configured
-    const mcpConfig = this.configManager.getProviderConfig('mcp');
-    if (!mcpConfig.mcpServerCommand && !mcpConfig.mcpServers) return null;
-
-    // Check for common MCP tool keywords
-    const mcpKeywords = ['screenshot', 'browser', 'navigate', 'click', 'playwright', 'web'];
-    const hasMCPKeywords = mcpKeywords.some(keyword =>
-      lastMessage.content.toLowerCase().includes(keyword)
-    );
-
-    if (!hasMCPKeywords) return null;
-
+  private async initializeMCPToolsIfConfigured(): Promise<void> {
     try {
-      // Use MCP provider to handle the tool call
-      const mcpProvider = this.getProvider('mcp');
-      return await mcpProvider.sendMessage(messages, mcpConfig);
+      // Check if MCP is configured
+      const mcpConfig = this.configManager.getProviderConfig('mcp');
+
+      if (!mcpConfig.mcpServerCommand && !mcpConfig.mcpServers) {
+        // No MCP configured, skip
+        return;
+      }
+
+      // Check if MCP tools are already initialized
+      const existingMCPTools = toolRegistry
+        .listTools()
+        .filter(tool => tool.name.startsWith('mcp_'));
+      if (existingMCPTools.length > 0) {
+        // MCP tools already initialized
+        return;
+      }
+
+      console.log('🔧 Initializing MCP tools for AI provider access...');
+
+      // Initialize MCP provider and discover tools
+      const mcpProvider = this.getProvider('mcp') as MCPProvider;
+
+      // Connect to MCP server and discover tools
+      await mcpProvider.initializeMCPTools(mcpConfig);
+
+      console.log('✅ MCP tools initialized and registered for AI provider use');
     } catch (error) {
-      // If MCP fails, continue with original provider
-      console.warn('MCP tool execution failed, falling back to original provider:', error);
-      return null;
+      console.warn('⚠️ Failed to initialize MCP tools:', error);
+      // Don't throw - MCP initialization failure shouldn't break the main flow
     }
   }
 }

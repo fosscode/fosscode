@@ -6,11 +6,11 @@ import {
   MessagingPlatformResponse,
 } from '../../types/index.js';
 
-// Import TelegramBot at the top level to avoid dynamic import issues
-import TelegramBot from 'node-telegram-bot-api';
+// Import Bot from grammy for secure Telegram integration
+import { Bot } from 'grammy';
 
 export class TelegramPlatform implements MessagingPlatform {
-  private bot: any = null;
+  private bot: Bot | null = null;
   private isListening = false;
 
   getPlatformType(): MessagingPlatformType {
@@ -23,13 +23,10 @@ export class TelegramPlatform implements MessagingPlatform {
     }
 
     try {
-      this.bot = new TelegramBot(config.botToken, {
-        polling: false, // We'll handle polling manually
-        webHook: false, // We'll use polling for simplicity
-      });
+      this.bot = new Bot(config.botToken);
 
       // Test the connection
-      await this.bot.getMe();
+      await this.bot.api.getMe();
     } catch (error) {
       throw new Error(
         `Failed to initialize Telegram bot: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -49,9 +46,8 @@ export class TelegramPlatform implements MessagingPlatform {
       for (const chunk of chunks) {
         // Try sending with Markdown parsing first
         try {
-          await this.bot.sendMessage(chatId, chunk, {
+          await this.bot.api.sendMessage(chatId, chunk, {
             parse_mode: 'Markdown',
-            disable_web_page_preview: true,
           });
         } catch (markdownError) {
           // If Markdown parsing fails, retry without parsing mode
@@ -60,9 +56,7 @@ export class TelegramPlatform implements MessagingPlatform {
             (markdownError.message.includes('parse entities') ||
               markdownError.message.includes('parse_mode'))
           ) {
-            await this.bot.sendMessage(chatId, chunk, {
-              disable_web_page_preview: true,
-            });
+            await this.bot.api.sendMessage(chatId, chunk);
           } else {
             // Re-throw if it's a different error
             throw markdownError;
@@ -94,7 +88,9 @@ export class TelegramPlatform implements MessagingPlatform {
       throw new Error('Already listening for messages');
     }
 
-    this.bot.on('message', async (msg: any) => {
+    // Set up message handler
+    this.bot.on('message:text', async ctx => {
+      const msg = ctx.message;
       if (!msg.text) {
         return; // Ignore non-text messages
       }
@@ -116,14 +112,14 @@ export class TelegramPlatform implements MessagingPlatform {
       }
     });
 
-    // Start polling
-    await this.bot.startPolling();
+    // Start the bot
+    this.bot.start();
     this.isListening = true;
   }
 
   async stopListening(): Promise<void> {
     if (this.bot && this.isListening) {
-      await this.bot.stopPolling();
+      this.bot.stop();
       this.isListening = false;
     }
   }
@@ -139,8 +135,9 @@ export class TelegramPlatform implements MessagingPlatform {
 
     try {
       // Try to initialize with the config to validate it
-      await this.initialize(config);
-      await this.stopListening(); // Clean up
+      const tempBot = new Bot(config.botToken);
+      await tempBot.api.getMe();
+      tempBot.stop(); // Clean up
       return true;
     } catch (error) {
       return false;

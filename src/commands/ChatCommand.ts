@@ -362,6 +362,10 @@ export class ChatCommand {
       process.exit(1);
     }
 
+    // Initialize logger and start session for messaging mode
+    await this.chatLogger.initialize();
+    await this.chatLogger.startSession(options.provider as ProviderType, options.model);
+
     console.log(
       chalk.blue(
         `🤖 fosscode - ${options.provider} (${options.model}) via ${options.messagingPlatform}`
@@ -401,6 +405,9 @@ export class ChatCommand {
         };
         history.push(chatMessage);
 
+        // Log the incoming message
+        await this.chatLogger.logMessageSent(chatMessage);
+
         try {
           const response = await this.providerManager.sendMessage(
             options.provider as ProviderType,
@@ -416,6 +423,9 @@ export class ChatCommand {
             timestamp: new Date(),
           };
           history.push(assistantMessage);
+
+          // Log the response
+          await this.chatLogger.logMessageReceived(response);
 
           // Send response back to the messaging platform
           const platformResponse = await this.messagingManager.sendMessage(
@@ -456,12 +466,14 @@ export class ChatCommand {
     // Handle graceful shutdown
     process.on('SIGINT', async () => {
       console.log(chalk.yellow('\n🛑 Shutting down...'));
+      await this.chatLogger.endSession('completed');
       await this.messagingManager.stopAllListeners();
       process.exit(0);
     });
 
     process.on('SIGTERM', async () => {
       console.log(chalk.yellow('\n🛑 Shutting down...'));
+      await this.chatLogger.endSession('completed');
       await this.messagingManager.stopAllListeners();
       process.exit(0);
     });

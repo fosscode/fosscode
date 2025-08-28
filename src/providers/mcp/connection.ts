@@ -41,6 +41,11 @@ export class MCPConnectionManager {
 
     try {
       if (config.mcpServerCommand && config.mcpServerArgs) {
+        // Log the command being executed for debugging
+        console.log(
+          `🔧 Starting MCP server: ${config.mcpServerCommand} ${config.mcpServerArgs.join(' ')}`
+        );
+
         // Spawn the MCP server process
         this.childProcess = spawn(config.mcpServerCommand, config.mcpServerArgs, {
           stdio: ['pipe', 'pipe', 'pipe'],

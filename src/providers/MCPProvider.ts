@@ -36,8 +36,11 @@ export class MCPProvider implements LLMProvider {
     return this.connectionManager.validateConfig(config);
   }
 
-  private async connectToMCPServer(config: LLMConfig, serverName?: string): Promise<void> {
+  async connectToMCPServer(config: LLMConfig, serverName?: string): Promise<void> {
     let serverConfig: LLMConfig;
+
+    console.log('🔧 MCP connectToMCPServer called with config:', JSON.stringify(config, null, 2));
+    console.log('🔧 Requested server name:', serverName);
 
     if (config.mcpServers && serverName) {
       const selectedServer = config.mcpServers[serverName];
@@ -45,6 +48,7 @@ export class MCPProvider implements LLMProvider {
         throw new Error(`MCP server '${serverName}' not found or disabled`);
       }
       serverConfig = selectedServer;
+      console.log('🔧 Using specific server config:', JSON.stringify(serverConfig, null, 2));
     } else if (config.mcpServers && Object.keys(config.mcpServers).length > 0) {
       // Use the first enabled server if no specific server requested
       const enabledServers = Object.values(config.mcpServers).filter(s => s.enabled !== false);
@@ -52,9 +56,11 @@ export class MCPProvider implements LLMProvider {
         throw new Error('No enabled MCP servers found');
       }
       serverConfig = enabledServers[0];
+      console.log('🔧 Using first enabled server config:', JSON.stringify(serverConfig, null, 2));
     } else {
       // Fall back to legacy single server config
       serverConfig = config;
+      console.log('🔧 Using legacy single server config:', JSON.stringify(serverConfig, null, 2));
     }
 
     await this.connectionManager.connect(serverConfig);
@@ -179,6 +185,12 @@ export class MCPProvider implements LLMProvider {
       return ` (${currentServer})`;
     }
     return '';
+  }
+
+  // Public method to initialize MCP tools for AI provider access
+  async initializeMCPTools(config: LLMConfig, serverName?: string): Promise<void> {
+    await this.connectToMCPServer(config, serverName);
+    // Tools are automatically registered during connection
   }
 
   // Cleanup method to be called when done

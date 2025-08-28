@@ -1,17 +1,25 @@
 {
-  "defaultProvider": "mcp",
-  "defaultModel": "mcp-server",
+  "defaultProvider": "sonicfree",
+  "defaultModel": "sonic",
   "maxConversations": 100,
   "theme": "dark",
   "providers": {
+    "sonicfree": {
+      "baseURL": "https://gateway.opencode.ai/v1"
+    },
     "mcp": {
       "mcpServerCommand": "npx",
-      "mcpServerArgs": ["@playwright/mcp@latest"],
+      "mcpServerArgs": ["-y", "@upstash/context7-mcp@latest"],
       "timeout": 30000,
       "verbose": true
     }
   },
   "cachedModels": {
+    "sonicfree": {
+      "models": ["sonic"],
+      "lastUpdated": "2024-01-01T00:00:00.000Z",
+      "expiresAt": "2024-01-02T00:00:00.000Z"
+    },
     "mcp": {
       "models": ["mcp-server"],
       "lastUpdated": "2024-01-01T00:00:00.000Z",
