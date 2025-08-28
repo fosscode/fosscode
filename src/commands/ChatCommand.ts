@@ -342,6 +342,7 @@ export class ChatCommand {
         const helpMessage =
           `🤖 *Available Commands:*\n\n` +
           `• /clear - Clear conversation history\n` +
+          `• /compress - Compress conversation history to save space\n` +
           `• /help - Show this help message\n` +
           `• /status - Check bot health and status\n` +
           `• /timeouts - Show timeout settings\n\n` +
@@ -386,6 +387,87 @@ export class ChatCommand {
           `• Max Test Timeout: 120 seconds\n\n` +
           `💡 For long-running operations, the bot will send a "processing" message to keep you updated.`;
         await this.messagingManager.sendMessage(platformType, message.chatId, timeoutInfo);
+        break;
+      }
+
+      case '/compress': {
+        const chatId = message.chatId;
+        const history = this.conversationHistory.get(chatId) || [];
+
+        if (history.length === 0) {
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            '📝 No conversation history to compress.'
+          );
+          return;
+        }
+
+        try {
+          // Send processing message
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            '🗜️ Compressing conversation history... Please wait.'
+          );
+
+          // Create a summary prompt
+          const conversationText = history
+            .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+            .join('\n\n');
+
+          const summaryPrompt = `Please provide a concise summary of the following conversation. Focus on the key points, decisions made, and current context. Keep it brief but comprehensive enough to maintain continuity:
+
+${conversationText}
+
+Summary:`;
+
+          const summaryMessage: Message = {
+            role: 'user',
+            content: summaryPrompt,
+            timestamp: new Date(),
+          };
+
+          // Get current provider and model from the session
+          const config = this.configManager.getConfig();
+          const provider = config.defaultProvider || 'openai';
+          const model = config.defaultModel || 'gpt-3.5-turbo';
+
+          const response = await this.providerManager.sendMessage(
+            provider as ProviderType,
+            [summaryMessage],
+            model,
+            false
+          );
+
+          // Replace conversation history with the summary
+          const summaryAssistantMessage: Message = {
+            role: 'assistant',
+            content: `🗜️ Conversation compressed. Previous context summarized:\n\n${response.content}`,
+            timestamp: new Date(),
+          };
+
+          this.conversationHistory.set(chatId, [summaryAssistantMessage]);
+
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            `✅ Conversation compressed successfully! The chat history has been summarized to save space.`
+          );
+
+          console.log(chalk.yellow(`🗜️ Conversation compressed for chat ${message.chatId}`));
+        } catch (error) {
+          await this.messagingManager.sendMessage(
+            platformType,
+            message.chatId,
+            `❌ Failed to compress conversation: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+          console.log(
+            chalk.red(
+              `❌ Error compressing conversation for chat ${message.chatId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            )
+          );
+        }
         break;
       }
 
@@ -522,8 +604,17 @@ export class ChatCommand {
 
           // Prepare response message with ready notification for first message
           let responseMessage = response.content;
+
+          // Check if response is empty and provide fallback
+          if (!responseMessage || responseMessage.trim().length === 0) {
+            console.warn(
+              `⚠️ Empty response detected from ${options.provider}. Usage: ${response.usage ? JSON.stringify(response.usage) : 'N/A'}`
+            );
+            responseMessage = `🤖 I received your request but couldn't generate a proper response. This might be due to:\n\n• The request being too complex or filtered\n• A temporary service issue\n• Network connectivity problems\n\nPlease try rephrasing your question or breaking it into smaller parts.`;
+          }
+
           if (isFirstMessage) {
-            responseMessage = `🤖 *Bot is ready and connected!*\n\nI'm now set up and ready to help you. Feel free to ask me anything!\n\n---\n\n${response.content}`;
+            responseMessage = `🤖 *Bot is ready and connected!*\n\nI'm now set up and ready to help you. Feel free to ask me anything!\n\n---\n\n${responseMessage}`;
           }
 
           // Send response back to the messaging platform

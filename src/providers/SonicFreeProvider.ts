@@ -210,6 +210,12 @@ export class SonicFreeProvider implements LLMProvider {
           // Accumulate final response
           if (content.trim()) {
             intermediateContent += `✅ **Final Response:**\n${content}\n\n`;
+          } else {
+            // Log when we get an empty response for debugging
+            console.warn(
+              `⚠️ SonicFree returned empty content for iteration ${iteration + 1}. Finish reason: ${choice.finish_reason}`
+            );
+            intermediateContent += `⚠️ **Response Issue:** The AI returned an empty response. This might indicate content filtering or a service limitation.\n\n`;
           }
           finalContent = intermediateContent;
           finishReason = choice.finish_reason as 'stop' | 'length' | 'error';

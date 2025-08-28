@@ -12,6 +12,7 @@ import { Bot } from 'grammy';
 export class TelegramPlatform implements MessagingPlatform {
   private bot: Bot | null = null;
   private isListening = false;
+  private startupTime: Date | null = null;
 
   getPlatformType(): MessagingPlatformType {
     return 'telegram';
@@ -104,6 +105,19 @@ export class TelegramPlatform implements MessagingPlatform {
         return; // Ignore non-text messages
       }
 
+      // Skip old messages that were sent before the bot started listening
+      // Add a 5-second buffer to account for timing differences
+      if (this.startupTime) {
+        const messageTime = new Date(msg.date * 1000);
+        const bufferTime = new Date(this.startupTime.getTime() - 5000); // 5 seconds before startup
+        if (messageTime < bufferTime) {
+          console.log(
+            `⏭️ Skipping old message from ${messageTime.toISOString()} (bot started at ${this.startupTime.toISOString()})`
+          );
+          return;
+        }
+      }
+
       const messagingMessage: MessagingPlatformMessage = {
         id: msg.message_id.toString(),
         content: msg.text,
@@ -124,11 +138,37 @@ export class TelegramPlatform implements MessagingPlatform {
                   'Message processing timeout - the operation is taking too long. Try breaking down your request into smaller parts.'
                 )
               ),
-            120000
-          ); // 2 minute timeout
+            600000
+          ); // 10 minute timeout
         });
 
-        await Promise.race([callback(messagingMessage), timeoutPromise]);
+        // Send periodic status updates for long operations
+        let statusUpdateInterval: NodeJS.Timeout | null = null;
+        const startStatusUpdates = () => {
+          let updateCount = 0;
+          statusUpdateInterval = setInterval(async () => {
+            updateCount++;
+            try {
+              const statusMessage = `⏳ Still working on your request... (${updateCount * 30}s elapsed)`;
+              await ctx.reply(statusMessage);
+            } catch (statusError) {
+              console.error('Failed to send status update:', statusError);
+            }
+          }, 30000); // Update every 30 seconds
+        };
+
+        // Start status updates after 30 seconds
+        const statusDelay = setTimeout(startStatusUpdates, 30000);
+
+        try {
+          await Promise.race([callback(messagingMessage), timeoutPromise]);
+        } finally {
+          // Clean up status updates
+          if (statusUpdateInterval) {
+            clearInterval(statusUpdateInterval);
+          }
+          clearTimeout(statusDelay);
+        }
       } catch (error) {
         console.error('Error processing Telegram message:', error);
 
@@ -146,6 +186,9 @@ export class TelegramPlatform implements MessagingPlatform {
     this.bot.catch(err => {
       console.error('Telegram bot error:', err);
     });
+
+    // Record startup time to filter out old messages
+    this.startupTime = new Date();
 
     // Start the bot with error handling
     try {
