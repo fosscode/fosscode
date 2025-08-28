@@ -1,7 +1,7 @@
 # fosscode
 
 [![npm version](https://img.shields.io/npm/v/fosscode.svg)](https://www.npmjs.com/package/fosscode)
-[![Reproducible Builds](https://img.shields.io/badge/Reproducible%20Builds-✅-green.svg)](https://opencode.ai)
+[![Reproducible Builds](https://img.shields.io/badge/Reproducible%20Builds-✅-green.svg)](https://github.com/fosscode/fosscode)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue.svg)](https://discord.gg/UUVZqdPG)
 [![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/fosscode)](https://x.com/fosscode)
 [![Bluesky](https://img.shields.io/badge/Bluesky-Follow-blue)](https://bsky.app/profile/fosscode.bsky.social)
