@@ -175,6 +175,12 @@ describe('Type Definitions', () => {
           mcp: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
           anthropic: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
         },
+        messagingPlatforms: {
+          telegram: { enabled: false },
+          discord: { enabled: false },
+          slack: { enabled: false },
+          terminal: { enabled: true },
+        },
       };
 
       expect(appConfig.defaultProvider).toBe('openai');
@@ -211,6 +217,12 @@ describe('Type Definitions', () => {
             sonicfree: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
             mcp: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
             anthropic: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
+          },
+          messagingPlatforms: {
+            telegram: { enabled: false },
+            discord: { enabled: false },
+            slack: { enabled: false },
+            terminal: { enabled: true },
           },
         };
         expect(['dark', 'light']).toContain(config.theme);
