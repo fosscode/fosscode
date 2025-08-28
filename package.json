@@ -92,10 +92,5 @@
       "optional": true
     }
   },
-  "preferUnplugged": true,
-  "overrides": {
-    "form-data": "^4.0.0",
-    "tough-cookie": "^4.1.3",
-    "request": "^2.88.2"
-  }
+  "preferUnplugged": true
 }
