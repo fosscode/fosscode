@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target node --external \"@anthropic-ai/sdk\" --external \"openai\" --external \"chalk\" --external \"ink\" --external \"react\" --external \"yoga-wasm-web\" && cp node_modules/yoga-wasm-web/dist/yoga.wasm dist/",
+    "build": "bun build src/index.ts --outdir dist --target node --external \"@anthropic-ai/sdk\" --external \"openai\" --external \"chalk\" --external \"ink\" --external \"react\" --external \"yoga-wasm-web\" --external \"puppeteer\" && cp node_modules/yoga-wasm-web/dist/yoga.wasm dist/",
     "build:exe": "bun build src/binary.ts --target node --compile --production --outfile dist/fosscode",
     "build:docker": "docker build -t fosscode .",
     "typecheck": "tsc --noEmit",
