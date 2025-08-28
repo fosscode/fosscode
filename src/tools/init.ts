@@ -6,6 +6,7 @@ import { EditTool } from './EditTool.js';
 import { WebFetchTool } from './WebFetchTool.js';
 import { ListTool } from './ListTool.js';
 import { BashTool } from './BashTool.js';
+import { DuckDuckGoTool } from './DuckDuckGoTool.js';
 
 /**
  * Initialize and register all agent tools
@@ -28,6 +29,7 @@ export function initializeTools(verbose: boolean = false): void {
 
   // Register web tools
   toolRegistry.register(new WebFetchTool());
+  toolRegistry.register(new DuckDuckGoTool());
 
   if (verbose) {
     console.log(`✅ Registered ${toolRegistry.getToolCount()} tools:`);

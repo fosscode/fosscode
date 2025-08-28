@@ -68,6 +68,7 @@
     "@grammyjs/types": "^3.22.1",
     "@modelcontextprotocol/sdk": "1.17.4",
     "@playwright/mcp": "0.0.35",
+    "@types/jsdom": "^21.1.7",
     "array.prototype.findindex": "^2.2.4",
     "chalk": "5.6.0",
     "cheerio": "1.1.2",
@@ -76,7 +77,9 @@
     "ink": "4.4.1",
     "ink-spinner": "5.0.0",
     "ink-text-input": "5.0.1",
+    "jsdom": "^26.1.0",
     "openai": "4.104.0",
+    "puppeteer": "^24.17.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "yoga-wasm-web": "0.3.3"

@@ -168,11 +168,17 @@ export class ProviderManager {
   }
 
   /**
-   * Initialize MCP tools if MCP is configured
+   * Initialize MCP tools if MCP is configured and explicitly requested
    * This makes MCP tools available to AI providers through the global tool registry
    */
   private async initializeMCPToolsIfConfigured(): Promise<void> {
     try {
+      // Only initialize MCP if user explicitly requested it via --mcp flag
+      if (!this.mcpServersFilter || this.mcpServersFilter.length === 0) {
+        // No MCP servers filter set, skip initialization
+        return;
+      }
+
       // Check if MCP is configured
       const mcpConfig = this.configManager.getProviderConfig('mcp');
 
