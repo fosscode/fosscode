@@ -1,46 +1,35 @@
 /**
  * @jest-environment jsdom
  */
-// TODO: Fix ink-testing-library module import issue
-describe.skip('App Integration Tests (disabled due to ink-testing-library import issue)', () => {
-  // @ts-ignore - React is required for JSX in test files
-  import React from 'react';
-  import { jest } from '@jest/globals';
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { render } = require('ink-testing-library');
-  import { App } from '../ui/App.js';
-  import { ProviderManager } from '../providers/ProviderManager.js';
-  import { ConfigManager } from '../config/ConfigManager.js';
+import { render } from 'ink-testing-library';
+import { App } from '../ui/App';
+import { ProviderManager } from '../providers/ProviderManager';
+import { ConfigManager } from '../config/ConfigManager';
 
-  // Mock the providers and config
-  jest.mock('../providers/ProviderManager.js');
-  jest.mock('../config/ConfigManager.js');
+// Mock the providers and config
+jest.mock('../providers/ProviderManager');
+jest.mock('../config/ConfigManager');
 
-  const mockProviderManager = {
-    sendMessage: jest.fn(),
-    getAvailableProviders: jest.fn().mockReturnValue(['openai', 'grok']),
-  };
+const mockProviderManager = {
+  sendMessage: jest.fn(),
+  getAvailableProviders: jest.fn().mockReturnValue(['openai', 'grok']),
+};
 
-  const mockConfigManager = {
-    getConfig: jest.fn().mockReturnValue({
-      theme: 'dark',
-      providers: {},
-    }),
-  };
+const mockConfigManager = {
+  getConfig: jest.fn().mockReturnValue({
+    theme: 'dark',
+    providers: {},
+  }),
+};
 
-  (ProviderManager as jest.MockedClass<typeof ProviderManager>).mockImplementation(
-    () => mockProviderManager as any
-  );
-  (ConfigManager as jest.MockedClass<typeof ConfigManager>).mockImplementation(
-    () => mockConfigManager as any
-  );
+(ProviderManager as jest.MockedClass<typeof ProviderManager>).mockImplementation(
+  () => mockProviderManager as any
+);
+(ConfigManager as jest.MockedClass<typeof ConfigManager>).mockImplementation(
+  () => mockConfigManager as any
+);
 
-  it('placeholder test', () => {
-    expect(true).toBe(true);
-  });
-});
-
-describe.skip('App Integration Tests', () => {
+describe('App Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
