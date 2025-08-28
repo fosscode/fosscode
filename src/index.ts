@@ -37,6 +37,10 @@ program
   .option('-n, --non-interactive', 'Run in non-interactive mode (print response and exit)')
   .option('-v, --verbose', 'Enable verbose output (shows tool execution details)')
   .option('--messaging-platform <platform>', 'Use messaging platform (telegram, discord, slack)')
+  .option(
+    '--mcp <servers>',
+    'Enable specific MCP servers (comma-separated, e.g., "playwright,context7")'
+  )
   .action(async (message, options) => {
     try {
       // Initialize tools with verbose setting

@@ -41,9 +41,12 @@ export class ChatCommand {
       verbose?: boolean;
       messagingPlatform?: MessagingPlatformType;
       mcp?: string;
+<<<<<<< HEAD
       showContext?: boolean;
       contextFormat?: string;
       contextThreshold?: number;
+=======
+>>>>>>> 26c47ea (feat: add MCP server filtering functionality)
     }
   ): Promise<void> {
     // Handle provider selection if not specified
