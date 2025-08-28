@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+import { jest } from '@jest/globals';
 import { BinaryChatCommand } from '../binary-chat.js';
 import { MessageQueue } from '../utils/MessageQueue.js';
 import { ConfigManager } from '../config/ConfigManager.js';
@@ -87,7 +91,7 @@ describe('BinaryChatCommand', () => {
 
       mockProviderManager.sendMessage.mockResolvedValue(mockResponse);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await binaryChatCommand.execute('Test message', {
         provider: 'openai',
@@ -119,7 +123,7 @@ describe('BinaryChatCommand', () => {
         isProcessing: false,
       });
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await binaryChatCommand.execute('Test message', {
         provider: 'openai',
@@ -148,7 +152,7 @@ describe('BinaryChatCommand', () => {
 
       mockProviderManager.sendMessage.mockResolvedValue(mockResponse);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await binaryChatCommand.execute('Test message', {
         model: 'gpt-3.5-turbo',
@@ -176,7 +180,7 @@ describe('BinaryChatCommand', () => {
 
       mockProviderManager.sendMessage.mockResolvedValue(mockResponse);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await binaryChatCommand.execute('Test message', {
         provider: 'openai',
@@ -206,7 +210,7 @@ describe('BinaryChatCommand', () => {
 
       mockProviderManager.sendMessage.mockResolvedValue(mockResponse);
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await binaryChatCommand.execute('Test message', {
         provider: 'openai',
@@ -225,8 +229,10 @@ describe('BinaryChatCommand', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-      const processExitSpy = jest.spyOn(process, 'exit').mockImplementation();
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const processExitSpy = jest
+        .spyOn(process, 'exit')
+        .mockImplementation(() => undefined as never);
 
       mockProviderManager.sendMessage.mockRejectedValue(new Error('API Error'));
 
@@ -255,7 +261,7 @@ describe('BinaryChatCommand', () => {
     });
 
     it('should handle messageProcessing event', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       // Get the event listener that was registered
       const messageProcessingCall = mockMessageQueue.on.mock.calls.find(
@@ -280,7 +286,7 @@ describe('BinaryChatCommand', () => {
     });
 
     it('should handle messageCompleted event', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       // Get the event listener that was registered
       const messageCompletedCall = mockMessageQueue.on.mock.calls.find(
@@ -305,7 +311,7 @@ describe('BinaryChatCommand', () => {
     });
 
     it('should handle messageFailed event', () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       // Get the event listener that was registered
       const messageFailedCall = mockMessageQueue.on.mock.calls.find(

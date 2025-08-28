@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+import { jest } from '@jest/globals';
 import { BashTool } from '../tools/BashTool';
 
 // Mock child_process
@@ -21,7 +25,7 @@ describe('BashTool', () => {
   let bashTool: BashTool;
   let mockChildProcess: any;
   let mockSpawn: jest.Mock;
-  let mockValidateDirectoryOperation: jest.Mock;
+  let mockValidateDirectoryOperation: jest.MockedFunction<any>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -33,7 +37,8 @@ describe('BashTool', () => {
     mockValidateDirectoryOperation = securityModule.securityManager.validateDirectoryOperation;
 
     const securityManager = require('../tools/SecurityManager').securityManager;
-    mockValidateDirectoryOperation = securityManager.validateDirectoryOperation as jest.Mock;
+    mockValidateDirectoryOperation =
+      securityManager.validateDirectoryOperation as jest.MockedFunction<any>;
 
     // Create mock child process
     mockChildProcess = {

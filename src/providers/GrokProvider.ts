@@ -5,6 +5,7 @@ import {
   getOpenAIToolsFormat,
   hasAvailableTools,
 } from '../utils/toolExecutor.js';
+import { connectionPool } from '../utils/ConnectionPool.js';
 
 interface ModelInfo {
   id: string;
@@ -92,15 +93,17 @@ export class GrokProvider implements LLMProvider {
 
         console.log(`🔍 Debug - Trying xAI model: ${modelName}`);
 
-        const response = await fetch(`${this.baseURL}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${config.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-          signal: controller.signal,
-        });
+        const response = await connectionPool.executeWithRetry(() =>
+          fetch(`${this.baseURL}/chat/completions`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${config.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            signal: controller.signal,
+          })
+        );
 
         if (response.ok) {
           // Model worked, parse response

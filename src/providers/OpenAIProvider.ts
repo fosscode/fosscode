@@ -8,6 +8,7 @@ import {
   hasAvailableTools,
 } from '../utils/toolExecutor.js';
 import { cancellationManager } from '../utils/CancellationManager.js';
+import { connectionPool } from '../utils/ConnectionPool.js';
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI | null = null;
@@ -111,14 +112,16 @@ export class OpenAIProvider implements LLMProvider {
 
         if (config.verbose) {
           // Use streaming for verbose mode to show real-time output
-          const stream = await this.client.chat.completions.create({
-            model: config.model ?? 'gpt-3.5-turbo',
-            messages: openaiMessages,
-            temperature: 0.7,
-            max_tokens: 2000,
-            stream: true,
-            ...(openaiTools && { tools: openaiTools }),
-          });
+          const stream = await connectionPool.executeWithRetry(() =>
+            this.client!.chat.completions.create({
+              model: config.model ?? 'gpt-3.5-turbo',
+              messages: openaiMessages,
+              temperature: 0.7,
+              max_tokens: 2000,
+              stream: true,
+              ...(openaiTools && { tools: openaiTools }),
+            })
+          );
 
           let currentContent = '';
           let hasStarted = false;
@@ -159,14 +162,16 @@ export class OpenAIProvider implements LLMProvider {
             throw new Error('Request cancelled by user');
           }
 
-          response = await this.client.chat.completions.create({
-            model: config.model ?? 'gpt-3.5-turbo',
-            messages: openaiMessages,
-            temperature: 0.7,
-            max_tokens: 2000,
-            stream: false,
-            ...(openaiTools && { tools: openaiTools }),
-          });
+          response = await connectionPool.executeWithRetry(() =>
+            this.client!.chat.completions.create({
+              model: config.model ?? 'gpt-3.5-turbo',
+              messages: openaiMessages,
+              temperature: 0.7,
+              max_tokens: 2000,
+              stream: false,
+              ...(openaiTools && { tools: openaiTools }),
+            })
+          );
         }
 
         const choice = response.choices[0];

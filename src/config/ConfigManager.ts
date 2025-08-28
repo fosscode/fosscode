@@ -14,8 +14,12 @@ export class ConfigManager {
 
   constructor() {
     // Use XDG config directory: ~/.config/fosscode/
+    // Allow override via FOSSCODE_CONFIG_PATH for testing
     const xdgConfigDir = process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), '.config');
-    this.configPath = path.join(xdgConfigDir, 'fosscode', 'config.json');
+    this.configPath =
+      process.env.FOSSCODE_CONFIG_PATH ?? path.join(xdgConfigDir, 'fosscode', 'config.json');
+    console.log('ConfigManager using config path:', this.configPath);
+    console.log('FOSSCODE_CONFIG_PATH env var:', process.env.FOSSCODE_CONFIG_PATH);
     this.config = ConfigDefaults.getDefaultConfig();
     this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);
     this.initializeConfig();
@@ -32,16 +36,21 @@ export class ConfigManager {
 
   async loadConfig(): Promise<void> {
     try {
+      console.log('Loading config from:', this.configPath);
       const configDir = path.dirname(this.configPath);
       await fs.mkdir(configDir, { recursive: true });
 
       const configData = await fs.readFile(this.configPath, 'utf-8');
+      console.log('Config data loaded:', configData);
       const loadedConfig = JSON.parse(configData);
+      console.log('Parsed config:', loadedConfig);
 
       // Merge with default config to ensure all properties exist
       this.config = { ...ConfigDefaults.getDefaultConfig(), ...loadedConfig };
+      console.log('Final merged config:', this.config);
       this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);
     } catch (error) {
+      console.log('Error loading config:', error);
       // If config doesn't exist or is invalid, use defaults
       this.config = ConfigDefaults.getDefaultConfig();
       this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);

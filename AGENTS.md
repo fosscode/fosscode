@@ -317,3 +317,204 @@ Binary executables compiled with Bun may not be fully reproducible due to:
 - **Build Configuration:** `package.json`, `.bun-version`
 - **CI/CD:** `.github/workflows/ci.yml`
 - **Docker:** `Dockerfile`
+
+## End-to-End Interactive Testing
+
+### Overview
+
+fosscode includes comprehensive end-to-end (E2E) tests that exercise the interactive chat functionality, tool execution, and multi-turn conversations. These tests are **not included in CI** to avoid complexity and flakiness in the automated pipeline, but provide valuable verification of the interactive features.
+
+### Test Categories
+
+#### 1. Interactive Chat Tests (`InteractiveChat.e2e.test.ts`)
+
+- **Basic session startup and shutdown**
+- **Command handling** (`/help`, `/providers`, `/models`, `/themes`)
+- **Theme switching functionality**
+- **Invalid command handling and error recovery**
+
+#### 2. Tool Execution Tests (`ToolExecution.e2e.test.ts`)
+
+- **Bash command execution through AI tool calls**
+- **File read operations via tools**
+- **File write operations via tools**
+- **Grep/search operations via tools**
+- **Mock API server integration**
+
+#### 3. Multi-Turn Conversation Tests (`MultiTurnConversation.e2e.test.ts`)
+
+- **Context preservation across multiple interactions**
+- **Conversation history maintenance**
+- **Conversation reset functionality**
+- **Error recovery in ongoing conversations**
+
+### Running E2E Tests
+
+#### Quick Start
+
+```bash
+# Run all E2E tests with the automated script
+./scripts/run-e2e-tests.sh
+```
+
+#### Manual Test Execution
+
+```bash
+# Run individual test suites
+bun test src/__tests__/e2e/InteractiveChat.e2e.test.ts --timeout 60000
+bun test src/__tests__/e2e/ToolExecution.e2e.test.ts --timeout 60000
+bun test src/__tests__/e2e/MultiTurnConversation.e2e.test.ts --timeout 60000
+
+# Run all E2E tests
+bun test src/__tests__/e2e/ --timeout 60000
+```
+
+### Test Architecture
+
+#### Mock API Server Integration
+
+- Tests use **local mock servers** (ports 3001, 3002) to simulate AI provider responses
+- **No external API calls** are made during testing
+- Mock servers provide realistic tool call responses and conversation flows
+
+#### Temporary File System
+
+- Each test suite creates **isolated temporary directories**
+- Files are automatically cleaned up after test completion
+- Tests operate in `/tmp/fosscode-*` directories to avoid conflicts
+
+#### Process Management
+
+- Tests spawn actual `fosscode` binary processes
+- **Real interactive sessions** are created and controlled programmatically
+- Proper cleanup ensures no hanging processes
+
+### Test Configuration
+
+#### Environment Variables
+
+```bash
+NODE_ENV=test           # Enables test mode
+CI=true                 # Prevents unnecessary output
+```
+
+#### Test Timeouts
+
+- **Individual tests:** 15-35 seconds
+- **Overall suite:** 60 seconds maximum
+- **Process cleanup:** Automatic via trap handlers
+
+#### Port Usage
+
+- **3001:** Tool execution mock server
+- **3002:** Multi-turn conversation mock server
+- Tests run **sequentially** to avoid port conflicts
+
+### Troubleshooting E2E Tests
+
+#### Common Issues
+
+1. **Port Conflicts**
+
+   ```bash
+   # Check for processes using test ports
+   lsof -i :3001 -i :3002
+
+   # Kill any hanging processes
+   pkill -f "mock.*server"
+   pkill -f "fosscode"
+   ```
+
+2. **Test Timeouts**
+
+   ```bash
+   # Increase timeout for debugging
+   bun test src/__tests__/e2e/InteractiveChat.e2e.test.ts --timeout 120000
+   ```
+
+3. **Build Issues**
+
+   ```bash
+   # Ensure fosscode builds correctly
+   bun run build
+
+   # Test the binary directly
+   bun run src/binary-chat.ts --help
+   ```
+
+4. **File System Issues**
+
+   ```bash
+   # Clean up temporary directories
+   find /tmp -name "fosscode-*" -type d -exec rm -rf {} +
+
+   # Check available disk space
+   df -h /tmp
+   ```
+
+#### Debug Mode
+
+For detailed debugging, modify test files to include additional logging:
+
+```typescript
+child.stdout?.on('data', data => {
+  const output = data.toString();
+  console.log('[STDOUT]', output); // Add this for debugging
+  // ... rest of test logic
+});
+
+child.stderr?.on('data', data => {
+  console.log('[STDERR]', data.toString()); // Add this for debugging
+});
+```
+
+### Test Results and Logging
+
+#### Automated Logging
+
+- Test results are saved to `test-results/e2e/`
+- Each test suite generates a separate log file
+- **Logs are preserved** even after test completion for debugging
+
+#### Result Interpretation
+
+```bash
+# View test results
+ls -la test-results/e2e/
+cat test-results/e2e/Interactive_Chat.log
+```
+
+### Development Guidelines
+
+#### Adding New E2E Tests
+
+1. **Create test file** in `src/__tests__/e2e/`
+2. **Use appropriate timeout** (15-35 seconds typically)
+3. **Include proper cleanup** in `afterAll()`
+4. **Add to test runner script** if needed
+5. **Test both success and failure scenarios**
+
+#### Best Practices
+
+- **Use unique ports** for each test suite
+- **Always clean up** temporary files and processes
+- **Test realistic user workflows**, not just API calls
+- **Include error recovery scenarios**
+- **Avoid external dependencies** (use mocks)
+
+### File Locations
+
+- **Test Files:** `src/__tests__/e2e/*.e2e.test.ts`
+- **Test Runner:** `scripts/run-e2e-tests.sh`
+- **Jest Config:** `src/__tests__/e2e/jest.config.js`
+- **Test Results:** `test-results/e2e/`
+
+### Why E2E Tests Are Not in CI
+
+1. **Complexity:** Interactive tests require process spawning and cleanup
+2. **Flakiness:** Timing-dependent tests can be unreliable in CI environments
+3. **Resource Usage:** Tests require mock servers and temporary files
+4. **Development Focus:** These tests are for manual verification during development
+5. **CI Speed:** Keeps the main CI pipeline fast and focused
+
+The E2E tests provide **comprehensive coverage** of interactive features while maintaining **CI simplicity** and **reliability**.

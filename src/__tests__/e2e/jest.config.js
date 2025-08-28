@@ -1,0 +1,13 @@
+export default {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>'],
+  testMatch: ['**/*.e2e.test.ts'],
+  testTimeout: 60000,
+  setupFilesAfterEnv: ['<rootDir>/setup.ts'],
+  verbose: true,
+  collectCoverage: false,
+  maxWorkers: 1, // Run tests sequentially to avoid port conflicts
+  forceExit: true,
+  detectOpenHandles: true,
+};

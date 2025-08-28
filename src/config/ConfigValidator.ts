@@ -5,6 +5,7 @@ export class ConfigValidator {
    * Validate provider-specific configuration
    */
   static async validateProvider(provider: ProviderType, providerConfig: LLMConfig): Promise<void> {
+    console.log(`Validating provider ${provider} with config:`, providerConfig);
     // For LMStudio, we only need a baseURL (no API key required)
     if (provider === 'lmstudio') {
       if (!providerConfig.baseURL) {

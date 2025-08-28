@@ -34,7 +34,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   // Mode state
   const [currentMode, setCurrentMode] = useState<'code' | 'thinking'>('code');
 
-  // File search state
+  // File search state (memory optimized)
   const [isFileSearchMode, setIsFileSearchMode] = useState(false);
   const [fileSearchQuery, setFileSearchQuery] = useState('');
   const [fileSearchResults, setFileSearchResults] = useState<any[]>([]);
@@ -42,6 +42,10 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const [attachedFiles, setAttachedFiles] = useState<{ path: string; content: string }[]>([]);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isSearchingFiles, setIsSearchingFiles] = useState(false);
+
+  // Memory optimization constants (currently using inline limits)
+  // const MAX_FILE_SEARCH_RESULTS = 50;
+  // const MAX_ATTACHED_FILES = 10;
 
   // Get terminal dimensions for responsive design
   const { stdout } = useStdout();

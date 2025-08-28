@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { jest } from '@jest/globals';
 
 // Add OpenAI shim for Node.js environment
 import 'openai/shims/node';
@@ -32,5 +33,12 @@ jest.mock('chalk', () => ({
 
 // Mock fetch globally to prevent real API calls in tests
 // Use a spy that can be overridden by individual tests
-const mockFetch = jest.fn();
-global.fetch = mockFetch;
+const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+mockFetch.mockResolvedValue({
+  ok: true,
+  status: 200,
+  json: async () => ({}),
+  text: async () => '',
+} as Response);
+
+(global as any).fetch = mockFetch;

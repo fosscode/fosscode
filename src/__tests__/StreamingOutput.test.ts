@@ -1,10 +1,14 @@
+/**
+ * @jest-environment node
+ */
 import 'openai/shims/node';
+import { jest } from '@jest/globals';
 import { OpenAIProvider } from '../providers/OpenAIProvider.js';
 import { Message, LLMConfig } from '../types/index.js';
 
 // Mock OpenAI
-const mockOpenAICreate = jest.fn();
-const mockOpenAIList = jest.fn();
+const mockOpenAICreate = jest.fn() as jest.MockedFunction<any>;
+const mockOpenAIList = jest.fn() as jest.MockedFunction<any>;
 
 jest.mock('openai', () => {
   return {
@@ -76,7 +80,7 @@ describe('StreamingOutput', () => {
       mockOpenAICreate.mockResolvedValue(mockStream);
 
       // Mock process.stdout.write
-      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation();
+      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
       const result = await provider.sendMessage(messages, config);
 
@@ -128,7 +132,7 @@ describe('StreamingOutput', () => {
       mockOpenAICreate.mockResolvedValue(mockResponse);
 
       // Mock process.stdout.write
-      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation();
+      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
       const result = await provider.sendMessage(messages, nonVerboseConfig);
 
@@ -188,7 +192,7 @@ describe('StreamingOutput', () => {
 
       mockOpenAICreate.mockResolvedValue(mockStream);
 
-      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation();
+      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
       const result = await provider.sendMessage(messages, config);
 
@@ -220,7 +224,7 @@ describe('StreamingOutput', () => {
 
       mockOpenAICreate.mockResolvedValue(mockStream);
 
-      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation();
+      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
       await expect(provider.sendMessage(messages, config)).rejects.toThrow(
         'OpenAI API error: Streaming error'
@@ -281,7 +285,7 @@ describe('StreamingOutput', () => {
 
       mockOpenAICreate.mockResolvedValueOnce(mockToolResponse);
 
-      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation();
+      const stdoutWriteSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
       const result = await provider.sendMessage(messages, config);
 

@@ -62,12 +62,32 @@ npm install -g fosscode
 
 ## Commands
 
+### Core Commands
+
 - `fosscode chat` - Start interactive chat
 - `fosscode chat "message" --non-interactive` - Send single message
 - `fosscode chat --verbose` - Enable verbose output
 - `fosscode auth login <provider>` - Login to provider (grok, openai, lmstudio, openrouter, mcp)
 - `fosscode config set <key> <value>` - Set config values
 - `fosscode providers` - List available providers
+- `fosscode models [provider]` - List available models
+
+### Interactive Chat Commands
+
+- `/clear` - Clear conversation history
+- `/verbose` - Toggle verbose mode
+- `/themes` - Switch between dark/light themes
+- `/memory` - Show memory usage statistics
+- `/gc` - Trigger garbage collection
+- `/compress` - Compress conversation history to save memory
+- `/mode` or `/thinking` - Switch between code and thinking modes
+- `Tab` key - Quickly switch between code and thinking modes
+- `@` symbol - Enter file search mode to attach files
+
+### Configuration Commands
+
+- `fosscode config set <key> <value>` - Set configuration values
+- `fosscode themes [theme]` - Manage themes (dark/light)
 
 ## Providers & Authentication
 
@@ -118,6 +138,40 @@ fosscode chat "message" --verbose --provider sonicfree
 
 Shows tool calls, results, and AI behavior details.
 
+## Interactive Features
+
+### File Search & Attachment
+
+Attach files to your conversation by typing `@` to enter file search mode:
+
+- Type `@` followed by search terms to find files
+- Use arrow keys to navigate search results
+- Press `Enter` to attach selected file
+- Press `Escape` to exit file search mode
+
+### Mode Switching
+
+Switch between different AI modes for specialized tasks:
+
+- **Code Mode** (default): Optimized for programming tasks
+- **Thinking Mode**: Enhanced reasoning and analysis
+- Switch with `Tab` key or `/mode` command
+
+### Memory Management
+
+Monitor and optimize memory usage:
+
+- `/memory` - View current memory statistics
+- `/gc` - Manually trigger garbage collection
+- `/compress` - Compress conversation history when it gets long
+- Automatic cleanup prevents memory bloat during long sessions
+
+### Conversation Management
+
+- Conversations are automatically limited to prevent excessive memory usage
+- Use `/clear` to reset conversation history
+- Use `/compress` to summarize long conversations
+
 ## Configuration
 
 Stored in `~/.config/fosscode/config.json` (XDG standard). Configure API keys, defaults, UI prefs, and provider settings.
@@ -135,6 +189,128 @@ fosscode config set providers.openai.timeout 60000
 
 Auto-migrates from legacy `~/.fosscode/config.json`.
 
+## Usage Examples
+
+### Basic Chat Session
+
+```bash
+# Start interactive chat with default provider
+fosscode chat
+
+# Chat with specific provider and model
+fosscode chat --provider grok --model grok-1
+
+# Send single message (non-interactive)
+fosscode chat "Explain how recursion works" --non-interactive --provider openai
+```
+
+### File Operations with AI
+
+```bash
+# Start chat and use @ to search for files
+fosscode chat
+# Then type: @package.json
+# Select file and ask: "Analyze this package.json file"
+```
+
+### MCP Tool Usage
+
+```bash
+# Use MCP server for browser automation
+fosscode chat --provider mcp
+# Then ask: "Take a screenshot of google.com"
+```
+
+### Memory Management
+
+```bash
+# Monitor memory usage
+fosscode chat
+# Then type: /memory
+
+# Compress long conversation
+/compress
+
+# Clear conversation history
+/clear
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**"Provider not configured" error**
+
+```bash
+# Login to the provider first
+fosscode auth login grok
+```
+
+**High memory usage**
+
+```bash
+# In chat session:
+/memory    # Check usage
+/compress  # Compress history
+/gc        # Force garbage collection
+/clear     # Clear conversation
+```
+
+**Slow responses**
+
+- Try different models: `fosscode models grok`
+- Switch providers: `fosscode chat --provider openai`
+- Check your internet connection
+
+**MCP server not working**
+
+```bash
+# Verify MCP configuration
+fosscode config set providers.mcp.mcpServerCommand npx
+fosscode config set providers.mcp.mcpServerArgs '["@playwright/mcp@latest"]'
+```
+
+### Performance Optimization
+
+The application includes several performance optimizations:
+
+- **Lazy Loading**: Providers are loaded only when needed
+- **Memory Limits**: Conversation history is automatically limited
+- **Connection Pooling**: Efficient API request handling with retries
+- **Bundle Optimization**: Minified builds for smaller footprint
+
+### Getting Help
+
+- Check this README for common solutions
+- Use `/memory` and `/verbose` commands for debugging
+- Review configuration in `~/.config/fosscode/config.json`
+- Check logs and error messages for specific issues
+
+## Performance & Requirements
+
+### System Requirements
+
+- **Node.js**: 18.0.0 or higher
+- **Bun**: 1.2.21+ (recommended for development)
+- **Memory**: 50MB RAM minimum, 100MB recommended
+- **Storage**: ~2MB for installation
+- **Network**: Internet connection for LLM providers
+
+### Performance Characteristics
+
+- **Startup Time**: < 500ms (typically 200-300ms)
+- **Memory Usage**: ~50MB RSS during normal operation
+- **Bundle Size**: 1.8MB (minified)
+- **Response Time**: Depends on LLM provider (typically 1-10 seconds)
+
+### Optimization Features
+
+- Automatic conversation history limiting
+- Lazy loading of LLM providers
+- Connection pooling with retry logic
+- Memory monitoring and cleanup commands
+- Efficient data structures for chat history
+
 ## Development
 
 **Prerequisites:** Bun runtime, Node.js 18+
@@ -147,6 +323,8 @@ bun run build        # Build for dev
 bun run typecheck    # Type check
 bun run lint         # Lint
 bun run start        # Run app
+bun run perf         # Run performance tests
+bun test             # Run test suite
 ```
 
 ## Deployment

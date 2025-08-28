@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-08-28T00:25:02.355Z",
+  "startupTime": 458.930815,
+  "memoryUsage": {
+    "rssKB": 50908,
+    "virtualKB": 781644,
+    "rssMB": "49.71",
+    "virtualMB": "763.32"
+  },
+  "responseTimes": [],
+  "bundleSize": 1889576
+}
