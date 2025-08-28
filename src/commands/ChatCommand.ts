@@ -1,6 +1,6 @@
-import chalk from 'chalk';
 import { render } from 'ink';
 import React from 'react';
+import chalk from 'chalk';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ProviderManager } from '../providers/ProviderManager.js';
 import { ProviderType, Message } from '../types/index.js';

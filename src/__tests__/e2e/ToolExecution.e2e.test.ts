@@ -108,14 +108,17 @@ describe('Tool Execution E2E Tests', () => {
           'chat',
           `list files in ${tempDir}`,
           '--non-interactive',
-          '--config',
-          testConfigPath,
           '--verbose',
         ],
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
-          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0' },
+          env: {
+            ...process.env,
+            NODE_ENV: 'test',
+            FORCE_COLOR: '0',
+            FOSSCODE_CONFIG_PATH: testConfigPath,
+          },
         }
       );
 
@@ -170,7 +173,12 @@ describe('Tool Execution E2E Tests', () => {
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
-          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0' },
+          env: {
+            ...process.env,
+            NODE_ENV: 'test',
+            FORCE_COLOR: '0',
+            FOSSCODE_CONFIG_PATH: testConfigPath,
+          },
         }
       );
 
@@ -251,7 +259,12 @@ describe('Tool Execution E2E Tests', () => {
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
-          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0' },
+          env: {
+            ...process.env,
+            NODE_ENV: 'test',
+            FORCE_COLOR: '0',
+            FOSSCODE_CONFIG_PATH: testConfigPath,
+          },
         }
       );
 

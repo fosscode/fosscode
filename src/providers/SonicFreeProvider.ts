@@ -6,9 +6,15 @@ import {
   getOpenAIToolsFormat,
   hasAvailableTools,
 } from '../utils/toolExecutor.js';
+import { ChatLogger } from '../config/ChatLogger.js';
 
 export class SonicFreeProvider implements LLMProvider {
   private client: OpenAI | null = null;
+  private chatLogger: ChatLogger;
+
+  constructor() {
+    this.chatLogger = new ChatLogger();
+  }
 
   async validateConfig(config: LLMConfig): Promise<boolean> {
     // SonicFree doesn't require an API key, but we can validate the baseURL
@@ -103,7 +109,55 @@ export class SonicFreeProvider implements LLMProvider {
           if (!content.trim()) {
             content = 'Executing tools to help with your request...\n\n';
           }
-          const toolResult = await executeToolCalls(assistantMessage.tool_calls, mode);
+
+          // Log tool execution start
+          await this.chatLogger.logBackendOperation(
+            'tool_calls_started',
+            { toolCalls: assistantMessage.tool_calls.length, mode },
+            undefined,
+            true
+          );
+
+          const toolStartTime = Date.now();
+          let toolResult;
+          try {
+            toolResult = await executeToolCalls(assistantMessage.tool_calls, mode);
+          } catch (toolError) {
+            // Log tool execution error
+            await this.chatLogger.logError(
+              toolError instanceof Error ? toolError : new Error('Tool execution failed'),
+              `Tool calls: ${assistantMessage.tool_calls.length}`
+            );
+            // Continue with error message in content
+            toolResult = {
+              content: `❌ Error executing tools: ${toolError instanceof Error ? toolError.message : 'Unknown error'}\n\n`,
+              hasToolCalls: false,
+            };
+          }
+          const toolDuration = Date.now() - toolStartTime;
+
+          // Log individual tool executions
+          for (const toolCall of assistantMessage.tool_calls) {
+            await this.chatLogger.logToolExecution(
+              toolCall.function?.name || 'unknown',
+              toolCall.function?.arguments ? JSON.parse(toolCall.function.arguments) : {},
+              toolResult.hasToolCalls ? 'executed' : 'failed',
+              toolDuration,
+              toolResult.hasToolCalls
+            );
+          }
+
+          // Log tool execution completion
+          await this.chatLogger.logBackendOperation(
+            'tool_calls_completed',
+            {
+              toolCalls: assistantMessage.tool_calls.length,
+              hasResults: toolResult.hasToolCalls,
+              resultLength: toolResult.content.length,
+            },
+            toolDuration,
+            toolResult.hasToolCalls
+          );
 
           // Include tool execution results in the response content
           content += toolResult.content;
@@ -130,6 +184,20 @@ export class SonicFreeProvider implements LLMProvider {
           break;
         }
       }
+
+      // Log final response details for debugging
+      await this.chatLogger.logBackendOperation(
+        'response_finalized',
+        {
+          contentLength: finalContent.length,
+          hasContent: finalContent.trim().length > 0,
+          iterations: iteration + 1,
+          finishReason,
+          totalTokens: totalUsage.total_tokens,
+        },
+        undefined,
+        finalContent.trim().length > 0
+      );
 
       return {
         content: finalContent,

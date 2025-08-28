@@ -136,7 +136,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
-          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0' },
+          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0', FOSSCODE_CONFIG_PATH: testConfigPath },
         }
       );
 
@@ -188,7 +188,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
-          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0' },
+          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0', FOSSCODE_CONFIG_PATH: testConfigPath },
         }
       );
 
@@ -267,7 +267,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
-          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0' },
+          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0', FOSSCODE_CONFIG_PATH: testConfigPath },
         }
       );
 
@@ -325,7 +325,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
-          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0' },
+          env: { ...process.env, NODE_ENV: 'test', FORCE_COLOR: '0', FOSSCODE_CONFIG_PATH: testConfigPath },
         }
       );
 
