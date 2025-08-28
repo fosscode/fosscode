@@ -17,16 +17,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+       - uses: actions/checkout@v4
+         with:
+           fetch-depth: 0
 
-      - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@v3.90.5
-        with:
-          path: ./
-          git-url: file://.
-          extra_args: --debug --only-verified
+       - name: TruffleHog OSS
+         uses: trufflesecurity/trufflehog@v3.90.5
+         with:
+           path: ./
+           git-url: file://.
+           extra_args: --debug --only-verified
 
        - name: Setup Bun
          uses: oven-sh/setup-bun@v1
@@ -52,8 +52,8 @@ jobs:
             echo "✅ Code is properly formatted"
           fi
 
-      - name: Run linter
-        run: bun run lint
+       - name: Run linter
+         run: bun run lint
 
        - name: Run typecheck
          run: bun run typecheck
@@ -66,12 +66,12 @@ jobs:
       - name: Run tests
         run: bun run test
 
-      - name: Security audit
-        run: |
-          echo "🔒 Running security audit..."
-          bun install --frozen-lockfile
-          if command -v npm &> /dev/null; then
-            npm audit --audit-level=moderate || true
+       - name: Security audit
+         run: |
+           echo "🔒 Running security audit..."
+           bun install --frozen-lockfile
+           if command -v npm &> /dev/null; then
+             npm audit --audit-level=moderate || true
            fi
            echo "✅ Security audit completed"
 
@@ -81,8 +81,8 @@ jobs:
     needs: quality
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+       - name: Checkout code
+         uses: actions/checkout@v4
 
        - name: Setup Bun
          uses: oven-sh/setup-bun@v1
@@ -133,13 +133,13 @@ jobs:
         node-version: [20, 22]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+       - name: Checkout code
+         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: '1.2.21'
+       - name: Setup Bun
+         uses: oven-sh/setup-bun@v1
+         with:
+           bun-version: '1.2.21'
 
        - name: Setup Node.js
          uses: actions/setup-node@v4
@@ -156,11 +156,11 @@ jobs:
            fi
            bun install
 
-      - name: Run tests
-        run: bun run test
+       - name: Run tests
+         run: bun run test
 
-      - name: Build project
-        run: bun run build
+       - name: Build project
+         run: bun run build
 
        - name: Test CLI functionality
          run: |
