@@ -729,7 +729,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
       </Box>
 
       {/* Help text - moved below input for better UX */}
-      {messages.length === 0 && (
+      {messages.length === 0 && !input && (
         <Box marginTop={1}>
           {isVerySmallScreen ? (
             <Text color={themeColors.footer}>Enter send • Ctrl+C clear • Ctrl+C×2 exit</Text>

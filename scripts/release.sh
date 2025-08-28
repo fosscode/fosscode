@@ -1,14 +1,20 @@
 #!/bin/bash
 
 # Release script for fosscode
-# Usage: ./scripts/release.sh [patch|minor|major]
-# This script prepares a release by bumping version, building, testing, and tagging.
-# Publishing to npm is handled automatically by GitHub Actions when you create a GitHub release.
+# Usage: ./scripts/release.sh [patch|minor|major] [--with-binaries]
+# This script prepares a release by bumping version, building, testing, tagging, and creating GitHub release.
+# Publishing to npm is handled automatically by GitHub Actions when the release is published.
 
 set -e
 
 # Default to patch version bump
 VERSION_TYPE=${1:-patch}
+BUILD_BINARIES=false
+
+# Parse arguments
+if [[ "$2" == "--with-binaries" ]]; then
+  BUILD_BINARIES=true
+fi
 
 echo "🚀 Starting release process..."
 
@@ -21,6 +27,20 @@ fi
 # Check if logged into npm
 if ! npm whoami > /dev/null 2>&1; then
   echo "❌ Not logged into npm. Please run 'npm login' first."
+  exit 1
+fi
+
+# Check if gh CLI is available
+if ! command -v gh &> /dev/null; then
+  echo "❌ Error: GitHub CLI (gh) is not installed"
+  echo "Install from: https://cli.github.com/"
+  exit 1
+fi
+
+# Check if gh is authenticated
+if ! gh auth status &> /dev/null; then
+  echo "❌ Error: GitHub CLI is not authenticated"
+  echo "Run: gh auth login"
   exit 1
 fi
 
@@ -49,6 +69,32 @@ echo "🏷️  Creating and pushing git tag..."
 git tag "v$NEW_VERSION"
 git push origin "v$NEW_VERSION"
 
-echo "✅ Release $NEW_VERSION prepared successfully!"
-echo "📋 The GitHub Action will automatically publish to npm when you create a GitHub release at:"
-echo "   https://github.com/$(git config --get remote.origin.url | sed 's/.*github.com[:/]\([^.]*\).*/\1/')/releases/new?tag=v$NEW_VERSION"
+echo "📋 Generating changelog..."
+# Get the latest tag
+LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+CURRENT_TAG="v$NEW_VERSION"
+
+if [ -n "$LATEST_TAG" ]; then
+  # Generate changelog between tags
+  CHANGES=$(git log --pretty=format:"- %s (%h)" $LATEST_TAG..HEAD)
+else
+  # First release
+  CHANGES=$(git log --pretty=format:"- %s (%h)" --max-count=10)
+fi
+
+echo "📝 Creating GitHub release..."
+# Create the GitHub release with the changelog
+gh release create "v$NEW_VERSION" \
+  --title "Release v$NEW_VERSION" \
+  --notes "$CHANGES" \
+  --generate-notes
+
+if [[ "$BUILD_BINARIES" == "true" ]]; then
+  echo "🔨 Building and uploading binaries..."
+  # Build and upload binaries
+  ./scripts/build-binaries.sh "v$NEW_VERSION"
+fi
+
+echo "✅ Release $NEW_VERSION completed successfully!"
+echo "📦 NPM publishing will be handled automatically by GitHub Actions"
+echo "🔗 Release URL: https://github.com/$(git config --get remote.origin.url | sed 's/.*github.com[:/]\([^.]*\).*/\1/')/releases/tag/v$NEW_VERSION"

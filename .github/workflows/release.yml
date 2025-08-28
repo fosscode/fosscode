@@ -58,11 +58,20 @@ jobs:
           CHANGES="${CHANGES//$'\n'/'%0A'}"
           CHANGES="${CHANGES//$'\r'/'%0D'}"
 
-           echo "changes<<EOF" >> $GITHUB_OUTPUT
-           echo "$CHANGES" >> $GITHUB_OUTPUT
-           echo "EOF" >> $GITHUB_OUTPUT
+            echo "changes<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Build binaries (manual step)
-        run: |
-          echo "Binaries are built and uploaded manually to avoid GitHub Actions permission issues"
-          echo "See release documentation for manual binary building process"
+       - name: Create GitHub Release
+         run: |
+           gh release create ${{ github.ref_name }} \
+             --title "Release ${{ github.ref_name }}" \
+             --notes "${{ steps.changelog.outputs.changes }}" \
+             --generate-notes
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+       - name: Build binaries (manual step)
+         run: |
+           echo "Binaries are built and uploaded manually to avoid GitHub Actions permission issues"
+           echo "See release documentation for manual binary building process"
