@@ -489,7 +489,7 @@ Summary:`;
   }): Promise<void> {
     await this.configManager.loadConfig();
     const config = this.configManager.getConfig();
-    const platformConfig = config.messagingPlatforms[options.messagingPlatform];
+    const platformConfig = config.messagingPlatforms?.[options.messagingPlatform];
 
     if (!platformConfig?.enabled) {
       console.log(chalk.red(`❌ Messaging platform ${options.messagingPlatform} is not enabled`));

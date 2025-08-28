@@ -131,4 +131,8 @@ export class ProviderManager {
       return false;
     }
   }
+
+  setMCPServersFilter(servers: string[]): void {
+    // Filter MCP servers if needed
+  }
 }

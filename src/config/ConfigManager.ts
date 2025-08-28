@@ -12,7 +12,7 @@ export class ConfigManager {
   private config: AppConfig;
   private modelCacheManager: ModelCacheManager;
 
-  constructor() {
+  constructor(verbose: boolean = false) {
     // Use XDG config directory: ~/.config/fosscode/
     const xdgConfigDir = process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), '.config');
     this.configPath = path.join(xdgConfigDir, 'fosscode', 'config.json');

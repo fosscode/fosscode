@@ -7,6 +7,17 @@ export type ProviderType =
   | 'mcp'
   | 'anthropic';
 
+export type MessagingPlatformType = 'telegram' | 'discord' | 'slack' | 'terminal';
+
+export interface MessagingPlatformMessage {
+  id: string;
+  content: string;
+  userName: string;
+  chatId: string;
+  platform: MessagingPlatformType;
+  timestamp: Date;
+}
+
 export interface LLMConfig {
   apiKey?: string;
   baseURL?: string;
@@ -61,6 +72,7 @@ export interface AppConfig {
   theme: 'dark' | 'light';
   providers: Record<ProviderType, LLMConfig>;
   cachedModels: Record<ProviderType, CachedModels>;
+  messagingPlatforms?: Record<MessagingPlatformType, { enabled: boolean; botToken?: string }>;
 }
 
 export interface PerformanceMetrics {

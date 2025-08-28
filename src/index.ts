@@ -36,12 +36,13 @@ program
   .option('-m, --model <model>', 'Model to use')
   .option('-n, --non-interactive', 'Run in non-interactive mode (print response and exit)')
   .option('-v, --verbose', 'Enable verbose output (shows tool execution details)')
+  .option('--messaging-platform <platform>', 'Use messaging platform (telegram, discord, slack)')
   .action(async (message, options) => {
     try {
       // Initialize tools with verbose setting
       initializeTools(options.verbose);
 
-      const chatCommand = new ChatCommand();
+      const chatCommand = new ChatCommand(options.verbose);
       await chatCommand.execute(message, options);
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
