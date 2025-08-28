@@ -612,3 +612,123 @@ The E2E tests provide **comprehensive coverage** of interactive features while m
   - Consider extracting utility functions or classes
   - Improves maintainability and readability
   - Makes code easier to review and test
+
+## README Binary URL Updates
+
+### Overview
+
+The README.md file includes direct download links to the latest binary releases for easy installation. These links need to be updated whenever new versions are released.
+
+### Automated Scripts
+
+#### `scripts/get-binary-urls.sh`
+
+**Location:** `/home/dev/fosscode/scripts/get-binary-urls.sh`
+
+**Purpose:** Retrieves and displays binary download URLs for a specific version or the latest release.
+
+**Usage:**
+
+```bash
+./scripts/get-binary-urls.sh [version]
+```
+
+**Examples:**
+
+```bash
+# Get URLs for latest release
+./scripts/get-binary-urls.sh
+
+# Get URLs for specific version
+./scripts/get-binary-urls.sh v0.0.28
+```
+
+**Features:**
+
+- ✅ Automatically detects latest release if no version specified
+- ✅ Displays formatted URLs for all platforms (Linux, macOS, Windows)
+- ✅ Includes signature URLs for verification
+- ✅ Ready-to-copy format for README updates
+
+**Output Example:**
+
+```
+Binary download URLs for version v0.0.28:
+
+## Linux
+- **x64**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-x64
+- **ARM64**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-arm64
+
+## macOS
+- **Intel (x64)**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-macos-x64
+- **Apple Silicon (ARM64)**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-macos-arm64
+
+## Windows
+- **x64**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-windows-x64.exe
+
+## Signatures (for verification)
+- **Linux x64**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-x64.asc
+- **Linux ARM64**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-arm64.asc
+- **macOS x64**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-macos-x64.asc
+- **macOS ARM64**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-macos-arm64.asc
+- **Windows x64**: https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-windows-x64.exe.asc
+```
+
+#### `scripts/update-readme-binaries.sh` (Experimental)
+
+**Location:** `/home/dev/fosscode/scripts/update-readme-binaries.sh`
+
+**Purpose:** Automatically updates the README.md file with new binary URLs.
+
+**Usage:**
+
+```bash
+./scripts/update-readme-binaries.sh [version]
+```
+
+**Note:** This script is experimental and may need refinement for complex sed operations.
+
+### Manual Process
+
+If you prefer to update manually:
+
+1. **Get the binary URLs:**
+
+   ```bash
+   ./scripts/get-binary-urls.sh v0.0.28
+   ```
+
+2. **Update the README.md:**
+   - Find the "### Binary Installation (Latest: vX.X.X)" section
+   - Replace the version number and all download URLs
+   - Update both binary and signature links
+
+3. **Verify the changes:**
+   - Check that all links are accessible
+   - Ensure the format matches the existing style
+
+### Integration with Release Process
+
+#### Recommended Workflow
+
+After creating a new GitHub release with binaries:
+
+```bash
+# 1. Get the new binary URLs
+./scripts/get-binary-urls.sh
+
+# 2. Copy the output and update README.md manually
+# Or use the automated script (when working)
+./scripts/update-readme-binaries.sh
+
+# 3. Commit the README changes
+git add README.md
+git commit -m "docs: update binary download URLs for vX.X.X"
+```
+
+#### File Locations
+
+- **README:** `README.md` (contains the installation instructions)
+- **Binary URL Script:** `scripts/get-binary-urls.sh`
+- **Auto-update Script:** `scripts/update-readme-binaries.sh` (experimental)
+- **GitHub Releases:** `https://github.com/fosscode/fosscode/releases`

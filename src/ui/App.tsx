@@ -8,9 +8,6 @@ import { ConfigManager } from '../config/ConfigManager.js';
 
 import { MessageList } from './MessageList';
 import { FileSearch } from './FileSearch';
-import { useInputHandler } from './useInputHandler';
-import { useCommandHandler } from './useCommandHandler';
-import { useHistoryNavigation } from './useHistoryNavigation';
 
 export { App };
 
@@ -31,8 +28,10 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [chatLogger] = useState(() => new ChatLogger());
 
-  // History navigation
-  const { addToHistory, navigateHistory, resetHistoryNavigation } = useHistoryNavigation();
+  // Command history state
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [originalInput, setOriginalInput] = useState('');
 
   // Ctrl+C handling state
   const [ctrlCCount, setCtrlCCount] = useState(0);
