@@ -16,111 +16,111 @@ jobs:
     name: Code Quality & Tests
     runs-on: ubuntu-latest
 
-     steps:
-       - uses: actions/checkout@v4
-         with:
-           fetch-depth: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-       - name: TruffleHog OSS
-         uses: trufflesecurity/trufflehog@v3.90.5
-         with:
-           path: ./
-           git-url: file://.
-           extra_args: --debug --only-verified
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@v3.90.5
+        with:
+          path: ./
+          git-url: file://.
+          extra_args: --debug --only-verified
 
-       - name: Setup Bun
-         uses: oven-sh/setup-bun@v1
-         with:
-           bun-version: '1.2.21'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: '1.2.21'
 
-       - name: Install dependencies
-         run: |
-           sudo apt-get update
-           sudo apt-get install -y zsh
-           bun install
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh
+          bun install
 
-       - name: Check formatting
-         run: bun run format
+      - name: Check formatting
+        run: bun run format
 
-       - name: Check for formatting changes
-         run: |
-           if [ -n "$(git diff --name-only)" ]; then
-             echo "❌ Code formatting issues found. Please run 'bun run format' locally."
-             git diff --name-only
-             exit 1
-           else
-             echo "✅ Code is properly formatted"
-           fi
+      - name: Check for formatting changes
+        run: |
+          if [ -n "$(git diff --name-only)" ]; then
+            echo "❌ Code formatting issues found. Please run 'bun run format' locally."
+            git diff --name-only
+            exit 1
+          else
+            echo "✅ Code is properly formatted"
+          fi
 
-       - name: Run linter
-         run: bun run lint
+      - name: Run linter
+        run: bun run lint
 
-       - name: Run typecheck
-         run: bun run typecheck
+      - name: Run typecheck
+        run: bun run typecheck
 
-       - name: Clean and build
-         run: |
-           bun run clean
-           bun run build
+      - name: Clean and build
+        run: |
+          bun run clean
+          bun run build
 
-       - name: Run tests
-         run: bun run test
+      - name: Run tests
+        run: bun run test
 
-       - name: Security audit
-         run: |
-           echo "🔒 Running security audit..."
-           bun install --frozen-lockfile
-           if command -v npm &> /dev/null; then
-             npm audit --audit-level=moderate || true
-           fi
-           echo "✅ Security audit completed"
+      - name: Security audit
+        run: |
+          echo "🔒 Running security audit..."
+          bun install --frozen-lockfile
+          if command -v npm &> /dev/null; then
+            npm audit --audit-level=moderate || true
+          fi
+          echo "✅ Security audit completed"
 
   reproducible-builds:
     name: Reproducible Builds Verification
     runs-on: ubuntu-latest
     needs: quality
 
-     steps:
-       - name: Checkout code
-         uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-       - name: Setup Bun
-         uses: oven-sh/setup-bun@v1
-         with:
-           bun-version: '1.2.21'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: '1.2.21'
 
-       - name: Install dependencies
-         run: |
-           sudo apt-get update
-           sudo apt-get install -y zsh
-           bun install --frozen-lockfile
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh
+          bun install --frozen-lockfile
 
-       - name: Build project (Run 1)
-         run: |
-           bun run clean
-           bun run build
-           find dist -type f -exec sha256sum {} \; | sort > build1.sha256
+      - name: Build project (Run 1)
+        run: |
+          bun run clean
+          bun run build
+          find dist -type f -exec sha256sum {} \; | sort > build1.sha256
 
-       - name: Build project (Run 2)
-         run: |
-           bun run clean
-           bun run build
-           find dist -type f -exec sha256sum {} \; | sort > build2.sha256
+      - name: Build project (Run 2)
+        run: |
+          bun run clean
+          bun run build
+          find dist -type f -exec sha256sum {} \; | sort > build2.sha256
 
-       - name: Compare builds
-         run: |
-           echo "📊 Comparing build artifacts..."
-           if diff build1.sha256 build2.sha256; then
-             echo "✅ SUCCESS: Builds are reproducible!"
-           else
-             echo "❌ FAILURE: Builds are not reproducible"
-             echo "Build 1 checksums:"
-             cat build1.sha256
-             echo ""
-             echo "Build 2 checksums:"
-             cat build2.sha256
-             exit 1
-           fi
+      - name: Compare builds
+        run: |
+          echo "📊 Comparing build artifacts..."
+          if diff build1.sha256 build2.sha256; then
+            echo "✅ SUCCESS: Builds are reproducible!"
+          else
+            echo "❌ FAILURE: Builds are not reproducible"
+            echo "Build 1 checksums:"
+            cat build1.sha256
+            echo ""
+            echo "Build 2 checksums:"
+            cat build2.sha256
+            exit 1
+          fi
 
   test-matrix:
     name: Test Matrix (Node.js ${{ matrix.node-version }}, ${{ matrix.os }})
@@ -132,38 +132,38 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node-version: [20, 22]
 
-     steps:
-       - name: Checkout code
-         uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-       - name: Setup Bun
-         uses: oven-sh/setup-bun@v1
-         with:
-           bun-version: '1.2.21'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: '1.2.21'
 
-       - name: Setup Node.js
-         uses: actions/setup-node@v4
-         with:
-           node-version: ${{ matrix.node-version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
-       - name: Install dependencies
-         run: |
-           if [ "$RUNNER_OS" == "Linux" ]; then
-             sudo apt-get update
-             sudo apt-get install -y zsh
-           elif [ "$RUNNER_OS" == "macOS" ]; then
-             brew install zsh
-           fi
-           bun install
+      - name: Install dependencies
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y zsh
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install zsh
+          fi
+          bun install
 
-       - name: Run tests
-         run: bun run test
+      - name: Run tests
+        run: bun run test
 
-       - name: Build project
-         run: bun run build
+      - name: Build project
+        run: bun run build
 
-       - name: Test CLI functionality
-         run: |
-           bun run start --help
-           bun run start chat --help
-           bun run start providers
+      - name: Test CLI functionality
+        run: |
+          bun run start --help
+          bun run start chat --help
+          bun run start providers
