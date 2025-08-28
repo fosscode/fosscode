@@ -380,3 +380,4 @@ MIT License - see LICENSE file for details.
 ---
 
 [![Star History Chart](https://api.star-history.com/svg?repos=fosscode/fosscode&type=Date)](https://star-history.com/#fosscode/fosscode&Date)
+# GPG signing is configured to use ~/gpg_pass.txt

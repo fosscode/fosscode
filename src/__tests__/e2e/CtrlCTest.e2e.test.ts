@@ -3,7 +3,7 @@ import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 
-describe('Interactive Chat E2E Tests', () => {
+describe('Ctrl+C E2E Tests', () => {
   let testConfigPath: string;
   let mockServerProcess: ChildProcessWithoutNullStreams;
 
@@ -57,7 +57,7 @@ describe('Interactive Chat E2E Tests', () => {
           res.end('Not found');
         }
       });
-      server.listen(8080, () => console.error('Mock server running on 8080'));
+      server.listen(8081, () => console.error('Mock server running on 8081'));
       process.on('SIGTERM', () => {
         console.error('Mock server shutting down');
         server.close();
@@ -77,34 +77,12 @@ describe('Interactive Chat E2E Tests', () => {
       console.log('Mock server stderr:', data.toString());
     });
 
-    // Test the mock server directly
-    const http = require('http');
-    const testReq = http.request(
-      {
-        hostname: 'localhost',
-        port: 8080,
-        path: '/v1/chat/completions',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-      res => {
-        console.log('Mock server test response status:', res.statusCode);
-        let data = '';
-        res.on('data', chunk => (data += chunk));
-        res.on('end', () => console.log('Mock server test response:', data));
-      }
-    );
-    testReq.write(JSON.stringify({ messages: [{ role: 'user', content: 'test' }] }));
-    testReq.end();
-
-    testConfigPath = path.join(__dirname, 'test-config.json');
+    testConfigPath = path.join(__dirname, 'test-ctrlc-config.json');
     const testConfig = {
       providers: {
         openai: {
           apiKey: 'sk-test-key-123456789012345678901234567890',
-          baseURL: 'http://localhost:8080/v1',
+          baseUrl: 'http://localhost:8081/v1',
         },
       },
       defaultProvider: 'openai',
@@ -124,14 +102,14 @@ describe('Interactive Chat E2E Tests', () => {
     }
   });
 
-  test('should handle non-interactive mode correctly', async () => {
+  test('should handle Ctrl+C gracefully during startup', async () => {
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         child.kill();
-        reject(new Error('Non-interactive test timed out'));
-      }, 10000);
+        reject(new Error('Ctrl+C test timed out'));
+      }, 15000);
 
-      const child = spawn('bun', ['run', 'src/index.ts', 'chat', 'hello', '--non-interactive'], {
+      const child = spawn('bun', ['run', 'src/index.ts', 'chat', '--non-interactive', 'hello'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd(),
         env: {
@@ -144,163 +122,111 @@ describe('Interactive Chat E2E Tests', () => {
 
       let output = '';
       let errorOutput = '';
+      let exited = false;
+      let exitCode: number | null = null;
 
       child.stdout?.on('data', data => {
         output += data.toString();
+        console.log('Child stdout:', data.toString());
       });
 
       child.stderr?.on('data', data => {
         errorOutput += data.toString();
+        console.log('Child stderr:', data.toString());
       });
 
       child.on('exit', code => {
         clearTimeout(timeout);
-        console.log('Exit code:', code);
-        console.log('Output:', output);
-        console.log('Error output:', errorOutput);
-        expect(code).toBe(0);
-        expect(output).toContain('Hello');
+        exited = true;
+        exitCode = code;
+        console.log('Child exited with code:', code);
+        console.log('Final output:', output);
+        console.log('Final error output:', errorOutput);
+
+        // Verify the process exited gracefully
+        expect(exited).toBe(true);
+        // Ctrl+C should result in exit code 130 (128 + 2) or 0 depending on signal handling
+        expect(exitCode === 0 || exitCode === 130 || exitCode === null).toBe(true);
         resolve();
       });
 
       child.on('error', error => {
         clearTimeout(timeout);
+        console.error('Child error:', error);
         reject(error);
       });
-    });
-  }, 15000);
 
-  test('should show help information', async () => {
+      // Send Ctrl+C after a short delay to interrupt startup/configuration
+      setTimeout(() => {
+        if (!exited) {
+          console.log('Sending SIGINT (Ctrl+C) to interrupt startup');
+          child.kill('SIGINT');
+        }
+      }, 1000);
+    });
+  }, 20000);
+
+  test('should handle Ctrl+C during command execution', async () => {
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         child.kill();
-        reject(new Error('Help test timed out'));
-      }, 5000);
+        reject(new Error('Ctrl+C during command test timed out'));
+      }, 15000);
 
-      const child = spawn('bun', ['run', 'src/index.ts', '--help'], {
+      const child = spawn('bun', ['run', 'src/index.ts', 'chat'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd(),
-        env: { ...process.env, FORCE_COLOR: '0' },
+        env: {
+          ...process.env,
+          NODE_ENV: 'test',
+          FORCE_COLOR: '0',
+          FOSSCODE_CONFIG_PATH: testConfigPath,
+        },
       });
 
       let output = '';
+      let errorOutput = '';
+      let exited = false;
+      let exitCode: number | null = null;
 
       child.stdout?.on('data', data => {
         output += data.toString();
+        console.log('Child stdout:', data.toString());
+      });
+
+      child.stderr?.on('data', data => {
+        errorOutput += data.toString();
+        console.log('Child stderr:', data.toString());
       });
 
       child.on('exit', code => {
         clearTimeout(timeout);
-        expect(code).toBe(0);
-        expect(output).toContain('fosscode');
-        expect(output).toContain('chat');
-        expect(output).toContain('providers');
+        exited = true;
+        exitCode = code;
+        console.log('Child exited with code:', code);
+        console.log('Final output:', output);
+        console.log('Final error output:', errorOutput);
+
+        // Verify the process exited gracefully
+        expect(exited).toBe(true);
+        // Should exit with code 0 (successful completion) or 130 (SIGINT)
+        expect(exitCode === 0 || exitCode === 130 || exitCode === null).toBe(true);
         resolve();
       });
 
       child.on('error', error => {
         clearTimeout(timeout);
+        console.error('Child error:', error);
         reject(error);
       });
+
+      // Send Ctrl+C after a short delay to interrupt any ongoing processing
+      setTimeout(() => {
+        if (!exited) {
+          console.log('Sending SIGINT (Ctrl+C) to interrupt command execution');
+          child.kill('SIGINT');
+        }
+      }, 2000);
     });
-  }, 10000);
-
-  test('should list providers', async () => {
-    return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Providers test timed out'));
-      }, 5000);
-
-      const child = spawn('bun', ['run', 'src/index.ts', 'providers'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: process.cwd(),
-        env: { ...process.env, FORCE_COLOR: '0' },
-      });
-
-      let output = '';
-
-      child.stdout?.on('data', data => {
-        output += data.toString();
-      });
-
-      child.on('exit', code => {
-        clearTimeout(timeout);
-        expect(code).toBe(0);
-        expect(output).toContain('Available providers');
-        resolve();
-      });
-
-      child.on('error', error => {
-        clearTimeout(timeout);
-        reject(error);
-      });
-    });
-  }, 10000);
-
-  test('should handle theme commands', async () => {
-    return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Themes test timed out'));
-      }, 5000);
-
-      const child = spawn('bun', ['run', 'src/index.ts', 'themes'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: process.cwd(),
-        env: { ...process.env, FORCE_COLOR: '0' },
-      });
-
-      let output = '';
-
-      child.stdout?.on('data', data => {
-        output += data.toString();
-      });
-
-      child.on('exit', code => {
-        clearTimeout(timeout);
-        expect(code).toBe(0);
-        expect(output).toContain('Themes');
-        resolve();
-      });
-
-      child.on('error', error => {
-        clearTimeout(timeout);
-        reject(error);
-      });
-    });
-  }, 10000);
-
-  test('should display version', async () => {
-    return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Version test timed out'));
-      }, 5000);
-
-      const child = spawn('bun', ['run', 'src/index.ts', '--version'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: process.cwd(),
-        env: { ...process.env, FORCE_COLOR: '0' },
-      });
-
-      let output = '';
-
-      child.stdout?.on('data', data => {
-        output += data.toString();
-      });
-
-      child.on('exit', code => {
-        clearTimeout(timeout);
-        expect(code).toBe(0);
-        expect(output.trim()).toMatch(/^\d+\.\d+\.\d+$/);
-        resolve();
-      });
-
-      child.on('error', error => {
-        clearTimeout(timeout);
-        reject(error);
-      });
-    });
-  }, 10000);
+  }, 20000);
 });

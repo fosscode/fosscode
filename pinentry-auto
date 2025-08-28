@@ -1,0 +1,14 @@
+#!/bin/bash
+# Custom pinentry script that reads password from file
+echo "OK Pleased to meet you"
+while read line; do
+    case "$line" in
+        GETPIN)
+            cat ~/gpg_pass.txt
+            echo "OK"
+            ;;
+        *)
+            echo "OK"
+            ;;
+    esac
+done

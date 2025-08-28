@@ -81,6 +81,7 @@ declare -a TEST_FILES=(
     "src/__tests__/e2e/InteractiveChat.e2e.test.ts:Interactive_Chat"
     "src/__tests__/e2e/ToolExecution.e2e.test.ts:Tool_Execution"
     "src/__tests__/e2e/MultiTurnConversation.e2e.test.ts:Multi_Turn_Conversation"
+    "src/__tests__/e2e/CtrlCTest.e2e.test.ts:Ctrl_C_Test"
 )
 
 echo -e "${GREEN}📊 Test Summary${NC}"

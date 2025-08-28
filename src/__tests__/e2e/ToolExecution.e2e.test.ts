@@ -72,8 +72,8 @@ describe('Tool Execution E2E Tests', () => {
     const testConfig = {
       providers: {
         openai: {
-          apiKey: 'test-key',
-          baseUrl: 'http://localhost:3001/v1',
+          apiKey: 'sk-test-key-123456789012345678901234567890',
+          baseURL: 'http://localhost:3001/v1',
         },
       },
       defaultProvider: 'openai',

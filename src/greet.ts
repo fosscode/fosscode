@@ -1,0 +1,8 @@
+/**
+ * Greets a user by name.
+ * @param name The name of the user to greet.
+ * @returns A greeting string.
+ */
+export function greetUser(name: string): string {
+  return `Hello, ${name}!`;
+}
