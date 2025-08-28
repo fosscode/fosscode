@@ -191,7 +191,7 @@ describe('MCPCommand', () => {
       };
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.remove(name);
 
       expect(mockConfigManagerInstance.loadConfig).toHaveBeenCalled();
@@ -219,7 +219,7 @@ describe('MCPCommand', () => {
       };
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.remove(name);
 
       expect(console.error).toHaveBeenCalledWith(
@@ -254,7 +254,7 @@ describe('MCPCommand', () => {
       };
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.enable(name);
 
       expect(mockConfigManagerInstance.loadConfig).toHaveBeenCalled();
@@ -292,7 +292,7 @@ describe('MCPCommand', () => {
       };
       mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.disable(name);
 
       expect(mockConfigManagerInstance.loadConfig).toHaveBeenCalled();
@@ -317,7 +317,7 @@ describe('MCPCommand', () => {
       mockFs.mkdir.mockResolvedValue(undefined);
       mockFs.writeFile.mockResolvedValue(undefined);
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.createConfigFile(name, command, args, options);
 
       expect(mockFs.mkdir).toHaveBeenCalledWith('/home/user/.config/fosscode/mcp.d', {
@@ -341,7 +341,7 @@ describe('MCPCommand', () => {
 
       mockFs.mkdir.mockRejectedValue(new Error(errorMessage));
 
-      const mcpCommand = new MCPCommand();
+      const mcpCommand = new MCPCommand(false);
       await mcpCommand.createConfigFile(name, command, args);
 
       expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Error:'), errorMessage);
