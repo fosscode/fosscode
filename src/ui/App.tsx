@@ -36,6 +36,11 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   // Cursor position state
   const [cursorPosition, setCursorPosition] = useState(0);
 
+  // Context window monitoring state
+  const [contextSize, setContextSize] = useState(0);
+  const [maxContextSize] = useState(128000); // Default max context for GPT-4
+  const [lastResponseTokens, setLastResponseTokens] = useState(0);
+
   // Ctrl+C handling state
   const [ctrlCCount, setCtrlCCount] = useState(0);
   const [ctrlCTimer, setCtrlCTimer] = useState<NodeJS.Timeout | null>(null);
@@ -456,6 +461,12 @@ Summary:`;
         // Log the response received
         await chatLogger.logMessageReceived(response, responseTime);
 
+        // Update context size with actual token usage
+        if (response.usage) {
+          setLastResponseTokens(response.usage.totalTokens);
+          setContextSize(response.usage.totalTokens);
+        }
+
         if (isVerbose) {
           // Remove the temporary thinking message and add the real response
           setMessages(prev => {
@@ -543,11 +554,46 @@ Summary:`;
     return `${beforeCursor}█${afterCursor}`;
   }, []);
 
+  // Calculate context size based on messages (fallback when no API usage data)
+  const calculateContextSize = useCallback((messages: Message[]) => {
+    // Rough estimation: ~4 characters per token
+    const totalChars = messages.reduce((sum, msg) => sum + msg.content.length, 0);
+    const estimatedTokens = Math.ceil(totalChars / 4);
+    return estimatedTokens;
+  }, []);
+
+  // Update context size when messages change (fallback)
+  useEffect(() => {
+    // Only use estimation if we don't have actual token data
+    if (contextSize === 0 || lastResponseTokens === 0) {
+      const newContextSize = calculateContextSize(messages);
+      setContextSize(newContextSize);
+    }
+  }, [messages, calculateContextSize, contextSize, lastResponseTokens]);
+
   return (
     <Box flexDirection="column" height="100%">
-      {/* Header */}
+      {/* Header with Context Window Display */}
       <Box marginBottom={isVerySmallScreen ? 0 : 1}>
-        <Text color={themeColors.header}>{headerText}</Text>
+        <Box justifyContent="space-between" alignItems="center">
+          <Text color={themeColors.header}>{headerText}</Text>
+          {!isVerySmallScreen && (
+            <Box>
+              <Text
+                color={
+                  contextSize > maxContextSize * 0.8
+                    ? 'red'
+                    : contextSize > maxContextSize * 0.6
+                      ? 'yellow'
+                      : themeColors.footer
+                }
+              >
+                📊 {contextSize.toLocaleString()}/{maxContextSize.toLocaleString()} tokens (
+                {Math.round((contextSize / maxContextSize) * 100)}%)
+              </Text>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Messages */}
@@ -600,6 +646,18 @@ Summary:`;
             </Text>
           )}
         </Text>
+        {/* Context window indicator for small screens */}
+        {isVerySmallScreen && (
+          <Box marginLeft={1}>
+            <Text color={
+              contextSize > maxContextSize * 0.8 ? 'red' :
+              contextSize > maxContextSize * 0.6 ? 'yellow' :
+              themeColors.footer
+            }>
+              {Math.round((contextSize / maxContextSize) * 100)}%
+            </Text>
+          </Box>
+        )}
       </Box>
 
       {/* Footer - conditionally rendered based on screen size and chat state */}
