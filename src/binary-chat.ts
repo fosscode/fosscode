@@ -5,6 +5,11 @@ import { ProviderType, Message, QueuedMessage } from './types/index.js';
 import { ConfigDefaults } from './config/ConfigDefaults.js';
 import { MessageQueue } from './utils/MessageQueue.js';
 import { cancellationManager } from './utils/CancellationManager.js';
+import {
+  enhanceWithContext,
+  formatContextDisplay,
+  getContextWarningMessage,
+} from './utils/contextUtils.js';
 
 export class BinaryChatCommand {
   private configManager: ConfigManager;
@@ -215,21 +220,46 @@ export class BinaryChatCommand {
         options.verbose
       );
 
+      // Enhance response with context information
+      const enhancedResponse = enhanceWithContext(
+        response,
+        options.provider as ProviderType,
+        options.model
+      );
+
       let output = '';
       if (options.verbose) {
-        console.log(chalk.green('🤖'), response.content);
-        output += response.content;
+        console.log(chalk.green('🤖'), enhancedResponse.content);
+        output += enhancedResponse.content;
       } else {
-        console.log(response.content);
-        output += response.content;
+        console.log(enhancedResponse.content);
+        output += enhancedResponse.content;
       }
 
-      if (response.usage) {
+      // Display token usage and context information
+      if (enhancedResponse.usage) {
         const usageInfo = chalk.gray(
-          `\n📊 Tokens: ${response.usage.totalTokens} (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
+          `\n📊 Tokens: ${enhancedResponse.usage.totalTokens} (${enhancedResponse.usage.promptTokens} prompt, ${enhancedResponse.usage.completionTokens} completion)`
         );
         console.log(usageInfo);
         output += '\n' + usageInfo;
+
+        // Display context percentage if available
+        if (enhancedResponse.context) {
+          const contextDisplay = formatContextDisplay(enhancedResponse.context, 'both');
+          if (contextDisplay) {
+            const contextInfo = chalk.gray(`\n🧠 Context: ${contextDisplay}`);
+            console.log(contextInfo);
+            output += '\n' + contextInfo;
+
+            // Show context warning if needed
+            const warningMessage = getContextWarningMessage(enhancedResponse.context);
+            if (warningMessage) {
+              console.log(chalk.yellow(warningMessage));
+              output += '\n' + warningMessage;
+            }
+          }
+        }
       }
 
       return output;

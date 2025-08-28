@@ -59,6 +59,11 @@ export interface ProviderResponse {
         totalTokens: number;
       }
     | undefined;
+  context?: {
+    usedTokens: number;
+    limit?: number;
+    percentage?: number;
+  };
   finishReason: 'stop' | 'length' | 'error';
 }
 
