@@ -31,11 +31,6 @@ describe('CLI Testing Library Example', () => {
   test('should handle basic CLI commands with CLI Testing Library', async () => {
     const { findByText } = await render('./dist/fosscode', ['--help'], {
       cwd: process.cwd(),
-      env: {
-        ...process.env,
-        FORCE_COLOR: '0',
-        NODE_ENV: 'test',
-      },
     });
 
     // Wait for help output - be more flexible with text matching
