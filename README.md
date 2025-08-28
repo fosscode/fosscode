@@ -420,14 +420,7 @@ _Copy the address above or click the link to view on Etherscan_
 
 ## Contributing
 
-We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
-
-- How to contribute code
-- Our Contributor License Agreement (CLA) requirements
-- Development setup and guidelines
-- Pull request process
-
-**Important**: All contributors must sign our CLA before their contributions can be accepted.
+Issues and pull requests are welcome! However, please note that pull requests will not be merged into this repository.
 
 ## License
 
