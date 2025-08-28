@@ -4,5 +4,5 @@
  * @returns A greeting string.
  */
 export function greetUser(name?: string): string {
-  return `Hello, ${name ?? 'user'}!`;
+  return `Hello, ${name || 'user'}!`;
 }

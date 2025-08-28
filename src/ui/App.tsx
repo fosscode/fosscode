@@ -3,9 +3,14 @@ import { Box, Text, useStdout, useInput } from 'ink';
 import { ProviderManager } from '../providers/ProviderManager.js';
 import { Message, ProviderType } from '../types/index.js';
 import { InteractiveLoading } from './InteractiveLoading';
+import { ChatLogger } from '../config/ChatLogger.js';
 import { ConfigManager } from '../config/ConfigManager.js';
-import { ReadTool } from '../tools/ReadTool.js';
-import { BashTool } from '../tools/BashTool.js';
+
+import { MessageList } from './MessageList';
+import { FileSearch } from './FileSearch';
+import { useInputHandler } from './useInputHandler';
+import { useCommandHandler } from './useCommandHandler';
+import { useHistoryNavigation } from './useHistoryNavigation';
 
 export { App };
 
@@ -24,11 +29,10 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const [error, setError] = useState<string | null>(null);
   const [isVerbose, setIsVerbose] = useState(verbose);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [chatLogger] = useState(() => new ChatLogger());
 
-  // History navigation state
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [originalInput, setOriginalInput] = useState('');
+  // History navigation
+  const { addToHistory, navigateHistory, resetHistoryNavigation } = useHistoryNavigation();
 
   // Ctrl+C handling state
   const [ctrlCCount, setCtrlCCount] = useState(0);
@@ -37,14 +41,9 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   // Mode state
   const [currentMode, setCurrentMode] = useState<'code' | 'thinking'>('code');
 
-  // File search state (memory optimized)
+  // File search state
   const [isFileSearchMode, setIsFileSearchMode] = useState(false);
-  const [fileSearchQuery, setFileSearchQuery] = useState('');
-  const [fileSearchResults, setFileSearchResults] = useState<any[]>([]);
-  const [selectedFileIndex, setSelectedFileIndex] = useState(0);
   const [attachedFiles, setAttachedFiles] = useState<{ path: string; content: string }[]>([]);
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-  const [isSearchingFiles, setIsSearchingFiles] = useState(false);
 
   // Memory optimization constants (currently using inline limits)
   // const MAX_FILE_SEARCH_RESULTS = 50;
@@ -59,16 +58,25 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const isSmallScreen = terminalWidth < 60 || terminalHeight < 15;
   const isVerySmallScreen = terminalWidth < 40 || terminalHeight < 10;
 
-  // Load initial theme from config
+  // Load initial theme from config and initialize chat logging
   useEffect(() => {
-    const loadTheme = async () => {
+    const initializeApp = async () => {
       const configManager = new ConfigManager();
       await configManager.loadConfig();
       const config = configManager.getConfig();
       setTheme(config.theme);
+
+      // Initialize chat logger and start session
+      await chatLogger.initialize();
+      await chatLogger.startSession(provider, model);
     };
-    loadTheme();
-  }, []);
+    initializeApp();
+
+    // Cleanup: end session when component unmounts
+    return () => {
+      chatLogger.endSession('completed').catch(console.warn);
+    };
+  }, [chatLogger, provider, model]);
 
   // Cleanup Ctrl+C timer on unmount
   useEffect(() => {
@@ -86,181 +94,6 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
       process.stdout.write('\r');
     }
   }, [messages]);
-
-  // Debounce file search queries to prevent excessive API calls
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(fileSearchQuery);
-    }, 300); // 300ms debounce delay
-
-    return () => clearTimeout(timer);
-  }, [fileSearchQuery]);
-
-  // Perform search when debounced query changes
-  useEffect(() => {
-    if (isFileSearchMode) {
-      setIsSearchingFiles(true);
-      performFileSearch(debouncedSearchQuery).finally(() => {
-        setIsSearchingFiles(false);
-      });
-    }
-  }, [debouncedSearchQuery, isFileSearchMode]);
-
-  // File search functions
-  const performFileSearch = useCallback(async (query: string): Promise<void> => {
-    try {
-      const bashTool = new BashTool();
-
-      // Check if we're in a git repository
-      const gitCheck = await bashTool.execute({
-        command: 'git rev-parse --git-dir > /dev/null 2>&1 && echo "git" || echo "no-git"',
-        cwd: process.cwd(),
-        timeout: 2000,
-      });
-
-      const isGitRepo = gitCheck.success && gitCheck.data?.stdout.trim() === 'git';
-
-      if (!query.trim()) {
-        // If no query, show recent files or common files
-        let gitFiles: string[] = [];
-        let taskFiles: string[] = [];
-
-        if (isGitRepo) {
-          // Use git ls-files to respect .gitignore
-          const gitResult = await bashTool.execute({
-            command: 'git ls-files | grep -E "\\.(ts|js|tsx|jsx|json|md)$"',
-            cwd: process.cwd(),
-            timeout: 5000,
-          });
-          if (gitResult.success && gitResult.data) {
-            gitFiles = gitResult.data.stdout.split('\n').filter((f: string) => f.trim());
-          }
-        } else {
-          // Fallback to find command
-          const findResult = await bashTool.execute({
-            command:
-              'find . -type f -name "*.ts" -o -name "*.js" -o -name "*.tsx" -o -name "*.jsx" -o -name "*.json" -o -name "*.md"',
-            cwd: process.cwd(),
-            timeout: 5000,
-          });
-          if (findResult.success && findResult.data) {
-            gitFiles = findResult.data.stdout.split('\n').filter((f: string) => f.trim());
-          }
-        }
-
-        // Always include files from tasks directory
-        const taskCommand = 'find ./tasks -type f 2>/dev/null || true';
-        const taskResult = await bashTool.execute({
-          command: taskCommand,
-          cwd: process.cwd(),
-          timeout: 3000,
-        });
-        if (taskResult.success && taskResult.data) {
-          taskFiles = taskResult.data.stdout.split('\n').filter((f: string) => f.trim());
-        }
-
-        // Combine and deduplicate files
-        const allFiles = [...gitFiles, ...taskFiles]
-          .filter((file, index, arr) => arr.indexOf(file) === index)
-          .slice(0, 20);
-
-        const fileItems = allFiles.map((file: string) => ({
-          name: file,
-          type: 'file' as const,
-          size: 0,
-          modified: new Date().toISOString(),
-        }));
-        setFileSearchResults(fileItems);
-        setSelectedFileIndex(0);
-      } else {
-        // Use git-aware search with pattern
-        const escapedQuery = query.replace(/'/g, "'\\''"); // Escape single quotes
-        let gitFiles: string[] = [];
-        let taskFiles: string[] = [];
-
-        if (isGitRepo) {
-          // Use git ls-files with grep to respect .gitignore
-          const gitResult = await bashTool.execute({
-            command: `git ls-files | grep -i "${escapedQuery}"`,
-            cwd: process.cwd(),
-            timeout: 5000,
-          });
-          if (gitResult.success && gitResult.data) {
-            gitFiles = gitResult.data.stdout.split('\n').filter((f: string) => f.trim());
-          }
-        } else {
-          // Fallback to find command
-          const findResult = await bashTool.execute({
-            command: `find . -type f -iname "*${escapedQuery}*" -not -path "./node_modules/*" -not -path "./.git/*" -not -path "./dist/*" -not -path "./build/*"`,
-            cwd: process.cwd(),
-            timeout: 5000,
-          });
-          if (findResult.success && findResult.data) {
-            gitFiles = findResult.data.stdout.split('\n').filter((f: string) => f.trim());
-          }
-        }
-
-        // Always include matching files from tasks directory
-        const taskCommand = `find ./tasks -type f -iname "*${escapedQuery}*" 2>/dev/null || true`;
-        const taskResult = await bashTool.execute({
-          command: taskCommand,
-          cwd: process.cwd(),
-          timeout: 3000,
-        });
-        if (taskResult.success && taskResult.data) {
-          taskFiles = taskResult.data.stdout.split('\n').filter((f: string) => f.trim());
-        }
-
-        // Combine and deduplicate files
-        const allFiles = [...gitFiles, ...taskFiles]
-          .filter((file, index, arr) => arr.indexOf(file) === index)
-          .slice(0, 20);
-
-        const fileItems = allFiles.map((file: string) => ({
-          name: file,
-          type: 'file' as const,
-          size: 0,
-          modified: new Date().toISOString(),
-        }));
-        setFileSearchResults(fileItems);
-        setSelectedFileIndex(0);
-      }
-    } catch (error) {
-      setFileSearchResults([]);
-    }
-  }, []);
-
-  const attachFile = useCallback(async (file: any) => {
-    try {
-      const readTool = new ReadTool();
-      const result = await readTool.execute({
-        filePath: file.name,
-        withLineNumbers: true,
-      });
-
-      if (result.success && result.data) {
-        const fileContent = result.data.content;
-        setAttachedFiles(prev => [
-          ...prev,
-          {
-            path: file.name,
-            content: fileContent,
-          },
-        ]);
-
-        // Exit file search mode
-        setIsFileSearchMode(false);
-        setFileSearchQuery('');
-        setFileSearchResults([]);
-        setSelectedFileIndex(0);
-
-        // Add file reference to input
-        setInput(prev => prev + file.name + ' ');
-      }
-    } catch (error) {
-      // Handle error silently for now
-    }
-  }, []);
 
   // Handle input and arrow key navigation for command history
   useInput((inputChar, key) => {
@@ -300,6 +133,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     // Handle tab key to toggle between thinking and code mode
     if (key.tab) {
       const newMode = currentMode === 'code' ? 'thinking' : 'code';
+      chatLogger.logModeChanged(currentMode, newMode).catch(console.warn);
       setCurrentMode(newMode);
       setMessages(prev => [
         ...prev,
@@ -309,57 +143,6 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           timestamp: new Date(),
         },
       ]);
-      return;
-    }
-
-    // Handle file search mode
-    if (isFileSearchMode) {
-      if (key.escape) {
-        // Exit file search mode
-        setIsFileSearchMode(false);
-        setFileSearchQuery('');
-        setFileSearchResults([]);
-        setSelectedFileIndex(0);
-        return;
-      }
-
-      if (key.upArrow) {
-        setSelectedFileIndex(prev => (prev > 0 ? prev - 1 : fileSearchResults.length - 1));
-        return;
-      }
-
-      if (key.downArrow) {
-        setSelectedFileIndex(prev => (prev < fileSearchResults.length - 1 ? prev + 1 : 0));
-        return;
-      }
-
-      if (key.return) {
-        // Select the current file
-        if (fileSearchResults.length > 0) {
-          const selectedFile = fileSearchResults[selectedFileIndex];
-          attachFile(selectedFile);
-        }
-        return;
-      }
-
-      if (key.backspace || key.delete) {
-        if (fileSearchQuery.length > 0) {
-          setFileSearchQuery(prev => prev.slice(0, -1));
-        } else {
-          // Exit file search if backspacing from empty query
-          setIsFileSearchMode(false);
-          setFileSearchQuery('');
-          setFileSearchResults([]);
-          setSelectedFileIndex(0);
-        }
-        return;
-      }
-
-      if (inputChar && !key.ctrl && !key.meta && inputChar.length === 1) {
-        setFileSearchQuery(prev => prev + inputChar);
-        return;
-      }
-
       return;
     }
 
@@ -419,17 +202,6 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           setCtrlCTimer(null);
         }
       }
-
-      // Check if we need to exit file search mode
-      if (newInput.endsWith('@')) {
-        setIsFileSearchMode(true);
-        setFileSearchQuery('');
-      } else if (isFileSearchMode && !newInput.includes('@')) {
-        setIsFileSearchMode(false);
-        setFileSearchQuery('');
-        setFileSearchResults([]);
-        setSelectedFileIndex(0);
-      }
     } else if (inputChar && !key.ctrl && !key.meta && inputChar.length === 1) {
       // Handle regular character input
       if (historyIndex >= 0) {
@@ -448,12 +220,6 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           clearTimeout(ctrlCTimer);
           setCtrlCTimer(null);
         }
-      }
-
-      // Check for @ symbol to enter file search mode
-      if (inputChar === '@' && !isFileSearchMode) {
-        setIsFileSearchMode(true);
-        setFileSearchQuery('');
       }
     }
   });
@@ -481,6 +247,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
       // Handle special commands
       if (trimmedInput === '/verbose') {
         setIsVerbose(!isVerbose);
+        await chatLogger.logCommand('/verbose', { enabled: !isVerbose });
         setMessages(prev => [
           ...prev,
           {
@@ -498,6 +265,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         setTheme(newTheme);
         const configManager = new ConfigManager();
         configManager.setConfig('theme', newTheme);
+        await chatLogger.logCommand('/themes', { from: theme, to: newTheme });
         setMessages(prev => [
           ...prev,
           {
@@ -511,6 +279,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
       }
 
       if (trimmedInput === '/clear') {
+        await chatLogger.logCommand('/clear', { messageCount: messages.length });
         setMessages([]);
         setInput('');
         return;
@@ -518,6 +287,8 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
 
       if (trimmedInput === '/mode' || trimmedInput === '/thinking') {
         const newMode = currentMode === 'code' ? 'thinking' : 'code';
+        await chatLogger.logModeChanged(currentMode, newMode);
+        await chatLogger.logCommand(trimmedInput, { from: currentMode, to: newMode });
         setCurrentMode(newMode);
         setMessages(prev => [
           ...prev,
@@ -545,6 +316,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           return;
         }
 
+        await chatLogger.logCommand('/compress', { messageCount: messages.length });
         setInput('');
         setIsLoading(true);
         setError(null);
@@ -583,6 +355,9 @@ Summary:`;
 
           setMessages([summaryAssistantMessage]);
         } catch (err) {
+          await chatLogger.logError(
+            err instanceof Error ? err : new Error('Failed to compress conversation')
+          );
           setError(err instanceof Error ? err.message : 'Failed to compress conversation');
         } finally {
           setIsLoading(false);
@@ -605,11 +380,19 @@ Summary:`;
         timestamp: new Date(),
       };
 
+      // Log the message being sent
+      await chatLogger.logMessageSent(
+        userMessage,
+        attachedFiles.length > 0 ? attachedFiles : undefined
+      );
+
       setMessages(prev => [...prev, userMessage]);
       setInput('');
       setAttachedFiles([]); // Clear attached files after sending
       setIsLoading(true);
       setError(null);
+
+      const startTime = Date.now();
 
       try {
         if (isVerbose) {
@@ -631,6 +414,11 @@ Summary:`;
           isVerbose,
           currentMode
         );
+
+        const responseTime = Date.now() - startTime;
+
+        // Log the response received
+        await chatLogger.logMessageReceived(response, responseTime);
 
         if (isVerbose) {
           // Remove the temporary thinking message and add the real response
@@ -658,7 +446,9 @@ Summary:`;
           setMessages(prev => [...prev, assistantMessage]);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+        const error = err instanceof Error ? err : new Error('Unknown error occurred');
+        await chatLogger.logError(error);
+        setError(error.message);
       } finally {
         setIsLoading(false);
       }
@@ -690,39 +480,17 @@ Summary:`;
     [theme]
   );
 
-  // Memoize message rendering with responsive design
-  const renderedMessages = useMemo(
-    () =>
-      messages.map((message, index) => (
-        <Box key={index} marginBottom={isVerySmallScreen ? 0 : 1}>
-          <Text
-            color={message.role === 'user' ? themeColors.userMessage : themeColors.assistantMessage}
-          >
-            {isVerySmallScreen
-              ? message.role === 'user'
-                ? '👤 '
-                : '🤖 '
-              : message.role === 'user'
-                ? '👤 '
-                : '🤖 '}
-          </Text>
-          <Text>{message.content}</Text>
-        </Box>
-      )),
-    [messages, themeColors, isVerySmallScreen]
-  );
-
-  // Memoize file search results to prevent unnecessary re-renders
-  const renderedFileResults = useMemo(
-    () =>
-      fileSearchResults.slice(0, 5).map((file, index) => (
-        <Text key={index} color={index === selectedFileIndex ? themeColors.userMessage : 'gray'}>
-          {index === selectedFileIndex ? '▶ ' : '  '}
-          {file.name} ({file.type})
-        </Text>
-      )),
-    [fileSearchResults, selectedFileIndex, themeColors.userMessage]
-  );
+  // File attachment handler
+  const handleFileAttach = useCallback((filePath: string, content: string) => {
+    setAttachedFiles(prev => [
+      ...prev,
+      {
+        path: filePath,
+        content,
+      },
+    ]);
+    setInput(prev => prev + filePath + ' ');
+  }, []);
 
   return (
     <Box flexDirection="column" height="100%">
@@ -733,7 +501,11 @@ Summary:`;
 
       {/* Messages */}
       <Box flexDirection="column" flexGrow={1} marginBottom={isVerySmallScreen ? 0 : 1}>
-        {renderedMessages}
+        <MessageList
+          messages={messages}
+          themeColors={themeColors}
+          isVerySmallScreen={isVerySmallScreen}
+        />
 
         {isLoading && <InteractiveLoading />}
 
@@ -744,32 +516,12 @@ Summary:`;
         )}
 
         {/* File Search Interface */}
-        {isFileSearchMode && (
-          <Box flexDirection="column" marginBottom={1} paddingX={1}>
-            <Text color={themeColors.header}>
-              {`🔍 Search files: ${fileSearchQuery || '<type to search>'}${isSearchingFiles ? ' ⏳' : ''}`}
-            </Text>
-            {isSearchingFiles ? (
-              <Text color={themeColors.inputPrompt}>🔎 Searching...</Text>
-            ) : fileSearchResults.length > 0 ? (
-              <Box flexDirection="column" marginTop={1}>
-                {renderedFileResults}
-                {fileSearchResults.length > 5 && (
-                  <Text color={themeColors.footer}>
-                    {`... and ${fileSearchResults.length - 5} more`}
-                  </Text>
-                )}
-              </Box>
-            ) : fileSearchQuery ? (
-              <Text color={themeColors.error}>
-                {`No files found matching "${fileSearchQuery}"`}
-              </Text>
-            ) : (
-              <Text color={themeColors.footer}>Start typing to search files...</Text>
-            )}
-            <Text color={themeColors.footer}>↑↓ navigate • Enter select • Esc cancel</Text>
-          </Box>
-        )}
+        <FileSearch
+          isActive={isFileSearchMode}
+          onFileAttach={handleFileAttach}
+          onExit={() => setIsFileSearchMode(false)}
+          themeColors={themeColors}
+        />
 
         {/* Attached Files Indicator */}
         {attachedFiles.length > 0 && !isFileSearchMode && (

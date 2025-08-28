@@ -211,6 +211,9 @@ export class OpenAIProvider implements LLMProvider {
           }
           const toolResult = await executeToolCalls(assistantMessage.tool_calls, mode);
 
+          // Include tool execution results in the response content
+          content += toolResult.content;
+
           // Add tool results as tool messages
           for (const toolCall of assistantMessage.tool_calls) {
             openaiMessages.push({

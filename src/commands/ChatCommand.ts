@@ -6,13 +6,16 @@ import { ProviderManager } from '../providers/ProviderManager.js';
 import { ProviderType, Message } from '../types/index.js';
 import { App } from '../ui/App.js';
 import { ConfigDefaults } from '../config/ConfigDefaults.js';
+import { ChatLogger } from '../config/ChatLogger.js';
 export class ChatCommand {
   private configManager: ConfigManager;
   private providerManager: ProviderManager;
+  private chatLogger: ChatLogger;
 
   constructor() {
     this.configManager = new ConfigManager();
     this.providerManager = new ProviderManager(this.configManager);
+    this.chatLogger = new ChatLogger();
   }
 
   async execute(
@@ -109,6 +112,10 @@ export class ChatCommand {
       verbose?: boolean;
     }
   ): Promise<void> {
+    // Initialize logger and start session
+    await this.chatLogger.initialize();
+    await this.chatLogger.startSession(options.provider as ProviderType, options.model);
+
     console.log(chalk.blue(`🤖 fosscode - ${options.provider} (${options.model})`));
     console.log(chalk.cyan(`👤 ${message}`));
 
@@ -131,30 +138,50 @@ export class ChatCommand {
       timestamp: new Date(),
     };
 
-    const response = await this.providerManager.sendMessage(
-      options.provider as ProviderType,
-      [chatMessage],
-      options.model!,
-      options.verbose ?? false
-    );
+    // Log the message being sent
+    await this.chatLogger.logMessageSent(chatMessage);
 
-    // For verbose mode, the response is already streamed to stdout
-    // For non-verbose mode, show the response
-    if (!options.verbose) {
-      if (response.content.includes('Executing tools')) {
-        // Show tool execution details
-        console.log(chalk.green('🤖'), response.content);
-      } else {
-        console.log(chalk.green('🤖'), response.content);
-      }
-    }
+    const startTime = Date.now();
 
-    if (response.usage) {
-      console.log(
-        chalk.gray(
-          `\n📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
-        )
+    try {
+      const response = await this.providerManager.sendMessage(
+        options.provider as ProviderType,
+        [chatMessage],
+        options.model!,
+        options.verbose ?? false
       );
+
+      const responseTime = Date.now() - startTime;
+
+      // Log the response received
+      await this.chatLogger.logMessageReceived(response, responseTime);
+
+      // For verbose mode, the response is already streamed to stdout
+      // For non-verbose mode, show the response
+      if (!options.verbose) {
+        if (response.content.includes('Executing tools')) {
+          // Show tool execution details
+          console.log(chalk.green('🤖'), response.content);
+        } else {
+          console.log(chalk.green('🤖'), response.content);
+        }
+      }
+
+      if (response.usage) {
+        console.log(
+          chalk.gray(
+            `\n📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
+          )
+        );
+      }
+
+      // End session successfully
+      await this.chatLogger.endSession('completed');
+    } catch (error) {
+      // Log the error and end session with error status
+      await this.chatLogger.logError(error instanceof Error ? error : new Error('Unknown error'));
+      await this.chatLogger.endSession('error');
+      throw error;
     }
 
     process.exit(0);
