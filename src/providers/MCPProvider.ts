@@ -175,7 +175,7 @@ export class MCPProvider implements LLMProvider {
     if (config.mcpServers && Object.keys(config.mcpServers).length > 1) {
       const availableServers = this.getAvailableMCPServers(config);
       const currentServer =
-        serverName || (availableServers.length > 0 ? availableServers[0] : 'unknown');
+        serverName ?? (availableServers.length > 0 ? availableServers[0] : 'unknown');
       return ` (${currentServer})`;
     }
     return '';

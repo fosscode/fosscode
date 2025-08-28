@@ -25,7 +25,7 @@ export class MCPCommand {
         console.log(chalk.yellow('Legacy Single Server:'));
         console.log(`  Command: ${mcpConfig.mcpServerCommand}`);
         console.log(`  Args: ${mcpConfig.mcpServerArgs.join(' ')}`);
-        console.log(`  URL: ${mcpConfig.mcpServerUrl || 'Not set'}`);
+        console.log(`  URL: ${mcpConfig.mcpServerUrl ?? 'Not set'}`);
         console.log('');
       }
 
@@ -36,11 +36,11 @@ export class MCPCommand {
           const status =
             server.enabled !== false ? chalk.green('✓ Enabled') : chalk.red('✗ Disabled');
           console.log(`  ${chalk.bold(name)}: ${status}`);
-          console.log(`    Command: ${server.mcpServerCommand || 'Not set'}`);
+          console.log(`    Command: ${server.mcpServerCommand ?? 'Not set'}`);
           console.log(
             `    Args: ${server.mcpServerArgs ? server.mcpServerArgs.join(' ') : 'Not set'}`
           );
-          console.log(`    URL: ${server.mcpServerUrl || 'Not set'}`);
+          console.log(`    URL: ${server.mcpServerUrl ?? 'Not set'}`);
           console.log('');
         }
       } else {
@@ -117,7 +117,7 @@ export class MCPCommand {
       await this.configManager.loadConfig();
       const config = this.configManager.getConfig();
 
-      if (!config.providers.mcp.mcpServers || !config.providers.mcp.mcpServers[name]) {
+      if (!config.providers.mcp.mcpServers?.[name]) {
         console.error(chalk.red(`Error: MCP server '${name}' not found`));
         process.exit(1);
       }
@@ -137,7 +137,7 @@ export class MCPCommand {
       await this.configManager.loadConfig();
       const config = this.configManager.getConfig();
 
-      if (!config.providers.mcp.mcpServers || !config.providers.mcp.mcpServers[name]) {
+      if (!config.providers.mcp.mcpServers?.[name]) {
         console.error(chalk.red(`Error: MCP server '${name}' not found`));
         process.exit(1);
       }
@@ -157,7 +157,7 @@ export class MCPCommand {
       await this.configManager.loadConfig();
       const config = this.configManager.getConfig();
 
-      if (!config.providers.mcp.mcpServers || !config.providers.mcp.mcpServers[name]) {
+      if (!config.providers.mcp.mcpServers?.[name]) {
         console.error(chalk.red(`Error: MCP server '${name}' not found`));
         process.exit(1);
       }
