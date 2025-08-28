@@ -57,11 +57,25 @@ function formatBashResult(data: any): string {
   output += `   📊 Exit code: ${exitCode}\n`;
 
   if (stdout) {
-    output += `   📝 Output:\n${indentText(stdout, 6)}`;
+    // Show first few lines of output for brevity
+    const lines = stdout.split('\n');
+    const previewLines = lines.slice(0, 10);
+    output += `   📝 Output:\n${indentText(previewLines.join('\n'), 6)}`;
+    if (lines.length > 10) {
+      output += `\n${indentText(`... and ${lines.length - 10} more lines`, 6)}`;
+    }
+    output += '\n';
   }
 
   if (stderr) {
-    output += `   ⚠️  Errors:\n${indentText(stderr, 6)}`;
+    // Show stderr briefly
+    const lines = stderr.split('\n');
+    const previewLines = lines.slice(0, 5);
+    output += `   ⚠️  Errors:\n${indentText(previewLines.join('\n'), 6)}`;
+    if (lines.length > 5) {
+      output += `\n${indentText(`... and ${lines.length - 5} more error lines`, 6)}`;
+    }
+    output += '\n';
   }
 
   return output;

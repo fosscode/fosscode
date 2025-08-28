@@ -106,11 +106,41 @@ export class SonicFreeProvider implements LLMProvider {
 
         let content = assistantMessage.content ?? '';
 
+        // Show LLM thinking/response for this iteration
+        if (content.trim()) {
+          intermediateContent += `🤔 **Iteration ${iteration + 1} - LLM Response:**\n${content}\n\n`;
+        }
+
         // Handle tool calls if present
         if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
           if (!content.trim()) {
             content = 'Executing tools to help with your request...\n\n';
           }
+
+          // Show tool calls being made
+          intermediateContent += `🔧 **Iteration ${iteration + 1} - Tool Calls:**\n`;
+          for (const toolCall of assistantMessage.tool_calls) {
+            intermediateContent += `   • ${toolCall.function?.name || 'unknown'}`;
+            if (toolCall.function?.arguments) {
+              try {
+                const args = JSON.parse(toolCall.function.arguments);
+                const argSummary = Object.keys(args)
+                  .slice(0, 3)
+                  .map(
+                    key =>
+                      `${key}: ${String(args[key]).length > 20 ? String(args[key]).substring(0, 20) + '...' : args[key]}`
+                  )
+                  .join(', ');
+                if (argSummary) {
+                  intermediateContent += ` (${argSummary})`;
+                }
+              } catch (_e) {
+                // Ignore JSON parse errors for display
+              }
+            }
+            intermediateContent += '\n';
+          }
+          intermediateContent += '\n';
 
           // Log tool execution start
           await this.chatLogger.logBackendOperation(
@@ -162,7 +192,7 @@ export class SonicFreeProvider implements LLMProvider {
           );
 
           // Include tool execution results in the response content
-          content += toolResult.content;
+          intermediateContent += `📊 **Iteration ${iteration + 1} - Tool Results:**\n${toolResult.content}\n`;
 
           // Add tool results as tool messages
           for (const toolCall of assistantMessage.tool_calls) {
@@ -177,9 +207,9 @@ export class SonicFreeProvider implements LLMProvider {
           continue;
         } else {
           // No more tool calls, this is the final response
-          // Accumulate intermediate content
+          // Accumulate final response
           if (content.trim()) {
-            intermediateContent += content + '\n\n';
+            intermediateContent += `✅ **Final Response:**\n${content}\n\n`;
           }
           finalContent = intermediateContent;
           finishReason = choice.finish_reason as 'stop' | 'length' | 'error';
