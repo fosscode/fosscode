@@ -13,8 +13,8 @@ A lightweight, fast command-line application with a text user interface (TUI) fo
 
 - 🚀 **Lightweight & Fast**: Optimized for minimal resource usage
 - 🖥️ **Text User Interface**: Beautiful terminal-based chat interface
-- 🔄 **Multiple Providers**: Support for OpenAI, Grok, LMStudio, OpenRouter, and MCP
-- 🔧 **MCP Integration**: Full Model Context Protocol support for external tools
+- 🔄 **Multiple Providers**: Support for OpenAI, Grok, LMStudio, OpenRouter, Anthropic, and MCP
+- 🔧 **Universal MCP Tools**: MCP tools work across ALL providers (no provider switching needed!)
 - ⚙️ **Easy Configuration**: Simple config management for API keys and MCP servers
 - 📦 **NPM Installable**: Install globally with `npm install -g fosscode`
 - 🔍 **Verbose Mode**: Toggle detailed tool execution output for debugging
@@ -51,23 +51,23 @@ Download the latest pre-built binaries for your platform:
 
 #### Linux
 
-- **x64**: [fosscode-linux-x64](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-x64) | [Signature](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-x64.asc)
-- **ARM64**: [fosscode-linux-arm64](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-arm64) | [Signature](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-arm64.asc)
+- **x64**: [fosscode-linux-x64](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-linux-x64) | [Signature](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-linux-x64.asc)
+- **ARM64**: [fosscode-linux-arm64](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-linux-arm64) | [Signature](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-linux-arm64.asc)
 
 #### macOS
 
-- **Intel (x64)**: [fosscode-macos-x64](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-macos-x64) | [Signature](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-macos-x64.asc)
-- **Apple Silicon (ARM64)**: [fosscode-macos-arm64](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-macos-arm64) | [Signature](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-macos-arm64.asc)
+- **Intel (x64)**: [fosscode-macos-x64](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-macos-x64) | [Signature](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-macos-x64.asc)
+- **Apple Silicon (ARM64)**: [fosscode-macos-arm64](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-macos-arm64) | [Signature](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-macos-arm64.asc)
 
 #### Windows
 
-- **x64**: [fosscode-windows-x64.exe](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-windows-x64.exe) | [Signature](https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-windows-x64.exe.asc)
+- **x64**: [fosscode-windows-x64.exe](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-windows-x64.exe) | [Signature](https://github.com/fosscode/fosscode/releases/latest/download/fosscode-windows-x64.exe.asc)
 
 **Installation Steps:**
 
 ```bash
 # Download the appropriate binary for your platform
-curl -L -o fosscode https://github.com/fosscode/fosscode/releases/download/v0.0.28/fosscode-linux-x64  # Replace with your platform
+curl -L -o fosscode https://github.com/fosscode/fosscode/releases/latest/download/fosscode-linux-x64  # Replace with your platform
 chmod +x fosscode
 sudo mv fosscode /usr/local/bin/  # Or add to your PATH
 ```
@@ -93,7 +93,12 @@ npm install -g fosscode
 3. **Specific provider:** `fosscode chat --provider grok --model grok-1`
 4. **Single message:** `fosscode chat "message" --non-interactive --provider grok`
 5. **Verbose mode:** `fosscode chat "message" --verbose --provider sonicfree`
-6. **MCP tools:** `fosscode chat "Take screenshot" --provider mcp`
+6. **MCP tools:** Configure once, then use with any provider:
+   ```bash
+   fosscode config set providers.mcp.mcpServerCommand npx
+   fosscode config set providers.mcp.mcpServerArgs '["@playwright/mcp@latest"]'
+   fosscode chat "Take screenshot of google.com" --provider grok
+   ```
 
 ## Commands
 
@@ -136,7 +141,7 @@ Authenticate with at least one provider before chatting:
 
 ### MCP Configuration
 
-Configure MCP servers via command or URL:
+Configure MCP servers in your config.json:
 
 ```json
 {
@@ -151,7 +156,17 @@ Configure MCP servers via command or URL:
 }
 ```
 
-Usage: `fosscode chat --provider mcp` | Tools auto-discovered and registered
+**MCP tools are now available across ALL providers!** Just configure MCP once and use tools like browser automation with any provider (OpenAI, Grok, etc.):
+
+```bash
+# Configure MCP once
+fosscode config set providers.mcp.mcpServerCommand npx
+fosscode config set providers.mcp.mcpServerArgs '["@playwright/mcp@latest"]'
+
+# Then use MCP tools with any provider
+fosscode chat "Take a screenshot of google.com" --provider grok
+fosscode chat "Navigate to example.com and click the login button" --provider openai
+```
 
 ## Non-Interactive & Verbose Modes
 
@@ -251,9 +266,15 @@ fosscode chat
 ### MCP Tool Usage
 
 ```bash
-# Use MCP server for browser automation
-fosscode chat --provider mcp
-# Then ask: "Take a screenshot of google.com"
+# MCP tools work with ANY provider now!
+# Configure MCP once:
+fosscode config set providers.mcp.mcpServerCommand npx
+fosscode config set providers.mcp.mcpServerArgs '["@playwright/mcp@latest"]'
+
+# Then use MCP tools with your favorite provider:
+fosscode chat "Take a screenshot of google.com" --provider grok
+fosscode chat "Navigate to example.com and extract the page title" --provider openai
+fosscode chat "Click the login button on the current page" --provider anthropic
 ```
 
 ### Memory Management
