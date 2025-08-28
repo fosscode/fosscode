@@ -16,16 +16,18 @@ if [ $# -eq 0 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  $0 v0.0.17          # Build for specific version"
     echo "  $0 \$(git describe --tags --abbrev=0)  # Build for latest tag"
     echo ""
-    echo "This script will:"
-    echo "  1. Build binaries for Linux (x64 & ARM64), macOS (Intel & ARM64), and Windows"
-    echo "  2. Upload them to the specified GitHub release"
-    echo "  3. Clean up local binary files"
-    echo ""
-    echo "Requirements:"
-    echo "  - Bun (https://bun.sh/docs/installation)"
-    echo "  - GitHub CLI (https://cli.github.com/)"
-    echo "  - Authenticated gh CLI (run: gh auth login)"
-    echo "  - Existing GitHub release with the specified tag"
+echo "This script will:"
+echo "  1. Build binaries for Linux (x64 & ARM64), macOS (Intel & ARM64), and Windows"
+echo "  2. Sign all binaries with GPG"
+echo "  3. Upload binaries and signatures to the specified GitHub release"
+echo "  4. Clean up local binary and signature files"
+echo ""
+echo "Requirements:"
+echo "  - Bun (https://bun.sh/docs/installation)"
+echo "  - GitHub CLI (https://cli.github.com/)"
+echo "  - Authenticated gh CLI (run: gh auth login)"
+echo "  - GPG with a private key (run: gpg --gen-key if needed)"
+echo "  - Existing GitHub release with the specified tag"
     exit 1
 fi
 
@@ -60,6 +62,20 @@ fi
 if ! gh auth status &> /dev/null; then
     echo "❌ Error: GitHub CLI is not authenticated"
     echo "Run: gh auth login"
+    exit 1
+fi
+
+# Check if gpg is available
+if ! command -v gpg &> /dev/null; then
+    echo "❌ Error: GPG is not installed"
+    echo "Install GPG to sign binaries (apt install gnupg or similar)"
+    exit 1
+fi
+
+# Check if gpg has a default key
+if ! gpg --list-keys --with-colons | grep -q "^pub:"; then
+    echo "❌ Error: No GPG keys found"
+    echo "Create a GPG key with: gpg --gen-key"
     exit 1
 fi
 
@@ -106,22 +122,52 @@ echo "📋 Binary sizes:"
 ls -lh fosscode-*
 
 echo ""
-echo "⬆️  Uploading binaries to GitHub release..."
+echo "🔐 Signing binaries with GPG..."
 
-# Upload all binaries to the release
+# Sign each binary
+echo "Signing fosscode-linux-x64..."
+gpg --detach-sign --armor fosscode-linux-x64
+
+echo "Signing fosscode-linux-arm64..."
+gpg --detach-sign --armor fosscode-linux-arm64
+
+echo "Signing fosscode-macos-x64..."
+gpg --detach-sign --armor fosscode-macos-x64
+
+echo "Signing fosscode-macos-arm64..."
+gpg --detach-sign --armor fosscode-macos-arm64
+
+echo "Signing fosscode-windows-x64.exe..."
+gpg --detach-sign --armor fosscode-windows-x64.exe
+
+echo "✅ All binaries signed successfully!"
+echo ""
+echo "📋 Signature files created:"
+ls -lh fosscode-*.asc
+
+echo ""
+echo "⬆️  Uploading binaries and signatures to GitHub release..."
+
+# Upload all binaries and signatures to the release
 gh release upload $VERSION_TAG \
     fosscode-linux-x64 \
     fosscode-linux-arm64 \
     fosscode-macos-x64 \
     fosscode-macos-arm64 \
-    fosscode-windows-x64.exe
+    fosscode-windows-x64.exe \
+    fosscode-linux-x64.asc \
+    fosscode-linux-arm64.asc \
+    fosscode-macos-x64.asc \
+    fosscode-macos-arm64.asc \
+    fosscode-windows-x64.exe.asc
 
 echo ""
-echo "🧹 Cleaning up local binary files..."
+echo "🧹 Cleaning up local binary and signature files..."
 rm fosscode-linux-x64 fosscode-linux-arm64 fosscode-macos-x64 fosscode-macos-arm64 fosscode-windows-x64.exe
+rm fosscode-linux-x64.asc fosscode-linux-arm64.asc fosscode-macos-x64.asc fosscode-macos-arm64.asc fosscode-windows-x64.exe.asc
 
 echo ""
-echo "✅ Binary building and upload completed successfully!"
+echo "✅ Binary building, signing, and upload completed successfully!"
 echo ""
 echo "📥 Download URLs:"
 echo "Linux x64:     https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-linux-x64"
@@ -129,3 +175,12 @@ echo "Linux ARM64:   https://github.com/fosscode/fosscode/releases/download/$VER
 echo "macOS Intel:   https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-macos-x64"
 echo "macOS ARM64:   https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-macos-arm64"
 echo "Windows:       https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-windows-x64.exe"
+echo ""
+echo "🔐 Signature files (for verification):"
+echo "Linux x64:     https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-linux-x64.asc"
+echo "Linux ARM64:   https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-linux-arm64.asc"
+echo "macOS Intel:   https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-macos-x64.asc"
+echo "macOS ARM64:   https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-macos-arm64.asc"
+echo "Windows:       https://github.com/fosscode/fosscode/releases/download/$VERSION_TAG/fosscode-windows-x64.exe.asc"
+echo ""
+echo "🔍 To verify signatures: gpg --verify <signature-file> <binary-file>"

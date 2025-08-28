@@ -43,21 +43,23 @@ fosscode builds static binaries for multiple platforms (Linux x64, Linux ARM64, 
 
 **Features:**
 
-- ✅ Environment validation (Bun, GitHub CLI, authentication)
+- ✅ Environment validation (Bun, GitHub CLI, GPG, authentication)
 - ✅ Builds 5 platform binaries (Linux x64/ARM64, macOS Intel/ARM64, Windows)
-- ✅ Uploads all binaries to GitHub release
+- ✅ Signs all binaries with GPG for security
+- ✅ Uploads binaries and detached signatures to GitHub release
 - ✅ Cleans up local files after upload
-- ✅ Provides download URLs
+- ✅ Provides download URLs for both binaries and signatures
 - ✅ Comprehensive error handling
 
 **What it does:**
 
-1. Validates environment and requirements
-2. Builds 4 platform-specific binaries using Bun
-3. Verifies the GitHub release exists
-4. Uploads all binaries to the specified GitHub release
-5. Cleans up local binary files after upload
-6. Displays download URLs for verification
+1. Validates environment and requirements (Bun, GitHub CLI, GPG)
+2. Builds 5 platform-specific binaries using Bun
+3. Signs each binary with GPG to create detached signatures
+4. Verifies the GitHub release exists
+5. Uploads all binaries and signatures to the specified GitHub release
+6. Cleans up local binary and signature files after upload
+7. Displays download URLs for both binaries and signatures
 
 #### `scripts/release.sh`
 
@@ -151,11 +153,21 @@ bun build src/binary.ts --target node --compile --outfile fosscode-macos-x64
 bun build src/binary.ts --target node --compile --outfile fosscode-macos-arm64
 bun build src/binary.ts --target node --compile --outfile fosscode-windows-x64.exe
 
-# Upload to release
-gh release upload v0.0.18 fosscode-linux-x64 fosscode-linux-arm64 fosscode-macos-x64 fosscode-macos-arm64 fosscode-windows-x64.exe
+# Sign binaries
+gpg --detach-sign --armor fosscode-linux-x64
+gpg --detach-sign --armor fosscode-linux-arm64
+gpg --detach-sign --armor fosscode-macos-x64
+gpg --detach-sign --armor fosscode-macos-arm64
+gpg --detach-sign --armor fosscode-windows-x64.exe
+
+# Upload to release (binaries and signatures)
+gh release upload v0.0.18 \
+    fosscode-linux-x64 fosscode-linux-arm64 fosscode-macos-x64 fosscode-macos-arm64 fosscode-windows-x64.exe \
+    fosscode-linux-x64.asc fosscode-linux-arm64.asc fosscode-macos-x64.asc fosscode-macos-arm64.asc fosscode-windows-x64.exe.asc
 
 # Clean up
 rm fosscode-linux-x64 fosscode-linux-arm64 fosscode-macos-x64 fosscode-macos-arm64 fosscode-windows-x64.exe
+rm fosscode-linux-x64.asc fosscode-linux-arm64.asc fosscode-macos-x64.asc fosscode-macos-arm64.asc fosscode-windows-x64.exe.asc
 ```
 
 ### Binary Specifications
@@ -170,6 +182,62 @@ rm fosscode-linux-x64 fosscode-linux-arm64 fosscode-macos-x64 fosscode-macos-arm
   - Windows x64 (~98MB)
 - **Dependencies:** All dependencies bundled, no external requirements
 
+### GPG Signing and Verification
+
+#### Overview
+
+All fosscode binaries are signed with GPG to ensure authenticity and integrity. Each release includes detached signature files (`.asc`) that can be used to verify the binaries haven't been tampered with.
+
+#### GPG Key Information
+
+- **Key ID:** 5A4818774F6CA92319CE88A45ACBB22988757D6E
+- **Key Owner:** fosscode <fosscode0@gmail.com>
+- **Key Type:** EDDSA (Ed25519)
+
+#### Verifying Binaries
+
+To verify a downloaded binary:
+
+1. Download both the binary and its corresponding `.asc` signature file
+2. Import the fosscode GPG key (one time setup):
+
+```bash
+# Import the public key
+gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 5A4818774F6CA92319CE88A45ACBB22988757D6E
+```
+
+3. Verify the signature:
+
+```bash
+# For Linux/macOS binaries
+gpg --verify fosscode-linux-x64.asc fosscode-linux-x64
+
+# For Windows binary
+gpg --verify fosscode-windows-x64.exe.asc fosscode-windows-x64.exe
+```
+
+4. Expected output for valid signatures:
+
+```
+gpg: Signature made Thu Aug 28 01:27:42 2025 UTC
+gpg:                using EDDSA key 5A4818774F6CA92319CE88A45ACBB22988757D6E
+gpg: Good signature from "fosscode <fosscode0@gmail.com>" [ultimate]
+```
+
+#### Release Artifacts
+
+Each release includes:
+
+- **Binaries:** Platform-specific executables
+- **Signatures:** Detached ASCII-armored signatures (`.asc` files)
+- **Checksums:** SHA256 hashes for additional verification
+
+#### Security Benefits
+
+- **Authenticity:** Verify the binary comes from fosscode
+- **Integrity:** Detect any tampering or corruption
+- **Trust:** Build confidence in downloaded software
+
 ### Troubleshooting
 
 #### Build Fails
@@ -183,6 +251,21 @@ rm fosscode-linux-x64 fosscode-linux-arm64 fosscode-macos-x64 fosscode-macos-arm
 - Ensure you have `gh` CLI installed and authenticated
 - Verify the release tag exists: `gh release list`
 - Check that you have permission to upload to the repository
+
+#### GPG Signing Fails
+
+- Ensure GPG is installed: `apt install gnupg` (Ubuntu/Debian) or equivalent
+- Verify you have a GPG private key: `gpg --list-secret-keys`
+- If no key exists, generate one: `gpg --gen-key`
+- Make sure your GPG key is not expired: `gpg --list-keys --with-validity`
+- Check that GPG can sign: `echo "test" | gpg --clearsign`
+
+#### Signature Verification Fails
+
+- Ensure you have imported the fosscode public key: `gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 5A4818774F6CA92319CE88A45ACBB22988757D6E`
+- Verify the key fingerprint matches: `gpg --fingerprint 5A4818774F6CA92319CE88A45ACBB22988757D6E`
+- Check that both binary and signature files are from the same release
+- Ensure files weren't corrupted during download
 
 #### Permission Issues
 
