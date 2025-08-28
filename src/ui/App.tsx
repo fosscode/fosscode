@@ -6,7 +6,6 @@ import { InteractiveLoading } from './InteractiveLoading';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ReadTool } from '../tools/ReadTool.js';
 import { BashTool } from '../tools/BashTool.js';
-import { FlashyText } from './FlashyText.js';
 
 export { App };
 
@@ -30,6 +29,10 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [originalInput, setOriginalInput] = useState('');
+
+  // Ctrl+C handling state
+  const [ctrlCCount, setCtrlCCount] = useState(0);
+  const [ctrlCTimer, setCtrlCTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Mode state
   const [currentMode, setCurrentMode] = useState<'code' | 'thinking'>('code');
@@ -66,6 +69,15 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     };
     loadTheme();
   }, []);
+
+  // Cleanup Ctrl+C timer on unmount
+  useEffect(() => {
+    return () => {
+      if (ctrlCTimer) {
+        clearTimeout(ctrlCTimer);
+      }
+    };
+  }, [ctrlCTimer]);
 
   // Force immediate re-render when messages change to prevent buffering
   useEffect(() => {
@@ -254,9 +266,35 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   useInput((inputChar, key) => {
     if (isLoading) return;
 
-    // Allow Ctrl+C to exit
+    // Handle Ctrl+C with double-tap detection
     if (key.ctrl && inputChar === 'c') {
-      process.exit(0);
+      setCtrlCCount(prev => {
+        const newCount = prev + 1;
+
+        if (newCount === 1) {
+          // First Ctrl+C: Clear the input
+          setInput('');
+
+          // Start timer for double-tap detection
+          const timer = setTimeout(() => {
+            setCtrlCCount(0);
+            setCtrlCTimer(null);
+          }, 1000); // 1 second window for double Ctrl+C
+
+          setCtrlCTimer(timer);
+          return newCount;
+        } else if (newCount === 2) {
+          // Second Ctrl+C: Exit the application
+          if (ctrlCTimer) {
+            clearTimeout(ctrlCTimer);
+            setCtrlCTimer(null);
+          }
+          process.exit(0);
+        }
+
+        return newCount;
+      });
+      return;
     }
 
     // Handle tab key to toggle between thinking and code mode
@@ -354,6 +392,15 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
       if (input.trim()) {
         sendMessage();
       }
+
+      // Reset Ctrl+C counter on enter
+      if (ctrlCCount > 0) {
+        setCtrlCCount(0);
+        if (ctrlCTimer) {
+          clearTimeout(ctrlCTimer);
+          setCtrlCTimer(null);
+        }
+      }
     } else if (key.backspace || key.delete) {
       // Handle backspace
       if (historyIndex >= 0) {
@@ -363,6 +410,15 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
       }
       const newInput = input.slice(0, -1);
       setInput(newInput);
+
+      // Reset Ctrl+C counter on any input
+      if (ctrlCCount > 0) {
+        setCtrlCCount(0);
+        if (ctrlCTimer) {
+          clearTimeout(ctrlCTimer);
+          setCtrlCTimer(null);
+        }
+      }
 
       // Check if we need to exit file search mode
       if (newInput.endsWith('@')) {
@@ -384,6 +440,15 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
 
       const newInput = input + inputChar;
       setInput(newInput);
+
+      // Reset Ctrl+C counter on any input
+      if (ctrlCCount > 0) {
+        setCtrlCCount(0);
+        if (ctrlCTimer) {
+          clearTimeout(ctrlCTimer);
+          setCtrlCTimer(null);
+        }
+      }
 
       // Check for @ symbol to enter file search mode
       if (inputChar === '@' && !isFileSearchMode) {
@@ -630,14 +695,8 @@ Summary:`;
     () =>
       messages.map((message, index) => (
         <Box key={index} marginBottom={isVerySmallScreen ? 0 : 1}>
-          <FlashyText
-            type={message.role === 'user' ? 'pulse' : 'wave'}
-            speed={message.role === 'user' ? 400 : 200}
-            colors={
-              message.role === 'user'
-                ? ['green', 'lime', 'cyan']
-                : ['blue', 'cyan', 'magenta', 'yellow']
-            }
+          <Text
+            color={message.role === 'user' ? themeColors.userMessage : themeColors.assistantMessage}
           >
             {isVerySmallScreen
               ? message.role === 'user'
@@ -646,7 +705,7 @@ Summary:`;
               : message.role === 'user'
                 ? '👤 '
                 : '🤖 '}
-          </FlashyText>
+          </Text>
           <Text>{message.content}</Text>
         </Box>
       )),
@@ -669,9 +728,7 @@ Summary:`;
     <Box flexDirection="column" height="100%">
       {/* Header */}
       <Box marginBottom={isVerySmallScreen ? 0 : 1}>
-        <FlashyText type="rainbow" speed={300}>
-          {headerText}
-        </FlashyText>
+        <Text color={themeColors.header}>{headerText}</Text>
       </Box>
 
       {/* Messages */}
@@ -682,93 +739,81 @@ Summary:`;
 
         {error && (
           <Box>
-            <FlashyText type="flash" speed={150} colors={['red', 'orange', 'yellow']}>
-              {`🚨 Error: ${error}`}
-            </FlashyText>
+            <Text color={themeColors.error}>{`🚨 Error: ${error}`}</Text>
           </Box>
         )}
 
         {/* File Search Interface */}
         {isFileSearchMode && (
           <Box flexDirection="column" marginBottom={1} paddingX={1}>
-            <FlashyText type="neon" speed={150}>
+            <Text color={themeColors.header}>
               {`🔍 Search files: ${fileSearchQuery || '<type to search>'}${isSearchingFiles ? ' ⏳' : ''}`}
-            </FlashyText>
+            </Text>
             {isSearchingFiles ? (
-              <FlashyText type="flash" speed={200} colors={['yellow', 'cyan']}>
-                🔎 Searching...
-              </FlashyText>
+              <Text color={themeColors.inputPrompt}>🔎 Searching...</Text>
             ) : fileSearchResults.length > 0 ? (
               <Box flexDirection="column" marginTop={1}>
                 {renderedFileResults}
                 {fileSearchResults.length > 5 && (
-                  <FlashyText type="pulse" speed={300} colors={['gray', 'white']}>
+                  <Text color={themeColors.footer}>
                     {`... and ${fileSearchResults.length - 5} more`}
-                  </FlashyText>
+                  </Text>
                 )}
               </Box>
             ) : fileSearchQuery ? (
-              <FlashyText type="flash" speed={250} colors={['red', 'orange']}>
+              <Text color={themeColors.error}>
                 {`No files found matching "${fileSearchQuery}"`}
-              </FlashyText>
+              </Text>
             ) : (
-              <FlashyText type="wave" speed={180}>
-                Start typing to search files...
-              </FlashyText>
+              <Text color={themeColors.footer}>Start typing to search files...</Text>
             )}
-            <FlashyText type="gradient" speed={220}>
-              ↑↓ navigate • Enter select • Esc cancel
-            </FlashyText>
+            <Text color={themeColors.footer}>↑↓ navigate • Enter select • Esc cancel</Text>
           </Box>
         )}
 
         {/* Attached Files Indicator */}
         {attachedFiles.length > 0 && !isFileSearchMode && (
           <Box marginBottom={1}>
-            <FlashyText type="pulse" speed={350} colors={['cyan', 'green', 'yellow']}>
+            <Text color={themeColors.inputPrompt}>
               {`📎 Attached: ${attachedFiles.map(f => f.path).join(', ')}`}
-            </FlashyText>
+            </Text>
           </Box>
         )}
       </Box>
 
       {/* Input */}
       <Box alignItems="flex-start">
-        <FlashyText type="flash" speed={500} colors={['yellow', 'cyan']}>
-          {isVerySmallScreen ? '$ ' : '> '}
-        </FlashyText>
+        <Text color={themeColors.inputPrompt}>{isVerySmallScreen ? '$ ' : '> '}</Text>
         <Text>
           {input || (
-            <FlashyText type="wave" speed={250} colors={['gray', 'white']}>
+            <Text color={themeColors.footer}>
               {isVerySmallScreen
                 ? 'Msg...'
                 : isSmallScreen
                   ? `Type message... (${currentMode})`
-                  : `Type your message... (${currentMode}) (Ctrl+C to exit)`}
-            </FlashyText>
+                  : `Type your message... (${currentMode}) (Ctrl+C clear, Ctrl+C twice exit)`}
+            </Text>
           )}
         </Text>
       </Box>
 
       {/* Footer - conditionally rendered based on screen size and chat state */}
-      {(messages.length > 0 || !isVerySmallScreen) && (
+      {messages.length === 0 && (
         <Box marginTop={1}>
           {isVerySmallScreen ? (
-            <FlashyText type="static" speed={400} colors={['gray', 'white']}>
-              Enter send • Ctrl+C exit
-            </FlashyText>
+            <Text color={themeColors.footer}>Enter send • Ctrl+C clear • Ctrl+C×2 exit</Text>
           ) : (
             <>
-              <FlashyText type="static" speed={400} colors={['gray', 'white']}>
+              <Text color={themeColors.footer}>
                 {isSmallScreen
-                  ? 'Enter to send, Ctrl+C to exit'
-                  : 'Type your message and press Enter to send, Ctrl+C to exit'}
-              </FlashyText>
+                  ? 'Enter to send, Ctrl+C clear, Ctrl+C×2 exit'
+                  : 'Type your message and press Enter to send, Ctrl+C clear, Ctrl+C×2 exit'}
+              </Text>
               {!isSmallScreen && (
-                <FlashyText type="static" speed={300} colors={['cyan', 'magenta', 'yellow']}>
+                <Text color={themeColors.footer}>
                   Commands: /verbose (toggle), /clear (clear), /compress (summarize), /themes
                   (switch), /mode (toggle) | Tab to toggle mode | ↑↓ for history
-                </FlashyText>
+                </Text>
               )}
             </>
           )}
