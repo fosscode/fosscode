@@ -118,7 +118,7 @@ export class ChatLogger {
     this.currentSession.messageCount++;
     await this.logOperation('message_sent', {
       message,
-      attachedFiles: attachedFiles || [],
+      attachedFiles: attachedFiles ?? [],
       messageNumber: this.currentSession.messageCount,
     });
   }
@@ -185,7 +185,7 @@ export class ChatLogger {
 
     await this.logOperation('streaming_token', {
       token,
-      isThinking: isThinking || false,
+      isThinking: isThinking ?? false,
       tokenLength: token.length,
     });
   }
