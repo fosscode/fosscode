@@ -63,15 +63,15 @@ jobs:
            echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-         run: |
-           gh release create ${{ github.ref_name }} \
-             --title "Release ${{ github.ref_name }}" \
-             --notes "${{ steps.changelog.outputs.changes }}" \
-             --generate-notes
-         env:
-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --title "Release ${{ github.ref_name }}" \
+            --notes "${{ steps.changelog.outputs.changes }}" \
+            --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-       - name: Build binaries (manual step)
-         run: |
-           echo "Binaries are built and uploaded manually to avoid GitHub Actions permission issues"
-           echo "See release documentation for manual binary building process"
+      - name: Build binaries (manual step)
+        run: |
+          echo "Binaries are built and uploaded manually to avoid GitHub Actions permission issues"
+          echo "See release documentation for manual binary building process"
