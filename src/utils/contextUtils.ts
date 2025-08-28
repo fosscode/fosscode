@@ -1,5 +1,6 @@
-import { ProviderResponse, ProviderType } from '../types/index.js';
+import { ProviderResponse, ProviderType, Message } from '../types/index.js';
 import { getContextLimit, calculateContextPercentage } from './contextLimits.js';
+import { ContextCompressionManager, CompressionResult } from './contextCompression.js';
 
 /**
  * Context information for a provider response
@@ -143,4 +144,35 @@ export function getContextWarningMessage(
     default:
       return undefined;
   }
+}
+
+/**
+ * Automatically compress messages if context usage is high
+ * @param messages Current conversation messages
+ * @param context Current context information
+ * @param compressionPromptFn Function to generate compression prompts
+ * @returns Compression result or null if no compression needed
+ */
+export async function autoCompressContext(
+  messages: Message[],
+  context: ContextInfo,
+  compressionPromptFn: (messages: Message[]) => Promise<string>
+): Promise<CompressionResult | null> {
+  const compressionManager = ContextCompressionManager.getInstance();
+
+  if (!compressionManager.shouldCompress(context)) {
+    return null;
+  }
+
+  return await compressionManager.compressMessages(messages, context, compressionPromptFn);
+}
+
+/**
+ * Check if automatic compression should be triggered
+ * @param context Current context information
+ * @returns True if compression should be triggered
+ */
+export function shouldTriggerAutoCompression(context: ContextInfo): boolean {
+  const compressionManager = ContextCompressionManager.getInstance();
+  return compressionManager.shouldCompress(context);
 }

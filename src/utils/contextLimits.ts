@@ -103,6 +103,19 @@ export const CONTEXT_LIMITS: ContextLimits = {
  * @returns The context window limit in tokens, or undefined if not found
  */
 export function getContextLimit(provider: string, model?: string): number | undefined {
+  // Try dynamic limits first (lazy import to avoid circular dependencies)
+  try {
+    const { ContextLimitManager } = require('./contextLimitManager.js');
+    const manager = ContextLimitManager.getInstance();
+    const dynamicLimit = manager.getContextLimit(provider as any, model || '');
+    if (dynamicLimit) {
+      return dynamicLimit;
+    }
+  } catch (error) {
+    // Fall back to static limits if dynamic manager is not available
+  }
+
+  // Fall back to static limits
   const providerLimits = CONTEXT_LIMITS[provider.toLowerCase()];
   if (!providerLimits) {
     return undefined;

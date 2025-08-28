@@ -9,6 +9,7 @@ import { MCPProvider } from './MCPProvider.js';
 import { AnthropicProvider } from './AnthropicProvider.js';
 import { cancellationManager } from '../utils/CancellationManager.js';
 import { toolRegistry } from '../tools/ToolRegistry.js';
+import { PromptCacheManager } from '../utils/promptCache.js';
 
 export class ProviderManager {
   private providers: Map<ProviderType, LLMProvider>;
@@ -93,6 +94,24 @@ export class ProviderManager {
     }
 
     const provider = this.getProvider(providerType);
+    const actualModel =
+      model || this.configManager.getProviderConfig(providerType).model || 'default';
+
+    // Try to get cached response first
+    const cacheManager = PromptCacheManager.getInstance();
+    const cachedResponse = cacheManager.getCachedResponse(messages, providerType, actualModel);
+
+    if (cachedResponse) {
+      return {
+        content: cachedResponse,
+        usage: {
+          promptTokens: 0, // Cached responses don't use new tokens
+          completionTokens: Math.floor(cachedResponse.length / 4), // Rough estimate
+          totalTokens: Math.floor(cachedResponse.length / 4),
+        },
+        finishReason: 'stop',
+      };
+    }
 
     const config = this.configManager.getProviderConfig(providerType);
     if (model) {
@@ -106,7 +125,20 @@ export class ProviderManager {
     await this.initializeMCPToolsIfConfigured();
 
     try {
-      return await provider.sendMessage(messages, config, mode);
+      const response = await provider.sendMessage(messages, config, mode);
+
+      // Cache the response for future use
+      if (response.usage?.totalTokens) {
+        cacheManager.cacheResponse(
+          messages,
+          response.content,
+          providerType,
+          actualModel,
+          response.usage.totalTokens
+        );
+      }
+
+      return response;
     } catch (error) {
       // Check if this was a cancellation
       if (cancellationManager.shouldCancel()) {

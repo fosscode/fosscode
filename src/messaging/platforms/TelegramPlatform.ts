@@ -39,6 +39,15 @@ export class TelegramPlatform implements MessagingPlatform {
       throw new Error('Telegram bot is not initialized');
     }
 
+    // Validate message is not empty
+    if (!message || message.trim().length === 0) {
+      return {
+        content: '',
+        success: false,
+        error: 'Message text is empty',
+      };
+    }
+
     try {
       // Telegram messages have a 4096 character limit
       const chunks = this.splitMessage(message, 4000);
