@@ -195,6 +195,7 @@ export class TelegramPlatform implements MessagingPlatform {
       await this.bot.start();
       this.isListening = true;
       console.log('✅ Telegram bot started successfully');
+      console.log('📅 Old messages (sent before startup) will be ignored');
     } catch (error) {
       console.error('Failed to start Telegram bot:', error);
       throw error;
