@@ -1,0 +1,3 @@
+#!/bin/bash
+# GPG wrapper that automatically provides passphrase from file
+exec gpg --passphrase-file ~/gpg_pass.txt --batch --yes --pinentry-mode loopback "$@"
