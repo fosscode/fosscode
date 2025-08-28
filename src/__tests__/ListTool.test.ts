@@ -1,6 +1,13 @@
 // Mock dependencies before importing
 // @ts-nocheck - Jest mock typing issues in test file
-jest.mock('fs');
+jest.mock('fs', () => ({
+  promises: {
+    readdir: jest.fn(),
+    stat: jest.fn(),
+  },
+  statSync: jest.fn(),
+  readdirSync: jest.fn(),
+}));
 jest.mock('path');
 jest.mock('../tools/SecurityManager');
 

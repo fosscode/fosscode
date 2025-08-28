@@ -10,6 +10,16 @@ import { LoginHandler } from '../auth/LoginHandler';
 const mockConfigManager = ConfigManager as jest.MockedClass<typeof ConfigManager>;
 const mockLoginHandler = LoginHandler as jest.MockedClass<typeof LoginHandler>;
 
+// Create mock instances
+const mockConfigManagerInstance = {
+  getConfig: jest.fn(),
+  setConfig: jest.fn(),
+  saveConfig: jest.fn(),
+};
+const mockLoginHandlerInstance = {
+  login: jest.fn(),
+};
+
 describe('AuthCommand', () => {
   let authCommand: AuthCommand;
   let consoleSpy: jest.SpyInstance;
@@ -20,6 +30,10 @@ describe('AuthCommand', () => {
     // Reset all mocks
     mockConfigManager.mockClear();
     mockLoginHandler.mockClear();
+
+    // Set up mock implementations
+    mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
+    mockLoginHandler.mockImplementation(() => mockLoginHandlerInstance as any);
 
     authCommand = new AuthCommand();
     consoleSpy = jest.spyOn(console, 'log').mockImplementation();
@@ -35,14 +49,7 @@ describe('AuthCommand', () => {
   describe('login', () => {
     it('should login successfully with valid provider', async () => {
       const provider = 'openai';
-      const mockLoginHandlerInstance = {
-        login: jest.fn().mockResolvedValue(true),
-      };
-      mockLoginHandler.mockImplementation(() => mockLoginHandlerInstance as any);
-
-      // Mock ConfigManager instance
-      const mockConfigManagerInstance = {};
-      mockConfigManager.mockImplementation(() => mockConfigManagerInstance as any);
+      mockLoginHandlerInstance.login.mockResolvedValue(true);
 
       await authCommand.login(provider);
 
@@ -59,10 +66,7 @@ describe('AuthCommand', () => {
 
     it('should handle login failure', async () => {
       const provider = 'openai';
-      const mockLoginHandlerInstance = {
-        login: jest.fn().mockResolvedValue(false),
-      };
-      mockLoginHandler.mockImplementation(() => mockLoginHandlerInstance as any);
+      mockLoginHandlerInstance.login.mockResolvedValue(false);
 
       await authCommand.login(provider);
 
@@ -76,7 +80,17 @@ describe('AuthCommand', () => {
     it('should reject unknown provider', async () => {
       const provider = 'unknown';
 
-      await authCommand.login(provider);
+      // Mock process.exit to prevent test from actually exiting
+      const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
+        throw new Error('Process exit called');
+      });
+
+      try {
+        await authCommand.login(provider);
+        fail('Expected login to throw due to process.exit');
+      } catch (error) {
+        expect(error.message).toBe('Process exit called');
+      }
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Unknown provider: unknown')
@@ -86,17 +100,16 @@ describe('AuthCommand', () => {
           'Available providers: openai, grok, lmstudio, openrouter, sonicfree'
         )
       );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockLoginHandler).not.toHaveBeenCalled();
+
+      mockExit.mockRestore();
     });
 
     it('should handle login error', async () => {
       const provider = 'openai';
       const errorMessage = 'Network error';
-      const mockLoginHandlerInstance = {
-        login: jest.fn().mockRejectedValue(new Error(errorMessage)),
-      };
-      mockLoginHandler.mockImplementation(() => mockLoginHandlerInstance as any);
+      mockLoginHandlerInstance.login.mockRejectedValue(new Error(errorMessage));
 
       await authCommand.login(provider);
 
@@ -109,10 +122,7 @@ describe('AuthCommand', () => {
 
     it('should handle non-Error login error', async () => {
       const provider = 'openai';
-      const mockLoginHandlerInstance = {
-        login: jest.fn().mockRejectedValue('String error'),
-      };
-      mockLoginHandler.mockImplementation(() => mockLoginHandlerInstance as any);
+      mockLoginHandlerInstance.login.mockRejectedValue('String error');
 
       await authCommand.login(provider);
 
@@ -126,10 +136,7 @@ describe('AuthCommand', () => {
     it.each(['openai', 'grok', 'lmstudio', 'openrouter', 'sonicfree'])(
       'should accept valid provider: %s',
       async provider => {
-        const mockLoginHandlerInstance = {
-          login: jest.fn().mockResolvedValue(true),
-        };
-        mockLoginHandler.mockImplementation(() => mockLoginHandlerInstance as any);
+        mockLoginHandlerInstance.login.mockResolvedValue(true);
 
         await authCommand.login(provider);
 

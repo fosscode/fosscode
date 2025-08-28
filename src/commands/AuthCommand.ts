@@ -21,7 +21,7 @@ export class AuthCommand {
 
       console.log(chalk.blue(`🔐 Logging in to ${provider}...`));
 
-      // Import the login handler
+      // Import the login handler only after validation
       const { LoginHandler } = await import('../auth/LoginHandler.js');
       const loginHandler = new LoginHandler(this.configManager);
 
