@@ -138,7 +138,7 @@ describe('ChatCommand', () => {
         await chatCommand.execute(undefined, options);
         fail('Expected process.exit to be called');
       } catch (error) {
-        expect(error.message).toBe('Process exit called');
+        expect((error as Error).message).toBe('Process exit called');
       }
 
       expect(console.error).toHaveBeenCalledWith(

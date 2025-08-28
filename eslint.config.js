@@ -28,6 +28,17 @@ export default [
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        // Node.js globals
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        fetch: 'readonly',
+        // React globals
+        React: 'readonly',
+        // Node.js types
+        NodeJS: 'readonly',
+        BufferEncoding: 'readonly',
       },
     },
     plugins: {
