@@ -6,6 +6,20 @@ import { BashTool } from '../tools/BashTool';
 describe('BashTool', () => {
   let bashTool: BashTool;
 
+  // Helper function to check if a shell is available on the system
+  async function isShellAvailable(shell: string): Promise<boolean> {
+    try {
+      const { exec } = await import('child_process');
+      const { promisify } = await import('util');
+      const execAsync = promisify(exec);
+
+      await execAsync(`which ${shell}`);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   beforeEach(() => {
     bashTool = new BashTool();
   });
@@ -88,6 +102,13 @@ describe('BashTool', () => {
     });
 
     it('should use zsh shell when specified', async () => {
+      // Skip test if zsh is not available (e.g., in CI environments)
+      const zshAvailable = await isShellAvailable('zsh');
+      if (!zshAvailable) {
+        console.log('Skipping zsh test: zsh not available on this system');
+        return;
+      }
+
       const params = { command: 'echo test', shell: 'zsh' };
 
       const result = await bashTool.execute(params);

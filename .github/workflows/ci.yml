@@ -33,10 +33,13 @@ jobs:
         with:
           bun-version: '1.2.21'
 
-      - name: Install dependencies
-        run: bun install
+       - name: Install dependencies
+         run: |
+           sudo apt-get update
+           sudo apt-get install -y zsh
+           bun install
 
-      - name: Check formatting
+       - name: Check formatting
         run: bun run format
 
       - name: Check for formatting changes
@@ -84,8 +87,11 @@ jobs:
         with:
           bun-version: '1.2.21'
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+       - name: Install dependencies
+         run: |
+           sudo apt-get update
+           sudo apt-get install -y zsh
+           bun install --frozen-lockfile
 
       - name: Build project (Run 1)
         run: |
@@ -138,8 +144,15 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies
-        run: bun install
+       - name: Install dependencies
+         run: |
+           if [ "$RUNNER_OS" == "Linux" ]; then
+             sudo apt-get update
+             sudo apt-get install -y zsh
+           elif [ "$RUNNER_OS" == "macOS" ]; then
+             brew install zsh
+           fi
+           bun install
 
       - name: Run tests
         run: bun run test

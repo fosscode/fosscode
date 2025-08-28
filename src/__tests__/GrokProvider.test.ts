@@ -1,5 +1,3 @@
-// Commented out to isolate hanging test
-/*
 import { GrokProvider } from '../providers/GrokProvider';
 import { Message, LLMConfig } from '../types';
 
@@ -274,4 +272,3 @@ describe('GrokProvider', () => {
     });
   });
 });
-*/

@@ -1,5 +1,3 @@
-// Commented out to isolate hanging test
-/*
 import 'openai/shims/node';
 import { OpenAIProvider } from '../providers/OpenAIProvider';
 import { LLMConfig } from '../types';
@@ -64,4 +62,3 @@ describe('OpenAIProvider', () => {
     });
   });
 });
-*/

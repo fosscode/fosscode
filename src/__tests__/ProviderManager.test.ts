@@ -1,5 +1,3 @@
-// Commented out to isolate hanging test
-/*
 import { Message } from '../types';
 
 // Mock the entire ProviderManager module
@@ -92,4 +90,3 @@ describe('ProviderManager Interface', () => {
     });
   });
 });
-*/

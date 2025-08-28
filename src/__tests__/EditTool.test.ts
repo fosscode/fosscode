@@ -1,5 +1,3 @@
-// Commented out to isolate hanging test
-/*
 import { EditTool } from '../tools/EditTool';
 
 describe('EditTool', () => {
@@ -126,4 +124,3 @@ describe('EditTool', () => {
     });
   });
 });
-*/
