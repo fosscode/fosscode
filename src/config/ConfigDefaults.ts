@@ -39,6 +39,12 @@ export class ConfigDefaults {
         mcp: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
         anthropic: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
       },
+      messagingPlatforms: {
+        telegram: { enabled: false },
+        discord: { enabled: false },
+        slack: { enabled: false },
+        terminal: { enabled: true }, // Terminal is always enabled as fallback
+      },
     };
   }
 

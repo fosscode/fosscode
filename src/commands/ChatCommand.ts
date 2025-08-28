@@ -3,19 +3,26 @@ import React from 'react';
 import chalk from 'chalk';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ProviderManager } from '../providers/ProviderManager.js';
-import { ProviderType, Message } from '../types/index.js';
+import { ProviderType, Message, MessagingPlatformType } from '../types/index.js';
 import { App } from '../ui/App.js';
 import { ConfigDefaults } from '../config/ConfigDefaults.js';
 import { ChatLogger } from '../config/ChatLogger.js';
+import { MessagingPlatformManager } from '../messaging/MessagingPlatformManager.js';
+import { TelegramPlatform } from '../messaging/platforms/TelegramPlatform.js';
 export class ChatCommand {
   private configManager: ConfigManager;
   private providerManager: ProviderManager;
   private chatLogger: ChatLogger;
+  private messagingManager: MessagingPlatformManager;
 
   constructor(verbose: boolean = false) {
     this.configManager = new ConfigManager(verbose);
     this.providerManager = new ProviderManager(this.configManager);
     this.chatLogger = new ChatLogger();
+    this.messagingManager = new MessagingPlatformManager();
+
+    // Register available messaging platforms
+    this.messagingManager.registerPlatform(new TelegramPlatform());
   }
 
   async execute(
@@ -25,6 +32,7 @@ export class ChatCommand {
       model?: string;
       nonInteractive?: boolean;
       verbose?: boolean;
+      messagingPlatform?: MessagingPlatformType;
     }
   ): Promise<void> {
     // Handle provider selection if not specified
@@ -40,6 +48,17 @@ export class ChatCommand {
     // Validate specific provider configuration
     await this.configManager.validateProvider(options.provider as ProviderType);
     await this.providerManager.initializeProvider(options.provider as ProviderType);
+
+    // Handle messaging platform mode
+    if (options.messagingPlatform) {
+      await this.handleMessagingMode({
+        provider: options.provider!,
+        model: options.model!,
+        messagingPlatform: options.messagingPlatform,
+        verbose: options.verbose ?? false,
+      });
+      return;
+    }
 
     // Non-interactive mode: send single message and exit
     if (options.nonInteractive ?? !!message) {
@@ -274,6 +293,111 @@ export class ChatCommand {
         console.log(chalk.yellow(`⚠️  Invalid choice, using ${configuredProviders[0]}`));
         resolve(configuredProviders[0]);
       });
+    });
+  }
+
+  private async handleMessagingMode(options: {
+    provider: string;
+    model: string;
+    messagingPlatform: MessagingPlatformType;
+    verbose?: boolean;
+  }): Promise<void> {
+    await this.configManager.loadConfig();
+    const config = this.configManager.getConfig();
+    const platformConfig = config.messagingPlatforms[options.messagingPlatform];
+
+    if (!platformConfig?.enabled) {
+      console.log(chalk.red(`❌ Messaging platform ${options.messagingPlatform} is not enabled`));
+      console.log(chalk.yellow(`\n📝 To enable it, update your config.json:`));
+      console.log(chalk.cyan(`  "messagingPlatforms": {`));
+      console.log(chalk.cyan(`    "${options.messagingPlatform}": {`));
+      console.log(chalk.cyan(`      "enabled": true,`));
+      console.log(chalk.cyan(`      "botToken": "your-bot-token"`));
+      console.log(chalk.cyan(`    }`));
+      console.log(chalk.cyan(`  }`));
+      process.exit(1);
+    }
+
+    console.log(
+      chalk.blue(
+        `🤖 fosscode - ${options.provider} (${options.model}) via ${options.messagingPlatform}`
+      )
+    );
+    console.log(chalk.yellow(`📱 Listening for messages on ${options.messagingPlatform}...`));
+    console.log(chalk.gray('Press Ctrl+C to stop'));
+
+    // Initialize the messaging platform
+    await this.messagingManager.initializePlatform(options.messagingPlatform, platformConfig);
+
+    // Start listening for messages
+    await this.messagingManager.startListening(
+      options.messagingPlatform,
+      platformConfig,
+      async message => {
+        console.log(chalk.cyan(`👤 ${message.userName}: ${message.content}`));
+
+        // Process the message with the AI provider
+        const chatMessage: Message = {
+          role: 'user',
+          content: message.content,
+          timestamp: message.timestamp,
+        };
+
+        try {
+          const response = await this.providerManager.sendMessage(
+            options.provider as ProviderType,
+            [chatMessage],
+            options.model,
+            options.verbose ?? false
+          );
+
+          // Send response back to the messaging platform
+          const platformResponse = await this.messagingManager.sendMessage(
+            options.messagingPlatform,
+            message.chatId,
+            response.content
+          );
+
+          if (platformResponse.success) {
+            console.log(chalk.green(`🤖 Response sent to ${message.userName}`));
+          } else {
+            console.log(chalk.red(`❌ Failed to send response: ${platformResponse.error}`));
+          }
+
+          if (response.usage) {
+            console.log(
+              chalk.gray(
+                `📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
+              )
+            );
+          }
+        } catch (error) {
+          const errorMessage = `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          await this.messagingManager.sendMessage(
+            options.messagingPlatform,
+            message.chatId,
+            errorMessage
+          );
+          console.log(
+            chalk.red(
+              `❌ Error processing message: ${error instanceof Error ? error.message : 'Unknown error'}`
+            )
+          );
+        }
+      }
+    );
+
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      console.log(chalk.yellow('\n🛑 Shutting down...'));
+      await this.messagingManager.stopAllListeners();
+      process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+      console.log(chalk.yellow('\n🛑 Shutting down...'));
+      await this.messagingManager.stopAllListeners();
+      process.exit(0);
     });
   }
 }

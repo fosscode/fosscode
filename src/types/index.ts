@@ -7,6 +7,8 @@ export type ProviderType =
   | 'mcp'
   | 'anthropic';
 
+export type MessagingPlatformType = 'telegram' | 'discord' | 'slack' | 'terminal';
+
 export interface MCPServerConfig {
   name: string;
   mcpServerCommand?: string;
@@ -66,6 +68,16 @@ export interface CachedModels {
   expiresAt: Date;
 }
 
+export interface MessagingPlatformConfig {
+  enabled: boolean;
+  botToken?: string;
+  webhookUrl?: string;
+  apiUrl?: string;
+  timeout?: number;
+  maxRetries?: number;
+  verbose?: boolean;
+}
+
 export interface AppConfig {
   defaultProvider: ProviderType;
   defaultModel: string;
@@ -73,6 +85,7 @@ export interface AppConfig {
   theme: 'dark' | 'light';
   providers: Record<ProviderType, LLMConfig>;
   cachedModels: Record<ProviderType, CachedModels>;
+  messagingPlatforms: Record<MessagingPlatformType, MessagingPlatformConfig>;
 }
 
 export interface PerformanceMetrics {
@@ -141,4 +154,30 @@ export interface MessageQueueState {
   isProcessing: boolean;
   queue: QueuedMessage[];
   currentMessage?: QueuedMessage;
+}
+
+// Messaging Platform types
+export interface MessagingPlatformMessage {
+  id: string;
+  content: string;
+  userId: string;
+  userName: string;
+  chatId: string;
+  timestamp: Date;
+  platform: MessagingPlatformType;
+}
+
+export interface MessagingPlatformResponse {
+  content: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface MessagingPlatform {
+  initialize(config: MessagingPlatformConfig): Promise<void>;
+  sendMessage(chatId: string, message: string): Promise<MessagingPlatformResponse>;
+  listenForMessages(callback: (message: MessagingPlatformMessage) => Promise<void>): Promise<void>;
+  stopListening(): Promise<void>;
+  validateConfig(config: MessagingPlatformConfig): Promise<boolean>;
+  getPlatformType(): MessagingPlatformType;
 }

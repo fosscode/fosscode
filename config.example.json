@@ -80,5 +80,31 @@
       "lastUpdated": "2024-01-01T00:00:00.000Z",
       "expiresAt": "2024-01-02T00:00:00.000Z"
     }
+  },
+  "messagingPlatforms": {
+    "telegram": {
+      "enabled": false,
+      "botToken": "your-telegram-bot-token-here",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "verbose": false
+    },
+    "discord": {
+      "enabled": false,
+      "botToken": "your-discord-bot-token-here",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "verbose": false
+    },
+    "slack": {
+      "enabled": false,
+      "botToken": "your-slack-bot-token-here",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "verbose": false
+    },
+    "terminal": {
+      "enabled": true
+    }
   }
 }
