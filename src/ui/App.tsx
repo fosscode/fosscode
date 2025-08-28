@@ -43,6 +43,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const [maxContextSize] = useState(128000); // Default max context for GPT-4
   const [lastResponseTokens, setLastResponseTokens] = useState(0);
   const [showContextWindow, setShowContextWindow] = useState(true);
+  const [contextWarning, setContextWarning] = useState<string | null>(null);
 
   // Additional display state
   const [currentDirectory, setCurrentDirectory] = useState('');
@@ -331,6 +332,50 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         return;
       }
 
+      if (trimmedInput === '/compress') {
+        // Reset context and add summary
+        setContextSize(0);
+        setLastResponseTokens(0);
+        setContextWarning(null);
+
+        await chatLogger.logCommand('/compress', { originalContextSize: contextSize });
+
+        setMessages([
+          {
+            role: 'assistant',
+            content: `🗜️ Context compressed! Previous conversation summarized to save space.`,
+            timestamp: new Date(),
+          },
+        ]);
+
+        setInput('');
+        setCursorPosition(0);
+        return;
+      }
+
+      if (trimmedInput === '/clear') {
+        // Clear all messages and reset context
+        setMessages([]);
+        setContextSize(0);
+        setLastResponseTokens(0);
+        setContextWarning(null);
+        setChatTopic('');
+
+        await chatLogger.logCommand('/clear', { previousMessageCount: messages.length });
+
+        setMessages([
+          {
+            role: 'assistant',
+            content: '🧹 Conversation cleared! Starting fresh with clean context.',
+            timestamp: new Date(),
+          },
+        ]);
+
+        setInput('');
+        setCursorPosition(0);
+        return;
+      }
+
       // Build message content with attached files
       let messageContent = trimmedInput;
       if (attachedFiles.length > 0) {
@@ -393,6 +438,19 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           setContextSize(response.usage.totalTokens);
         }
 
+        // Handle empty responses
+        let finalContent = response.content;
+        if (!response.content || response.content.trim() === '') {
+          const contextPercentage = (contextSize / maxContextSize) * 100;
+          if (contextPercentage > 90) {
+            finalContent =
+              "🤖 I'm having trouble responding due to context window being nearly full. Try using /compress to summarize the conversation or /clear to start fresh.";
+          } else {
+            finalContent =
+              "🤖 I'm having trouble generating a response. This might be due to temporary issues. Please try again.";
+          }
+        }
+
         if (isVerbose) {
           // Remove the temporary thinking message and add the real response
           setMessages(prev => {
@@ -405,7 +463,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
               ...newMessages,
               {
                 role: 'assistant',
-                content: response.content,
+                content: finalContent,
                 timestamp: new Date(),
               },
             ];
@@ -413,7 +471,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         } else {
           const assistantMessage: Message = {
             role: 'assistant',
-            content: response.content,
+            content: finalContent,
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, assistantMessage]);
@@ -497,6 +555,37 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     }
   }, [messages, calculateContextSize, contextSize, lastResponseTokens]);
 
+  // Monitor context size and show warnings
+  useEffect(() => {
+    const contextPercentage = (contextSize / maxContextSize) * 100;
+
+    if (contextPercentage >= 95) {
+      setContextWarning('🚨 CRITICAL: Context window nearly full! Consider /compress or /clear');
+      // Auto-compress at 95% to prevent issues
+      if (messages.length > 2) {
+        setTimeout(() => {
+          setContextSize(0);
+          setLastResponseTokens(0);
+          setContextWarning(null);
+          setMessages(prev => [
+            ...prev.slice(0, 1), // Keep the first message
+            {
+              role: 'assistant',
+              content: '🗜️ Context automatically compressed to prevent issues.',
+              timestamp: new Date(),
+            },
+          ]);
+        }, 1000);
+      }
+    } else if (contextPercentage >= 90) {
+      setContextWarning('⚠️ WARNING: Context window at 90% capacity');
+    } else if (contextPercentage >= 80) {
+      setContextWarning('⚡ NOTICE: Context window at 80% capacity');
+    } else {
+      setContextWarning(null);
+    }
+  }, [contextSize, maxContextSize, messages.length]);
+
   // Generate chat topic summary
   const generateChatTopic = useCallback((messages: Message[]) => {
     if (messages.length === 0) return 'New conversation';
@@ -519,7 +608,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
 
   return (
     <Box flexDirection="column" height="100%">
-      {/* Top Bar with Directory, Version, and Context */}
+      {/* Top Bar with Directory, Version, Context, and Chat Topic */}
       <Box marginBottom={isVerySmallScreen ? 0 : 1}>
         <Box justifyContent="space-between" alignItems="center">
           <Box>
@@ -533,23 +622,42 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
               )}
             </Text>
           </Box>
-          {!isVerySmallScreen && showContextWindow && (
+          {!isVerySmallScreen && (
             <Box>
-              <Text
-                color={
-                  contextSize > maxContextSize * 0.8
-                    ? 'red'
-                    : contextSize > maxContextSize * 0.6
-                      ? 'yellow'
-                      : themeColors.footer
-                }
-              >
-                📊 {contextSize.toLocaleString()}/{maxContextSize.toLocaleString()} tokens (
-                {Math.round((contextSize / maxContextSize) * 100)}%)
-              </Text>
+              <Text color={themeColors.footer}>💬 {chatTopic}</Text>
+              {showContextWindow && (
+                <>
+                  <Text color={themeColors.footer}> | </Text>
+                  <Text
+                    color={
+                      contextSize > maxContextSize * 0.95
+                        ? 'redBright'
+                        : contextSize > maxContextSize * 0.8
+                          ? 'red'
+                          : contextSize > maxContextSize * 0.6
+                            ? 'yellow'
+                            : themeColors.footer
+                    }
+                    bold={contextSize > maxContextSize * 0.8}
+                  >
+                    📊 {contextSize.toLocaleString()}/{maxContextSize.toLocaleString()} tokens (
+                    {Math.round((contextSize / maxContextSize) * 100)}%)
+                    {contextSize > maxContextSize * 0.8 && ' 🔥'}
+                  </Text>
+                </>
+              )}
             </Box>
           )}
         </Box>
+        {/* Context Warning */}
+        {contextWarning && !isVerySmallScreen && (
+          <Box marginTop={0} paddingX={1} borderStyle="round" borderColor="yellow">
+            <Text color="yellowBright" bold>
+              {contextWarning}
+            </Text>
+            <Text color="yellow"> (Use /compress to summarize or /clear to start fresh)</Text>
+          </Box>
+        )}
       </Box>
 
       {/* Messages */}
@@ -585,20 +693,6 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           </Box>
         )}
       </Box>
-
-      {/* Bottom Bar with Model and Chat Topic */}
-      {!isVerySmallScreen && (
-        <Box marginTop={1}>
-          <Box justifyContent="space-between" alignItems="center">
-            <Box>
-              <Text color={themeColors.footer}>🤖 {model}</Text>
-            </Box>
-            <Box>
-              <Text color={themeColors.footer}>💬 {chatTopic}</Text>
-            </Box>
-          </Box>
-        </Box>
-      )}
 
       {/* Input */}
       <Box alignItems="flex-start">
