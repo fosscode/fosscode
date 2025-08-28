@@ -16,7 +16,13 @@ export class ChatFileManager {
 
   async saveSession(session: ChatSession): Promise<void> {
     try {
-      const fileName = `chat_${session.id}.json`;
+      // Format timestamp as YYYY-MM-DD_HH-MM-SS
+      const timestamp = session.startTime
+        .toISOString()
+        .replace('T', '_')
+        .replace(/:\d{2}\.\d{3}Z$/, '')
+        .replace(/:/g, '-');
+      const fileName = `chat_${timestamp}_${session.id}.json`;
       const filePath = path.join(this.logsDir, fileName);
       await fs.writeFile(filePath, JSON.stringify(session, null, 2));
     } catch (error) {

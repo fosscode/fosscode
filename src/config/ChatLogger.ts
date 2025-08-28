@@ -45,6 +45,10 @@ export class ChatLogger {
     // Log session start
     await this.operationLogger.logSessionStarted(provider, model, sessionId);
 
+    // Show the new chat file name for debugging
+    const fileName = `chat_${sessionId}.json`;
+    console.log(`Started new chat session: ${fileName}`);
+
     return sessionId;
   }
 
