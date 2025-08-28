@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 // Mock dependencies before imports
 jest.mock('../config/ConfigManager.js');
 jest.mock('../providers/ProviderManager.js');

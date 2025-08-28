@@ -28,10 +28,10 @@ jobs:
           git-url: file://.
           extra_args: --debug --only-verified
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: '1.2.21'
+       - name: Setup Bun
+         uses: oven-sh/setup-bun@v1
+         with:
+           bun-version: '1.2.21'
 
        - name: Install dependencies
          run: |
@@ -40,7 +40,7 @@ jobs:
            bun install
 
        - name: Check formatting
-        run: bun run format
+         run: bun run format
 
       - name: Check for formatting changes
         run: |
@@ -55,11 +55,13 @@ jobs:
       - name: Run linter
         run: bun run lint
 
-      - name: Run typecheck
-        run: bun run typecheck
+       - name: Run typecheck
+         run: bun run typecheck
 
-      - name: Run build
-        run: bun run build
+       - name: Clean and build
+         run: |
+           bun run clean
+           bun run build
 
       - name: Run tests
         run: bun run test
@@ -82,10 +84,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: '1.2.21'
+       - name: Setup Bun
+         uses: oven-sh/setup-bun@v1
+         with:
+           bun-version: '1.2.21'
 
        - name: Install dependencies
          run: |
@@ -139,10 +141,10 @@ jobs:
         with:
           bun-version: '1.2.21'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
+       - name: Setup Node.js
+         uses: actions/setup-node@v4
+         with:
+           node-version: ${{ matrix.node-version }}
 
        - name: Install dependencies
          run: |
@@ -160,7 +162,8 @@ jobs:
       - name: Build project
         run: bun run build
 
-      - name: Test CLI functionality
-        run: |
-          bun run start chat --help
-          bun run start providers
+       - name: Test CLI functionality
+         run: |
+           bun run start --help
+           bun run start chat --help
+           bun run start providers

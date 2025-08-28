@@ -163,7 +163,7 @@ export class EditTool implements Tool {
 
     while ((index = content.indexOf(searchString, index)) !== -1) {
       count++;
-      index += searchString.length;
+      index += 1; // Increment by 1 to allow overlapping matches
     }
 
     return count;
