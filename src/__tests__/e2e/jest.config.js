@@ -4,7 +4,7 @@ export default {
   roots: ['<rootDir>'],
   testMatch: ['**/*.e2e.test.ts'],
   testTimeout: 60000,
-  setupFilesAfterEnv: ['<rootDir>/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/../../__tests__/setup.ts'],
   verbose: true,
   collectCoverage: false,
   maxWorkers: 1, // Run tests sequentially to avoid port conflicts

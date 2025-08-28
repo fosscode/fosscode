@@ -15,13 +15,13 @@ fi
 
 # Build the project
 echo "🔨 Building project..."
-npm run build
+bun run build
 
 # Run tests and linting
 echo "🧪 Running tests and linting..."
-npm run lint
-npm run typecheck
-npm test
+bun run lint
+bun run typecheck
+bun run test
 
 # Publish to npm
 npm publish
