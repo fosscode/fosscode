@@ -4,6 +4,15 @@ import { jest } from '@jest/globals';
 // Add OpenAI shim for Node.js environment
 import 'openai/shims/node';
 
+// CLI Testing Library setup
+import 'cli-testing-library/extend-expect';
+import { cleanup } from 'cli-testing-library';
+
+// Cleanup after each test
+afterEach(() => {
+  cleanup();
+});
+
 // Mock chalk to prevent ES module issues
 jest.mock('chalk', () => ({
   default: jest.fn((text: string) => text),

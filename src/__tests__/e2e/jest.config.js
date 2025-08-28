@@ -10,4 +10,8 @@ export default {
   maxWorkers: 1, // Run tests sequentially to avoid port conflicts
   forceExit: true,
   detectOpenHandles: true,
+  // CLI Testing Library setup
+  testEnvironmentOptions: {
+    // Add any CLI Testing Library specific options here
+  },
 };
