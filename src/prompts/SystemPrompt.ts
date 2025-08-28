@@ -247,7 +247,7 @@ export async function projectStructure(): Promise<string[]> {
       .join('\n');
 
     return [`<project>`, structure, `</project>`];
-  } catch (error) {
+  } catch (_error) {
     return [`<project>Unable to read project structure</project>`];
   }
 }

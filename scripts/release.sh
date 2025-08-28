@@ -1,19 +1,20 @@
 #!/bin/bash
 
 # Release script for fosscode
-# Usage: ./scripts/release.sh [patch|minor|major] [--with-binaries]
-# This script prepares a release by bumping version, building, testing, tagging, and creating GitHub release.
+# Usage: ./scripts/release.sh [patch|minor|major] [--skip-binaries]
+# This script prepares a release by bumping version, building, testing, tagging, creating GitHub release,
+# and building/signing/uploading binaries for all platforms.
 # Publishing to npm is handled automatically by GitHub Actions when the release is published.
 
 set -e
 
 # Default to patch version bump
 VERSION_TYPE=${1:-patch}
-BUILD_BINARIES=false
+BUILD_BINARIES=true
 
 # Parse arguments
-if [[ "$2" == "--with-binaries" ]]; then
-  BUILD_BINARIES=true
+if [[ "$2" == "--skip-binaries" ]]; then
+  BUILD_BINARIES=false
 fi
 
 echo "🚀 Starting release process..."
@@ -90,11 +91,16 @@ gh release create "v$NEW_VERSION" \
   --generate-notes
 
 if [[ "$BUILD_BINARIES" == "true" ]]; then
-  echo "🔨 Building and uploading binaries..."
+  echo "🔨 Building, signing, and uploading binaries for all platforms..."
   # Build and upload binaries
   ./scripts/build-binaries.sh "v$NEW_VERSION"
+else
+  echo "⏭️  Skipping binary building (--skip-binaries flag used)"
 fi
 
 echo "✅ Release $NEW_VERSION completed successfully!"
 echo "📦 NPM publishing will be handled automatically by GitHub Actions"
+if [[ "$BUILD_BINARIES" == "true" ]]; then
+  echo "📥 Binaries available at: https://github.com/$(git config --get remote.origin.url | sed 's/.*github.com[:/]\([^.]*\).*/\1/')/releases/tag/v$NEW_VERSION"
+fi
 echo "🔗 Release URL: https://github.com/$(git config --get remote.origin.url | sed 's/.*github.com[:/]\([^.]*\).*/\1/')/releases/tag/v$NEW_VERSION"

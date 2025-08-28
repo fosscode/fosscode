@@ -193,7 +193,7 @@ export class ConfigManager {
       }
 
       return Object.keys(mcpConfigs).length > 0 ? mcpConfigs : null;
-    } catch (error) {
+    } catch (_error) {
       // mcp.d directory doesn't exist, which is fine
       return null;
     }

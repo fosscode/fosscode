@@ -188,7 +188,14 @@ export class ChatCommand {
   }
 
   private async selectProvider(isNonInteractive: boolean): Promise<string> {
-    const availableProviders = ['openai', 'grok', 'lmstudio', 'openrouter', 'sonicfree'];
+    const availableProviders = [
+      'openai',
+      'grok',
+      'lmstudio',
+      'openrouter',
+      'sonicfree',
+      'anthropic',
+    ];
     const configuredProviders: string[] = [];
 
     console.log(chalk.blue('🔍 Checking configured providers...'));
@@ -200,7 +207,7 @@ export class ChatCommand {
         await this.providerManager.initializeProvider(provider as ProviderType);
         configuredProviders.push(provider);
         console.log(chalk.green(`  ✅ ${provider}`));
-      } catch (error) {
+      } catch (_error) {
         console.log(chalk.gray(`  ❌ ${provider} (not configured)`));
       }
     }

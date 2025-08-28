@@ -66,22 +66,28 @@ The MCP configuration uses Playwright as the MCP server:
 
 ## Usage Examples
 
-### Interactive Chat
+### Configure MCP Once
 
 ```bash
-fosscode chat --provider mcp
+# Set up MCP configuration
+fosscode config set providers.mcp.mcpServerCommand npx
+fosscode config set providers.mcp.mcpServerArgs '["@playwright/mcp@latest"]'
 ```
 
-### Single Message
+### Use MCP Tools with ANY Provider
 
 ```bash
-fosscode chat "Take a screenshot of google.com" --provider mcp --non-interactive
+# MCP tools now work with any provider!
+fosscode chat "Take a screenshot of google.com" --provider grok
+fosscode chat "Navigate to example.com" --provider openai --non-interactive
+fosscode chat "Click the login button" --provider anthropic
 ```
 
 ### List Available Tools
 
 ```bash
-fosscode chat "What tools do you have available?" --provider mcp
+# Works with any configured provider
+fosscode chat "What MCP tools do you have available?" --provider grok
 ```
 
 ## Available Playwright Tools

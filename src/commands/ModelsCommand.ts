@@ -61,7 +61,7 @@ export class ModelsCommand {
                 console.log(`  • ${model}`);
               });
             }
-          } catch (error) {
+          } catch (_error) {
             console.log(chalk.gray(`  Unable to list models (API key may not be configured)`));
           }
 

@@ -115,7 +115,7 @@ export class EditTool implements Tool {
         // Clean up temp file if write failed
         try {
           await fs.promises.unlink(tempPath);
-        } catch (cleanupError) {
+        } catch (_cleanupError) {
           // Ignore cleanup errors
         }
         throw error;

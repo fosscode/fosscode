@@ -143,7 +143,7 @@ export class GrepTool implements Tool {
               matchCount++;
             }
           }
-        } catch (error) {
+        } catch (_error) {
           // Skip files that can't be read
           continue;
         }
@@ -199,7 +199,7 @@ export class GrepTool implements Tool {
             }
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Skip directories we can't read
       }
     };

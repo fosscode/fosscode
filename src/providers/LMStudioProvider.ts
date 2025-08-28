@@ -400,7 +400,7 @@ export class LMStudioProvider implements LLMProvider {
 
     try {
       return await response.json();
-    } catch (error) {
+    } catch (_error) {
       throw new Error(
         'Failed to parse response from LMStudio server. The response may not be valid JSON.'
       );

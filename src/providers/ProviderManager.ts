@@ -93,6 +93,12 @@ export class ProviderManager {
       config.verbose = verbose;
     }
 
+    // Check if message contains MCP tool calls
+    const mcpResponse = await this.handleMCPToolsIfNeeded(messages, config);
+    if (mcpResponse) {
+      return mcpResponse;
+    }
+
     try {
       return await provider.sendMessage(messages, config, mode);
     } catch (error) {
@@ -152,6 +158,39 @@ export class ProviderManager {
       return await provider.validateConfig(config);
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Check if message contains MCP tool calls and handle them
+   */
+  private async handleMCPToolsIfNeeded(
+    messages: Message[],
+    _config: any
+  ): Promise<ProviderResponse | null> {
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role !== 'user') return null;
+
+    // Check if MCP is configured
+    const mcpConfig = this.configManager.getProviderConfig('mcp');
+    if (!mcpConfig.mcpServerCommand && !mcpConfig.mcpServers) return null;
+
+    // Check for common MCP tool keywords
+    const mcpKeywords = ['screenshot', 'browser', 'navigate', 'click', 'playwright', 'web'];
+    const hasMCPKeywords = mcpKeywords.some(keyword =>
+      lastMessage.content.toLowerCase().includes(keyword)
+    );
+
+    if (!hasMCPKeywords) return null;
+
+    try {
+      // Use MCP provider to handle the tool call
+      const mcpProvider = this.getProvider('mcp');
+      return await mcpProvider.sendMessage(messages, mcpConfig);
+    } catch (error) {
+      // If MCP fails, continue with original provider
+      console.warn('MCP tool execution failed, falling back to original provider:', error);
+      return null;
     }
   }
 }
