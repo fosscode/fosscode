@@ -41,15 +41,15 @@ jobs:
       - name: Run tests
         run: bun run test
 
-      - name: Build
-        run: bun run build
+       - name: Build
+         run: bun run build
 
-        - name: Setup npm registry
-          run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          env:
-            NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+       - name: Setup npm registry
+         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+         env:
+           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-        - name: Publish to npm
-          run: bunx npm publish
-          # Note: If this fails due to npm's 24-hour republish restriction,
-          # the package will need to be published manually after 24 hours
+       - name: Publish to npm
+         run: bunx npm publish
+         # Note: If this fails due to npm's 24-hour republish restriction,
+         # the package will need to be published manually after 24 hours

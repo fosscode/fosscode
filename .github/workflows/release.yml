@@ -53,16 +53,16 @@ jobs:
             CHANGES=$(git log --pretty=format:"- %s (%h)" --max-count=10)
           fi
 
-          # Escape newlines for GitHub output
-          CHANGES="${CHANGES//'%'/'%25'}"
-          CHANGES="${CHANGES//$'\n'/'%0A'}"
-          CHANGES="${CHANGES//$'\r'/'%0D'}"
+           # Escape newlines for GitHub output
+           CHANGES="${CHANGES//'%'/'%25'}"
+           CHANGES="${CHANGES//$'\n'/'%0A'}"
+           CHANGES="${CHANGES//$'\r'/'%0D'}"
 
-            echo "changes<<EOF" >> $GITHUB_OUTPUT
-            echo "$CHANGES" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+           echo "changes<<EOF" >> $GITHUB_OUTPUT
+           echo "$CHANGES" >> $GITHUB_OUTPUT
+           echo "EOF" >> $GITHUB_OUTPUT
 
-       - name: Create GitHub Release
+      - name: Create GitHub Release
          run: |
            gh release create ${{ github.ref_name }} \
              --title "Release ${{ github.ref_name }}" \
