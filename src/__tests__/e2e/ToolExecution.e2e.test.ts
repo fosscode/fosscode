@@ -1,4 +1,15 @@
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
+/**
+ * Tool Execution E2E Tests
+ *
+ * These tests validate the tool execution pipeline and file system operations
+ * of fosscode. Some tests are currently skipped due to mock server limitations
+ * or complex multi-step scenarios that require further development.
+ *
+ * Skipped tests represent intended functionality that should work but
+ * currently have infrastructure or implementation issues.
+ */
+
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
@@ -437,6 +448,7 @@ describe('Tool Execution E2E Tests', () => {
     });
   }, 15000);
 
+  // TODO: Fix complex multi-step tool chains - mock server may not be handling complex tool execution scenarios properly
   test.skip('should handle complex multi-step tool chains', async () => {
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
