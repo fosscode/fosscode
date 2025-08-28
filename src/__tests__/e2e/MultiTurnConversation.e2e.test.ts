@@ -214,15 +214,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
 
       const child = spawn(
         'bun',
-        [
-          'run',
-          'src/index.ts',
-          'chat',
-          'create function to greet users',
-          '--non-interactive',
-          '--config',
-          testConfigPath,
-        ],
+        ['run', 'src/index.ts', 'chat', 'create function to greet users', '--non-interactive'],
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
@@ -277,8 +269,6 @@ describe('Multi-Turn Conversation E2E Tests', () => {
           'chat',
           'create a test for the greet function',
           '--non-interactive',
-          '--config',
-          testConfigPath,
         ],
         {
           stdio: ['pipe', 'pipe', 'pipe'],
@@ -355,15 +345,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
 
       const child = spawn(
         'bun',
-        [
-          'run',
-          'src/index.ts',
-          'chat',
-          'hello there',
-          '--non-interactive',
-          '--config',
-          testConfigPath,
-        ],
+        ['run', 'src/index.ts', 'chat', 'hello there', '--non-interactive'],
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
@@ -416,28 +398,16 @@ describe('Multi-Turn Conversation E2E Tests', () => {
       };
       fs.writeFileSync(invalidConfigPath, JSON.stringify(invalidConfig, null, 2));
 
-      const child = spawn(
-        'bun',
-        [
-          'run',
-          'src/index.ts',
-          'chat',
-          'hello',
-          '--non-interactive',
-          '--config',
-          invalidConfigPath,
-        ],
-        {
-          stdio: ['pipe', 'pipe', 'pipe'],
-          cwd: process.cwd(),
-          env: {
-            ...process.env,
-            NODE_ENV: 'test',
-            FORCE_COLOR: '0',
-            FOSSCODE_CONFIG_PATH: testConfigPath,
-          },
-        }
-      );
+      const child = spawn('bun', ['run', 'src/index.ts', 'chat', 'hello', '--non-interactive'], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          NODE_ENV: 'test',
+          FORCE_COLOR: '0',
+          FOSSCODE_CONFIG_PATH: testConfigPath,
+        },
+      });
 
       let output = '';
       let errorOutput = '';
@@ -481,31 +451,23 @@ describe('Multi-Turn Conversation E2E Tests', () => {
       };
       fs.writeFileSync(timeoutConfigPath, JSON.stringify(timeoutConfig, null, 2));
 
-      const child = spawn(
-        'bun',
-        [
-          'run',
-          'src/index.ts',
-          'chat',
-          'hello',
-          '--non-interactive',
-          '--config',
-          timeoutConfigPath,
-        ],
-        {
-          stdio: ['pipe', 'pipe', 'pipe'],
-          cwd: process.cwd(),
-          env: {
-            ...process.env,
-            NODE_ENV: 'test',
-            FORCE_COLOR: '0',
-            FOSSCODE_CONFIG_PATH: timeoutConfigPath,
-          },
-        }
-      );
+      const child = spawn('bun', ['run', 'src/index.ts', 'chat', 'hello', '--non-interactive'], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          NODE_ENV: 'test',
+          FORCE_COLOR: '0',
+          FOSSCODE_CONFIG_PATH: timeoutConfigPath,
+        },
+      });
 
       let output = '';
       let errorOutput = '';
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error('Network timeout test timed out'));
+      }, 15000);
 
       child.stdout?.on('data', data => {
         output += data.toString();
@@ -534,11 +496,6 @@ describe('Multi-Turn Conversation E2E Tests', () => {
 
   test('should handle malformed API responses', async () => {
     return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Malformed response test timed out'));
-      }, 15000);
-
       // Create a config that points to a server that returns malformed JSON
       const malformedConfigPath = path.join(__dirname, 'malformed-config.json');
       const malformedConfig = {
@@ -570,32 +527,31 @@ describe('Multi-Turn Conversation E2E Tests', () => {
         `,
       ]);
 
+      let child: ChildProcessWithoutNullStreams;
+      const timeout = setTimeout(() => {
+        if (child) child.kill();
+        reject(new Error('Malformed response test timed out'));
+      }, 15000);
+
       setTimeout(() => {
-        const child = spawn(
-          'bun',
-          [
-            'run',
-            'src/index.ts',
-            'chat',
-            'hello',
-            '--non-interactive',
-            '--config',
-            malformedConfigPath,
-          ],
-          {
-            stdio: ['pipe', 'pipe', 'pipe'],
-            cwd: process.cwd(),
-            env: {
-              ...process.env,
-              NODE_ENV: 'test',
-              FORCE_COLOR: '0',
-              FOSSCODE_CONFIG_PATH: malformedConfigPath,
-            },
-          }
-        );
+        child = spawn('bun', ['run', 'src/index.ts', 'chat', 'hello', '--non-interactive'], {
+          stdio: ['pipe', 'pipe', 'pipe'],
+          cwd: process.cwd(),
+          env: {
+            ...process.env,
+            NODE_ENV: 'test',
+            FORCE_COLOR: '0',
+            FOSSCODE_CONFIG_PATH: malformedConfigPath,
+          },
+        });
 
         let output = '';
         let errorOutput = '';
+
+        const timeout = setTimeout(() => {
+          child.kill();
+          reject(new Error('Network timeout test timed out'));
+        }, 15000);
 
         child.stdout?.on('data', data => {
           output += data.toString();
@@ -635,15 +591,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
       // First interaction: Create a function
       const child1 = spawn(
         'bun',
-        [
-          'run',
-          'src/index.ts',
-          'chat',
-          'create a greet function',
-          '--non-interactive',
-          '--config',
-          testConfigPath,
-        ],
+        ['run', 'src/index.ts', 'chat', 'create a greet function', '--non-interactive'],
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
@@ -673,15 +621,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
         // Second interaction: Create a test (should remember the function)
         const child2 = spawn(
           'bun',
-          [
-            'run',
-            'src/index.ts',
-            'chat',
-            'now create a test for it',
-            '--non-interactive',
-            '--config',
-            testConfigPath,
-          ],
+          ['run', 'src/index.ts', 'chat', 'now create a test for it', '--non-interactive'],
           {
             stdio: ['pipe', 'pipe', 'pipe'],
             cwd: process.cwd(),
@@ -711,15 +651,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
           // Third interaction: Run the test (should remember both previous steps)
           const child3 = spawn(
             'bun',
-            [
-              'run',
-              'src/index.ts',
-              'chat',
-              'run the test to show it works',
-              '--non-interactive',
-              '--config',
-              testConfigPath,
-            ],
+            ['run', 'src/index.ts', 'chat', 'run the test to show it works', '--non-interactive'],
             {
               stdio: ['pipe', 'pipe', 'pipe'],
               cwd: process.cwd(),
@@ -776,15 +708,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
       // First create some conversation context
       const child1 = spawn(
         'bun',
-        [
-          'run',
-          'src/index.ts',
-          'chat',
-          'create a function',
-          '--non-interactive',
-          '--config',
-          testConfigPath,
-        ],
+        ['run', 'src/index.ts', 'chat', 'create a function', '--non-interactive'],
         {
           stdio: ['pipe', 'pipe', 'pipe'],
           cwd: process.cwd(),
@@ -804,15 +728,7 @@ describe('Multi-Turn Conversation E2E Tests', () => {
         // Simulate conversation reset by using a fresh conversation ID
         const child2 = spawn(
           'bun',
-          [
-            'run',
-            'src/index.ts',
-            'chat',
-            'what were we just working on?',
-            '--non-interactive',
-            '--config',
-            testConfigPath,
-          ],
+          ['run', 'src/index.ts', 'chat', 'what were we just working on?', '--non-interactive'],
           {
             stdio: ['pipe', 'pipe', 'pipe'],
             cwd: process.cwd(),
@@ -868,8 +784,6 @@ describe('Multi-Turn Conversation E2E Tests', () => {
           'chat',
           'create both a utility function and its test file',
           '--non-interactive',
-          '--config',
-          testConfigPath,
         ],
         {
           stdio: ['pipe', 'pipe', 'pipe'],
