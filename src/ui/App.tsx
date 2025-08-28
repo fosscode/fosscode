@@ -436,7 +436,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         // Handle empty responses
         let finalContent = response.content;
         if (!response.content || response.content.trim() === '') {
-          const contextPercentage = (contextSize / maxContextSize) * 100;
+          const contextPercentage = ((response.usage?.totalTokens || 0) / maxContextSize) * 100;
           if (contextPercentage > 90) {
             finalContent =
               "🤖 I'm having trouble responding due to context window being nearly full. Try using /compress to summarize the conversation or /clear to start fresh.";
