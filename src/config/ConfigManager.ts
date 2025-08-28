@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { AppConfig, ProviderType, LLMConfig } from '../types/index.js';
+import { AppConfig, ProviderType, LLMConfig, MCPServerConfig } from '../types/index.js';
 import { ConfigMigration } from './ConfigMigration.js';
 import { ConfigDefaults } from './ConfigDefaults.js';
 import { ModelCacheManager } from './ModelCacheManager.js';
@@ -45,9 +45,24 @@ export class ConfigManager {
       const loadedConfig = JSON.parse(configData);
       console.log('Parsed config:', loadedConfig);
 
+      // Load MCP server configurations from mcp.d directory
+      const mcpConfigs = await this.loadMCPConfigs(configDir);
+
       // Merge with default config to ensure all properties exist
       this.config = { ...ConfigDefaults.getDefaultConfig(), ...loadedConfig };
       console.log('Final merged config:', this.config);
+
+      // Merge MCP server configs into the main config
+      if (mcpConfigs && Object.keys(mcpConfigs).length > 0) {
+        if (!this.config.providers.mcp.mcpServers) {
+          this.config.providers.mcp.mcpServers = {};
+        }
+        this.config.providers.mcp.mcpServers = {
+          ...this.config.providers.mcp.mcpServers,
+          ...mcpConfigs,
+        };
+      }
+
       this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);
     } catch (error) {
       console.log('Error loading config:', error);
@@ -118,6 +133,44 @@ export class ConfigManager {
   private isPrototypePollutingKey(key: string): boolean {
     const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
     return dangerousKeys.includes(key);
+  }
+
+  private async loadMCPConfigs(configDir: string): Promise<Record<string, MCPServerConfig> | null> {
+    const mcpDir = path.join(configDir, 'mcp.d');
+    const mcpConfigs: Record<string, MCPServerConfig> = {};
+
+    try {
+      // Check if mcp.d directory exists
+      const stat = await fs.stat(mcpDir);
+      if (!stat.isDirectory()) {
+        return null;
+      }
+
+      // Read all .json files from mcp.d directory
+      const files = await fs.readdir(mcpDir);
+      const jsonFiles = files.filter(file => file.endsWith('.json'));
+
+      for (const file of jsonFiles) {
+        try {
+          const filePath = path.join(mcpDir, file);
+          const fileContent = await fs.readFile(filePath, 'utf-8');
+          const mcpConfig: MCPServerConfig = JSON.parse(fileContent);
+
+          // Use filename (without .json) as the server name if not specified
+          const serverName = mcpConfig.name || path.basename(file, '.json');
+          mcpConfig.name = serverName;
+
+          mcpConfigs[serverName] = mcpConfig;
+        } catch (error) {
+          console.warn(`Failed to load MCP config from ${file}:`, error);
+        }
+      }
+
+      return Object.keys(mcpConfigs).length > 0 ? mcpConfigs : null;
+    } catch (error) {
+      // mcp.d directory doesn't exist, which is fine
+      return null;
+    }
   }
 
   getProviderConfig(provider: ProviderType): LLMConfig {

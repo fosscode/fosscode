@@ -26,8 +26,31 @@ export class ConfigValidator {
       return;
     }
 
-    // For MCP, we need either a command with args or a URL
+    // For MCP, we need either a command with args or a URL, or multiple servers
     if (provider === 'mcp') {
+      // Check if multiple servers are configured
+      if (providerConfig.mcpServers && Object.keys(providerConfig.mcpServers).length > 0) {
+        const enabledServers = Object.values(providerConfig.mcpServers).filter(
+          s => s.enabled !== false
+        );
+        if (enabledServers.length === 0) {
+          throw new Error('No enabled MCP servers found in mcpServers configuration.');
+        }
+        // Validate each enabled server
+        for (const server of enabledServers) {
+          if (
+            !server.mcpServerUrl &&
+            (!server.mcpServerCommand || !server.mcpServerArgs || server.mcpServerArgs.length === 0)
+          ) {
+            throw new Error(
+              `MCP server '${server.name}' not properly configured. Please set either mcpServerUrl or both mcpServerCommand and mcpServerArgs.`
+            );
+          }
+        }
+        return;
+      }
+
+      // Fall back to legacy single server validation
       if (
         !providerConfig.mcpServerUrl &&
         (!providerConfig.mcpServerCommand ||
@@ -56,7 +79,15 @@ export class ConfigValidator {
     const configuredProviders = Object.entries(config)
       .filter(([provider, config]) => {
         if (provider === 'mcp') {
-          // MCP is configured if it has either a URL or command+args
+          // MCP is configured if it has either a URL or command+args, or multiple servers
+          if (config.mcpServers && Object.keys(config.mcpServers).length > 0) {
+            return Object.values(config.mcpServers).some(
+              s =>
+                s.enabled !== false &&
+                (s.mcpServerUrl ??
+                  (s.mcpServerCommand && s.mcpServerArgs && s.mcpServerArgs.length > 0))
+            );
+          }
           return (
             config.mcpServerUrl ??
             (config.mcpServerCommand && config.mcpServerArgs && config.mcpServerArgs.length > 0)

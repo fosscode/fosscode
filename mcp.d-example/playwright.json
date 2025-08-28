@@ -1,0 +1,6 @@
+{
+  "name": "playwright",
+  "mcpServerCommand": "npx",
+  "mcpServerArgs": ["@playwright/mcp@latest"],
+  "enabled": true
+}

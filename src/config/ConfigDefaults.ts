@@ -16,7 +16,18 @@ export class ConfigDefaults {
         lmstudio: { baseURL: 'http://localhost:1234' },
         openrouter: {},
         sonicfree: { baseURL: 'https://gateway.opencode.ai/v1' },
-        mcp: { mcpServerCommand: 'npx', mcpServerArgs: ['@playwright/mcp@latest'] },
+        mcp: {
+          mcpServerCommand: 'npx',
+          mcpServerArgs: ['@playwright/mcp@latest'],
+          mcpServers: {
+            context7: {
+              name: 'context7',
+              mcpServerCommand: 'npx',
+              mcpServerArgs: ['-y', '@upstash/context7-mcp@latest'],
+              enabled: true,
+            },
+          },
+        },
         anthropic: {},
       },
       cachedModels: {

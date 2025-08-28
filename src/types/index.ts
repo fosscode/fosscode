@@ -7,6 +7,16 @@ export type ProviderType =
   | 'mcp'
   | 'anthropic';
 
+export interface MCPServerConfig {
+  name: string;
+  mcpServerCommand?: string;
+  mcpServerArgs?: string[];
+  mcpServerUrl?: string;
+  timeout?: number;
+  verbose?: boolean;
+  enabled?: boolean;
+}
+
 export interface LLMConfig {
   apiKey?: string;
   baseURL?: string;
@@ -15,10 +25,12 @@ export interface LLMConfig {
   maxRetries?: number;
   model?: string;
   verbose?: boolean;
-  // MCP-specific config
+  // MCP-specific config (legacy single server support)
   mcpServerCommand?: string;
   mcpServerArgs?: string[];
   mcpServerUrl?: string;
+  // Multiple MCP servers support
+  mcpServers?: Record<string, MCPServerConfig>;
 }
 
 export interface Message {

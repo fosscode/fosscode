@@ -1,0 +1,6 @@
+{
+  "name": "context7",
+  "mcpServerCommand": "npx",
+  "mcpServerArgs": ["-y", "@upstash/context7-mcp@latest"],
+  "enabled": true
+}
