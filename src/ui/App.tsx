@@ -5,6 +5,8 @@ import { Message, ProviderType } from '../types/index.js';
 import { InteractiveLoading } from './InteractiveLoading';
 import { ChatLogger } from '../config/ChatLogger.js';
 import { ConfigManager } from '../config/ConfigManager.js';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { MessageList } from './MessageList';
 import { FileSearch } from './FileSearch';
@@ -42,6 +44,11 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const [lastResponseTokens, setLastResponseTokens] = useState(0);
   const [showContextWindow, setShowContextWindow] = useState(true);
 
+  // Additional display state
+  const [currentDirectory, setCurrentDirectory] = useState('');
+  const [fosscodeVersion, setFosscodeVersion] = useState('');
+  const [chatTopic, setChatTopic] = useState('');
+
   // Ctrl+C handling state
   const [ctrlCCount, setCtrlCCount] = useState(0);
   const [ctrlCTimer, setCtrlCTimer] = useState<NodeJS.Timeout | null>(null);
@@ -77,6 +84,17 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
       // Initialize chat logger and start session
       await chatLogger.initialize();
       await chatLogger.startSession(provider, model);
+
+      // Load version and current directory
+      try {
+        const packageJsonPath = path.join(process.cwd(), 'package.json');
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        setFosscodeVersion(packageJson.version || 'unknown');
+      } catch (error) {
+        setFosscodeVersion('unknown');
+      }
+
+      setCurrentDirectory(path.basename(process.cwd()));
     };
     initializeApp();
 
@@ -479,12 +497,42 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     }
   }, [messages, calculateContextSize, contextSize, lastResponseTokens]);
 
+  // Generate chat topic summary
+  const generateChatTopic = useCallback((messages: Message[]) => {
+    if (messages.length === 0) return 'New conversation';
+
+    const userMessages = messages.filter(m => m.role === 'user');
+    if (userMessages.length === 0) return 'Assistant mode';
+
+    const firstMessage = userMessages[0].content.slice(0, 50);
+    const topic =
+      firstMessage.length < userMessages[0].content.length ? `${firstMessage}...` : firstMessage;
+
+    return topic;
+  }, []);
+
+  // Update chat topic when messages change
+  useEffect(() => {
+    const topic = generateChatTopic(messages);
+    setChatTopic(topic);
+  }, [messages, generateChatTopic]);
+
   return (
     <Box flexDirection="column" height="100%">
-      {/* Header with Context Window Display */}
+      {/* Top Bar with Directory, Version, and Context */}
       <Box marginBottom={isVerySmallScreen ? 0 : 1}>
         <Box justifyContent="space-between" alignItems="center">
-          <Text color={themeColors.header}>{headerText}</Text>
+          <Box>
+            <Text color={themeColors.header}>
+              {headerText}
+              {!isVerySmallScreen && (
+                <Text color={themeColors.footer}>
+                  {' '}
+                  | 📁 {currentDirectory} | v{fosscodeVersion}
+                </Text>
+              )}
+            </Text>
+          </Box>
           {!isVerySmallScreen && showContextWindow && (
             <Box>
               <Text
@@ -537,6 +585,20 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           </Box>
         )}
       </Box>
+
+      {/* Bottom Bar with Model and Chat Topic */}
+      {!isVerySmallScreen && (
+        <Box marginTop={1}>
+          <Box justifyContent="space-between" alignItems="center">
+            <Box>
+              <Text color={themeColors.footer}>🤖 {model}</Text>
+            </Box>
+            <Box>
+              <Text color={themeColors.footer}>💬 {chatTopic}</Text>
+            </Box>
+          </Box>
+        </Box>
+      )}
 
       {/* Input */}
       <Box alignItems="flex-start">
