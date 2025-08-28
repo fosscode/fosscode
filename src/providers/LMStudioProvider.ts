@@ -75,7 +75,7 @@ export class LMStudioProvider implements LLMProvider {
       );
 
       // Prepare messages in OpenAI format
-      let lmstudioMessages: any[] = [
+      const lmstudioMessages: any[] = [
         { role: 'system', content: systemPrompt },
         ...messages.map(msg => ({
           role: msg.role as 'user' | 'assistant',
@@ -296,6 +296,7 @@ export class LMStudioProvider implements LLMProvider {
     }
 
     try {
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
