@@ -1,0 +1,1 @@
+{"providers":{"openai":{"apiKey":"sk-test","baseUrl":"http://localhost:8081/v1"}},"defaultProvider":"openai"}

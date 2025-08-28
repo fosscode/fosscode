@@ -1,5 +1,5 @@
 module.exports = {
-  preset: 'ts-jest',
+  preset: null,
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: [
@@ -17,14 +17,7 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/**/__tests__/**'],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   testTimeout: 10000,
-  transformIgnorePatterns: ['node_modules/(?!(strip-final-newline|strip-ansi|ansi-regex)/)'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
-  },
-  extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
   },
 };

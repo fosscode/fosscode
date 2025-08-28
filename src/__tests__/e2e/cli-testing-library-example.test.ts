@@ -29,7 +29,7 @@ describe('CLI Testing Library Example', () => {
   });
 
   test('should handle basic CLI commands with CLI Testing Library', async () => {
-    const { findByText } = await render('./dist/fosscode', ['--help'], {
+    const { findByText } = await render('bun', ['run', 'src/index.ts', '--help'], {
       cwd: process.cwd(),
     });
 

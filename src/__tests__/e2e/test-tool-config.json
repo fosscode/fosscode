@@ -1,0 +1,9 @@
+{
+  "providers": {
+    "openai": {
+      "apiKey": "sk-test-key-123456789012345678901234567890",
+      "baseURL": "http://localhost:3001/v1"
+    }
+  },
+  "defaultProvider": "openai"
+}
