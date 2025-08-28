@@ -61,9 +61,11 @@ export class SonicFreeProvider implements LLMProvider {
       let finalContent = '';
       let intermediateContent = '';
       let finishReason: 'stop' | 'length' | 'error' = 'stop';
+      let finalIteration = 0;
 
       // Agent loop for tool calling
       for (let iteration = 0; iteration < 15; iteration++) {
+        finalIteration = iteration;
         // Max 15 iterations to allow more attempts at solving problems
         const response = await this.client.chat.completions.create({
           model: config.model ?? 'sonic',
@@ -191,7 +193,7 @@ export class SonicFreeProvider implements LLMProvider {
         {
           contentLength: finalContent.length,
           hasContent: finalContent.trim().length > 0,
-          iterations: iteration + 1,
+          iterations: finalIteration + 1,
           finishReason,
           totalTokens: totalUsage.total_tokens,
         },
