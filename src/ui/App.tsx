@@ -33,6 +33,9 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [originalInput, setOriginalInput] = useState('');
 
+  // Cursor position state
+  const [cursorPosition, setCursorPosition] = useState(0);
+
   // Ctrl+C handling state
   const [ctrlCCount, setCtrlCCount] = useState(0);
   const [ctrlCTimer, setCtrlCTimer] = useState<NodeJS.Timeout | null>(null);
@@ -112,6 +115,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         if (newCount === 1) {
           // First Ctrl+C: Clear the input
           setInput('');
+          setCursorPosition(0);
 
           // Start timer for double-tap detection
           const timer = setTimeout(() => {
@@ -158,16 +162,24 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
     }
 
     // Regular input mode
-    if (key.upArrow) {
+    if (key.leftArrow) {
+      // Move cursor left
+      setCursorPosition(prev => Math.max(0, prev - 1));
+    } else if (key.rightArrow) {
+      // Move cursor right
+      setCursorPosition(prev => Math.min(input.length, prev + 1));
+    } else if (key.upArrow) {
       if (commandHistory.length > 0) {
         if (historyIndex === -1) {
           // Save current input before navigating history
           setOriginalInput(input);
           setHistoryIndex(commandHistory.length - 1);
           setInput(commandHistory[commandHistory.length - 1]);
+          setCursorPosition(commandHistory[commandHistory.length - 1].length);
         } else if (historyIndex > 0) {
           setHistoryIndex(historyIndex - 1);
           setInput(commandHistory[historyIndex - 1]);
+          setCursorPosition(commandHistory[historyIndex - 1].length);
         }
       }
     } else if (key.downArrow) {
@@ -175,10 +187,12 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         if (historyIndex < commandHistory.length - 1) {
           setHistoryIndex(historyIndex + 1);
           setInput(commandHistory[historyIndex + 1]);
+          setCursorPosition(commandHistory[historyIndex + 1].length);
         } else {
           // Return to original input
           setHistoryIndex(-1);
           setInput(originalInput);
+          setCursorPosition(originalInput.length);
         }
       }
     } else if (key.return) {
@@ -202,8 +216,12 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         setHistoryIndex(-1);
         setOriginalInput('');
       }
-      const newInput = input.slice(0, -1);
-      setInput(newInput);
+
+      if (cursorPosition > 0) {
+        const newInput = input.slice(0, cursorPosition - 1) + input.slice(cursorPosition);
+        setInput(newInput);
+        setCursorPosition(prev => prev - 1);
+      }
 
       // Reset Ctrl+C counter on any input
       if (ctrlCCount > 0) {
@@ -221,8 +239,9 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         setOriginalInput('');
       }
 
-      const newInput = input + inputChar;
+      const newInput = input.slice(0, cursorPosition) + inputChar + input.slice(cursorPosition);
       setInput(newInput);
+      setCursorPosition(prev => prev + 1);
 
       // Reset Ctrl+C counter on any input
       if (ctrlCCount > 0) {
@@ -268,6 +287,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           },
         ]);
         setInput('');
+        setCursorPosition(0);
         return;
       }
 
@@ -286,6 +306,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           },
         ]);
         setInput('');
+        setCursorPosition(0);
         return;
       }
 
@@ -293,6 +314,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
         await chatLogger.logCommand('/clear', { messageCount: messages.length });
         setMessages([]);
         setInput('');
+        setCursorPosition(0);
         return;
       }
 
@@ -310,6 +332,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
           },
         ]);
         setInput('');
+        setCursorPosition(0);
         return;
       }
 
@@ -329,6 +352,7 @@ function App({ provider, model, providerManager, verbose = false }: AppProps) {
 
         await chatLogger.logCommand('/compress', { messageCount: messages.length });
         setInput('');
+        setCursorPosition(0);
         setIsLoading(true);
         setError(null);
 
@@ -399,6 +423,7 @@ Summary:`;
 
       setMessages(prev => [...prev, userMessage]);
       setInput('');
+      setCursorPosition(0);
       setAttachedFiles([]); // Clear attached files after sending
       setIsLoading(true);
       setError(null);
@@ -492,15 +517,30 @@ Summary:`;
   );
 
   // File attachment handler
-  const handleFileAttach = useCallback((filePath: string, content: string) => {
-    setAttachedFiles(prev => [
-      ...prev,
-      {
-        path: filePath,
-        content,
-      },
-    ]);
-    setInput(prev => prev + filePath + ' ');
+  const handleFileAttach = useCallback(
+    (filePath: string, content: string) => {
+      setAttachedFiles(prev => [
+        ...prev,
+        {
+          path: filePath,
+          content,
+        },
+      ]);
+      const newInput =
+        input.slice(0, cursorPosition) + filePath + ' ' + input.slice(cursorPosition);
+      setInput(newInput);
+      setCursorPosition(prev => prev + filePath.length + 1);
+    },
+    [input, cursorPosition]
+  );
+
+  // Helper function to render input with cursor
+  const renderInputWithCursor = useCallback((text: string, cursorPos: number) => {
+    if (text.length === 0) return '';
+
+    const beforeCursor = text.slice(0, cursorPos);
+    const afterCursor = text.slice(cursorPos);
+    return `${beforeCursor}█${afterCursor}`;
   }, []);
 
   return (
@@ -548,7 +588,9 @@ Summary:`;
       <Box alignItems="flex-start">
         <Text color={themeColors.inputPrompt}>{isVerySmallScreen ? '$ ' : '> '}</Text>
         <Text>
-          {input || (
+          {input ? (
+            <Text>{renderInputWithCursor(input, cursorPosition)}</Text>
+          ) : (
             <Text color={themeColors.footer}>
               {isVerySmallScreen
                 ? 'Msg...'
