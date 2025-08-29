@@ -76,6 +76,6 @@ export class MessagingPlatformManager {
 
   isPlatformActive(type: MessagingPlatformType): boolean {
     const platform = this.getPlatform(type);
-    return platform && platform.isActive ? platform.isActive() : false;
+    return platform?.isActive ? platform.isActive() : false;
   }
 }
