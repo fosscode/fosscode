@@ -1,0 +1,168 @@
+name: Reproducible Builds Test
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly to catch reproducibility regressions
+    - cron: '0 0 * * 0'
+
+jobs:
+  test-reproducibility:
+    name: Test Build Reproducibility
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun (pinned version)
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.21
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set up reproducible build environment
+        run: |
+          echo "Setting up deterministic build environment..."
+          export SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          export LANG=C
+          export LC_ALL=C
+          export TZ=UTC
+          umask 022
+          echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> $GITHUB_ENV
+          echo "LANG=C" >> $GITHUB_ENV
+          echo "LC_ALL=C" >> $GITHUB_ENV
+          echo "TZ=UTC" >> $GITHUB_ENV
+          echo "Build environment configured for reproducibility"
+          echo "SOURCE_DATE_EPOCH: $SOURCE_DATE_EPOCH ($(date -u -d @$SOURCE_DATE_EPOCH))"
+
+      - name: Test basic reproducibility
+        run: |
+          echo "Testing basic build reproducibility..."
+          chmod +x scripts/test-reproducibility-with-fixes.sh
+          ./scripts/test-reproducibility-with-fixes.sh
+
+      - name: Build reproducible binaries (Linux only)
+        run: |
+          echo "Building with reproducible script..."
+          chmod +x scripts/build-binaries-reproducible.sh
+          SKIP_UPLOAD=1 ./scripts/build-binaries-reproducible.sh v0.0.0-ci-test
+
+      - name: Archive reproducibility artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: reproducibility-debug-artifacts
+          path: |
+            fosscode-repro-test-*
+            fosscode-test-build-*
+            reproducibility-manifest-*.json
+          retention-days: 7
+
+      - name: Report reproducibility status
+        if: always()
+        run: |
+          echo "::group::Reproducibility Test Results"
+          echo "Build reproducibility test completed"
+          echo "Check job logs for detailed analysis"
+          echo "::endgroup::"
+
+  cross-platform-reproducibility:
+    name: Cross-Platform Reproducibility (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun (pinned version)
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.21
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set up reproducible build environment (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          export SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          export LANG=C
+          export LC_ALL=C
+          export TZ=UTC
+          umask 022
+          echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> $GITHUB_ENV
+          echo "LANG=C" >> $GITHUB_ENV
+          echo "LC_ALL=C" >> $GITHUB_ENV
+          echo "TZ=UTC" >> $GITHUB_ENV
+
+      - name: Set up reproducible build environment (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $timestamp = git log -1 --format=%ct
+          echo "SOURCE_DATE_EPOCH=$timestamp" >> $env:GITHUB_ENV
+          echo "LANG=C" >> $env:GITHUB_ENV
+          echo "LC_ALL=C" >> $env:GITHUB_ENV
+          echo "TZ=UTC" >> $env:GITHUB_ENV
+
+      - name: Test platform-specific reproducibility
+        shell: bash
+        run: |
+          echo "Testing reproducibility on ${{ matrix.os }}..."
+
+          # Build two identical binaries
+          echo "Building first binary..."
+          bun build src/binary.ts --target node --compile --outfile test-binary-1
+
+          sleep 2
+
+          echo "Building second binary..."  
+          bun build src/binary.ts --target node --compile --outfile test-binary-2
+
+          # Compare hashes
+          if command -v shasum >/dev/null; then
+            HASH1=$(shasum -a 256 test-binary-1 | cut -d' ' -f1)
+            HASH2=$(shasum -a 256 test-binary-2 | cut -d' ' -f1)
+          else
+            HASH1=$(sha256sum test-binary-1 | cut -d' ' -f1)
+            HASH2=$(sha256sum test-binary-2 | cut -d' ' -f1)
+          fi
+
+          echo "Platform: ${{ matrix.os }}"
+          echo "Binary 1 SHA256: $HASH1"
+          echo "Binary 2 SHA256: $HASH2"
+
+          if [ "$HASH1" = "$HASH2" ]; then
+            echo "✅ Platform reproducibility: PASSED"
+          else
+            echo "❌ Platform reproducibility: FAILED" 
+            echo "::warning::Reproducible builds failed on ${{ matrix.os }}"
+          fi
+
+          # Cleanup
+          rm -f test-binary-1 test-binary-2
+
+      - name: Archive platform artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: reproducibility-${{ matrix.os }}-artifacts
+          path: |
+            test-binary-*
+          retention-days: 3

@@ -16,10 +16,9 @@ export function MessageList({
   isLoading,
   error,
   isVerySmallScreen,
-  showThinkingBlocks = true,
+  showThinkingBlocks: _showThinkingBlocks = true,
 }: MessageListProps) {
   // Use showThinkingBlocks for future thinking block display logic
-  console.log('Thinking blocks display:', showThinkingBlocks);
 
   const renderedMessages = messages.map((message, index) => {
     // TODO: Implement thinking block display logic based on showThinkingBlocks

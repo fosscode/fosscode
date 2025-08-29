@@ -32,6 +32,8 @@ export class SecurityManager {
         '.cpp',
         '.c',
         '.h',
+        '.yml',
+        '.yaml',
       ]
     );
     this.restrictedPaths = new Set(

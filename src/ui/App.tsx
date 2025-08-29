@@ -1,16 +1,19 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Box, useStdout, useInput } from 'ink';
+import { useState, useCallback, useEffect } from 'react';
+import { Box, useInput } from 'ink';
 import { ProviderManager } from '../providers/ProviderManager.js';
 import { Message, ProviderType } from '../types/index.js';
 import { ChatLogger } from '../config/ChatLogger.js';
 import { useFileSearch } from './hooks/useFileSearch.js';
 import { useCommandHistory } from './hooks/useCommandHistory.js';
+import { usePromptHistory } from './hooks/usePromptHistory.js';
 import { useTheme } from './hooks/useTheme.js';
+import { useTmux } from './hooks/useTmux.js';
 import { handleCommand, toggleMode } from './utils/commandHandler.js';
 import {
-  getEffectiveTerminalSize,
-  getTmuxResponsiveBreakpoints,
   isInTmux,
+  loadChatHistoryFromSession,
+  saveChatHistoryToSession,
+  cleanupOldSessionFiles,
 } from '../utils/tmuxUtils.js';
 import { AppHeader } from './components/AppHeader.js';
 import { MessageList } from './components/MessageList.js';
@@ -50,36 +53,16 @@ function App({
   // Custom hooks
   const fileSearch = useFileSearch();
   const commandHistory = useCommandHistory();
+  const promptHistory = usePromptHistory();
   const { theme, toggleTheme, themeColors } = useTheme();
+  const tmux = useTmux();
 
-  // Get terminal dimensions for responsive design (tmux-aware)
-  const { stdout } = useStdout();
+  // Terminal dimensions are handled by the useTmux hook
 
-  // Use tmux-aware dimensions when available
-  const effectiveDimensions = useMemo(() => {
-    if (isInTmux()) {
-      return getEffectiveTerminalSize();
-    }
-    return {
-      width: stdout?.columns ?? process.stdout.columns ?? 80,
-      height: stdout?.rows ?? process.stdout.rows ?? 24,
-    };
-  }, [stdout]);
+  // Use tmux-aware responsive breakpoints
+  const responsiveBreakpoints = tmux.responsiveBreakpoints;
 
-  const terminalWidth = effectiveDimensions.width;
-  const terminalHeight = effectiveDimensions.height;
-
-  // Get tmux-aware responsive breakpoints
-  const responsiveBreakpoints = useMemo(() => {
-    if (isInTmux()) {
-      return getTmuxResponsiveBreakpoints();
-    }
-    return {
-      isSmallScreen: terminalWidth < 60 || terminalHeight < 15,
-      isVerySmallScreen: terminalWidth < 40 || terminalHeight < 10,
-      isExtraSmallScreen: false, // Not used in non-tmux mode
-    };
-  }, [terminalWidth, terminalHeight]);
+  // Dimensions are now handled by the useTmux hook
 
   const isSmallScreen = responsiveBreakpoints.isSmallScreen;
   const isVerySmallScreen = responsiveBreakpoints.isVerySmallScreen;
@@ -100,12 +83,105 @@ function App({
     }
   }, [messages.length]);
 
+  // Load chat history from tmux session on mount
+  useEffect(() => {
+    if (isInTmux()) {
+      const sessionHistory = loadChatHistoryFromSession();
+      if (sessionHistory) {
+        setMessages(sessionHistory);
+      }
+      // Clean up old session files periodically
+      cleanupOldSessionFiles();
+    }
+  }, []);
+
+  // Tmux resize handling is now handled by the useTmux hook
+
+  // Update tmux status line when mode/provider changes
+  useEffect(() => {
+    tmux.updateStatusLine(currentMode, provider, model);
+    return () => {
+      tmux.clearStatusLine();
+    };
+  }, [currentMode, provider, model, tmux]);
+
+  // Set up tmux key bindings
+  useEffect(() => {
+    if (!tmux.isInTmux) return;
+
+    const keyBindings = {
+      'C-t': 'toggle-mode',
+      'C-s': 'save-session',
+      'C-l': 'clear-messages',
+      'C-h': 'show-help',
+    };
+
+    tmux.setupKeyBindings(keyBindings);
+
+    // Set up key binding listener
+    const unsubscribeKeyBindings = tmux.onKeyBinding((_key, action) => {
+      switch (action) {
+        case 'toggle-mode':
+          const newMode = toggleMode(currentMode);
+          setCurrentMode(newMode);
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: `Switched to ${newMode} mode (via tmux key binding)`,
+              timestamp: new Date(),
+            },
+          ]);
+          break;
+        case 'save-session':
+          if (saveChatHistoryToSession(messages)) {
+            setMessages(prev => [
+              ...prev,
+              {
+                role: 'assistant',
+                content: 'Chat history saved to tmux session',
+                timestamp: new Date(),
+              },
+            ]);
+          }
+          break;
+        case 'clear-messages':
+          setMessages([]);
+          break;
+        case 'show-help':
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content:
+                'Tmux Key Bindings:\n• Ctrl+T: Toggle mode\n• Ctrl+S: Save session\n• Ctrl+L: Clear messages\n• Ctrl+H: Show help',
+              timestamp: new Date(),
+            },
+          ]);
+          break;
+      }
+    });
+
+    return () => {
+      unsubscribeKeyBindings();
+      // Key bindings are automatically cleaned up by tmux
+    };
+  }, [currentMode, messages]);
+
+  // Save chat history to tmux session when messages change
+  useEffect(() => {
+    if (isInTmux() && messages.length > 0) {
+      saveChatHistoryToSession(messages);
+    }
+  }, [messages]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       // Clear any pending timers or intervals
       setIsLoading(false);
       setError(null);
+      tmux.clearStatusLine();
     };
   }, []);
 
@@ -174,18 +250,18 @@ function App({
 
     // Regular input mode
     if (key.upArrow) {
-      const newInput = commandHistory.navigateHistory('up', input);
+      const newInput = promptHistory.navigateHistory('up', input);
       setInput(newInput);
     } else if (key.downArrow) {
-      const newInput = commandHistory.navigateHistory('down', input);
+      const newInput = promptHistory.navigateHistory('down', input);
       setInput(newInput);
     } else if (key.return) {
       if (input.trim()) {
         sendMessage();
       }
     } else if (key.backspace || key.delete) {
-      if (commandHistory.historyIndex >= 0) {
-        commandHistory.exitHistoryMode();
+      if (promptHistory.historyIndex >= 0) {
+        promptHistory.exitHistoryMode();
       }
       const newInput = input.slice(0, -1);
       setInput(newInput);
@@ -198,8 +274,8 @@ function App({
         fileSearch.exitFileSearch();
       }
     } else if (inputChar && !key.ctrl && !key.meta && inputChar.length === 1) {
-      if (commandHistory.historyIndex >= 0) {
-        commandHistory.exitHistoryMode();
+      if (promptHistory.historyIndex >= 0) {
+        promptHistory.exitHistoryMode();
       }
 
       const newInput = input + inputChar;
@@ -220,9 +296,11 @@ function App({
 
       const trimmedInput = inputValue.trim();
 
-      // Add command to history
+      // Add command to both in-memory and persistent history
       commandHistory.addToHistory(trimmedInput);
       commandHistory.resetHistoryNavigation();
+      await promptHistory.addToHistory(trimmedInput);
+      promptHistory.resetHistoryNavigation();
 
       // Handle special commands
       const commandResult = await handleCommand(trimmedInput, {
