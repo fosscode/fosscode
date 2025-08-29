@@ -331,7 +331,7 @@ export class LSPDiagnosticsTool implements Tool {
   /**
    * Python specific analysis
    */
-  private analyzePython(content: string, filePath: string): Diagnostic[] {
+  private analyzePython(content: string, _filePath: string): Diagnostic[] {
     const diagnostics: Diagnostic[] = [];
 
     // Check for print statements (common in development)
@@ -351,7 +351,7 @@ export class LSPDiagnosticsTool implements Tool {
   /**
    * JSON syntax validation
    */
-  private analyzeJSON(content: string, filePath: string): Diagnostic[] {
+  private analyzeJSON(content: string, _filePath: string): Diagnostic[] {
     const diagnostics: Diagnostic[] = [];
 
     try {

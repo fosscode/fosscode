@@ -2,7 +2,12 @@ import { PatchTool } from '../tools/PatchTool.js';
 import * as fs from 'fs';
 import { jest } from '@jest/globals';
 
-// Skip SecurityManager mocking for now to focus on core functionality
+// Mock SecurityManager
+jest.mock('../tools/SecurityManager', () => ({
+  securityManager: {
+    validateDirectoryOperation: jest.fn().mockResolvedValue('/home/dev/fosscode'),
+  },
+}));
 
 // Mock fs module
 jest.mock('fs', () => ({
