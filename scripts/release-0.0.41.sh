@@ -46,7 +46,7 @@ npm run typecheck
 # npm test  # Temporarily disabled due to long test execution
 
 echo "📝 Committing version change..."
-git add package.json package-lock.json
+git add package.json
 git commit -m "chore: bump version to $VERSION"
 
 echo "⬆️  Pushing to GitHub..."
