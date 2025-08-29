@@ -76,8 +76,8 @@ describe('SonicFreeProvider', () => {
 
       // Simulate the scenario where finalContent is empty due to token limits
       const finalContent = '';
-      const totalTokensUsed = 12000;
-      const adaptiveTokenLimit = 11000;
+      const totalTokensUsed = 130000;
+      const adaptiveTokenLimit = 125000;
       const iterations: number = 2;
 
       // This simulates the logic we added in the fix
@@ -95,7 +95,7 @@ describe('SonicFreeProvider', () => {
       expect(resultContent).toBeTruthy();
       expect(resultContent).not.toBe('');
       expect(resultContent).toContain('token limit');
-      expect(resultContent).toContain('12000 tokens');
+      expect(resultContent).toContain('130000 tokens');
       expect(resultContent).toContain('3 iterations');
     });
   });

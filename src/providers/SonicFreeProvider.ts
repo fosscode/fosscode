@@ -103,7 +103,7 @@ export class SonicFreeProvider implements LLMProvider {
           model: config.model ?? 'sonic',
           messages: openaiMessages,
           temperature: 0.7,
-          max_tokens: 4096, // Optimal limit: generates ~3760 completion tokens (93% efficiency)
+          max_tokens: 16000, // Increased to use more of the 128K context window efficiently
           stream: false,
           ...(openaiTools && { tools: openaiTools }),
         });
@@ -341,12 +341,12 @@ export class SonicFreeProvider implements LLMProvider {
     const lastMessage = messages[messages.length - 1];
     const content = lastMessage?.content || '';
 
-    // Base token limits
-    let baseLimit = 8000;
+    // Use full context window for Sonic model (128,000 tokens)
+    let baseLimit = 120000; // Leave some buffer for system messages and overhead
 
     // Increase for complex tasks
     if (content.includes('refactor') || content.includes('architecture')) {
-      baseLimit += 4000; // Complex architectural work
+      baseLimit += 5000; // Complex architectural work
     }
 
     if (content.includes('debug') || content.includes('fix') || content.includes('error')) {
@@ -358,16 +358,16 @@ export class SonicFreeProvider implements LLMProvider {
     }
 
     if (mode === 'code') {
-      baseLimit += 3000; // Code mode often needs more tokens
+      baseLimit += 2000; // Code mode often needs more tokens
     }
 
     // Increase for multi-step tasks
     if (content.includes('step') || content.includes('multiple') || content.includes('several')) {
-      baseLimit += 2000;
+      baseLimit += 3000;
     }
 
-    // Cap at reasonable maximum
-    return Math.min(baseLimit, 25000);
+    // Cap at the model's maximum context window
+    return Math.min(baseLimit, 125000); // Sonic model limit is 128,000
   }
 
   /**

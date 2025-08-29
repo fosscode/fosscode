@@ -18,6 +18,7 @@ describe('Context Limits', () => {
       expect(getContextLimit('openai', 'gpt-4')).toBe(8192);
       expect(getContextLimit('anthropic', 'claude-3-sonnet-20240229')).toBe(200000);
       expect(getContextLimit('grok', 'grok-1')).toBe(128000);
+      expect(getContextLimit('sonicfree', 'sonic')).toBe(128000);
     });
 
     it('should handle partial model name matches', () => {
