@@ -132,6 +132,15 @@ export class ChatCommand {
 
     // Interactive mode: start TUI
     try {
+      // Check if raw mode is supported before attempting to render
+      const isRawModeSupported =
+        process.stdin.isTTY && typeof process.stdin.setRawMode === 'function';
+      if (!isRawModeSupported) {
+        throw new Error(
+          'Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.'
+        );
+      }
+
       // Initialize chat logger and start session for interactive mode
       await this.chatLogger.initialize();
       await this.chatLogger.startSession(options.provider as ProviderType, options.model!);
@@ -156,7 +165,10 @@ export class ChatCommand {
       );
     } catch (error) {
       // Fallback for environments where Ink/raw mode is not supported (e.g., tests, CI)
-      if (error instanceof Error && error.message.includes('Raw mode is not supported')) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('Raw mode is not supported') || error.message.includes('raw mode'))
+      ) {
         console.log(chalk.cyan(`🤖 fosscode - ${options.provider} (${options.model})`));
         console.log(
           chalk.yellow(
@@ -176,6 +188,12 @@ export class ChatCommand {
         console.log(
           chalk.gray(
             'Read about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
+          )
+        );
+        console.log(chalk.cyan('\n💡 Try using non-interactive mode instead:'));
+        console.log(
+          chalk.white(
+            `   fosscode chat "your message" --provider ${options.provider} --non-interactive`
           )
         );
         process.exit(0);

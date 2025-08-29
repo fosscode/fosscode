@@ -13,8 +13,9 @@ import { PermissionManager } from '../utils/PermissionManager.js';
 export class LMStudioProvider implements LLMProvider {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validateConfig(_config: LLMConfig): Promise<boolean> {
-    // TODO: Implement LMStudio validation
-    return true; // Assume local server is running
+    // LMStudio provider is not yet implemented
+    // Return false to prevent it from being selected until implementation is complete
+    return false;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

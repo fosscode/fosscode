@@ -49,8 +49,8 @@ export class AnthropicProvider implements LLMProvider {
     messages: Message[],
     config: LLMConfig,
     mode?: 'code' | 'thinking',
-    chatLogger?: any,
-    permissionManager?: PermissionManager
+    _chatLogger?: any,
+    _permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     if (!config.apiKey) {
       throw new Error('Anthropic API key not configured');

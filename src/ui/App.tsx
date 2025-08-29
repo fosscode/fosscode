@@ -192,105 +192,119 @@ function App({
 
   // Handle input and navigation
   useInput((inputChar, key) => {
-    if (isLoading) return;
+    try {
+      if (isLoading) return;
 
-    // Allow Ctrl+C to exit
-    if (key.ctrl && inputChar === 'c') {
-      process.exit(0);
-    }
+      // Allow Ctrl+C to exit
+      if (key.ctrl && inputChar === 'c') {
+        process.exit(0);
+      }
 
-    // Handle tab key to toggle between thinking and code mode
-    if (key.tab) {
-      const newMode = toggleMode(currentMode);
-      setCurrentMode(newMode);
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: `Switched to ${newMode} mode`,
-          timestamp: new Date(),
-        },
-      ]);
-      return;
-    }
-
-    // Handle file search mode
-    if (fileSearch.isFileSearchMode) {
-      if (key.escape) {
-        fileSearch.exitFileSearch();
+      // Handle tab key to toggle between thinking and code mode
+      if (key.tab) {
+        const newMode = toggleMode(currentMode);
+        setCurrentMode(newMode);
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: `Switched to ${newMode} mode`,
+            timestamp: new Date(),
+          },
+        ]);
         return;
       }
 
+      // Handle file search mode
+      if (fileSearch.isFileSearchMode) {
+        if (key.escape) {
+          fileSearch.exitFileSearch();
+          return;
+        }
+
+        if (key.upArrow) {
+          fileSearch.navigateFileResults('up');
+          return;
+        }
+
+        if (key.downArrow) {
+          fileSearch.navigateFileResults('down');
+          return;
+        }
+
+        if (key.return) {
+          fileSearch.selectCurrentFile();
+          return;
+        }
+
+        if (key.backspace || key.delete) {
+          if (fileSearch.fileSearchQuery.length > 0) {
+            fileSearch.setFileSearchQuery(prev => prev.slice(0, -1));
+          } else {
+            fileSearch.exitFileSearch();
+          }
+          return;
+        }
+
+        if (inputChar && !key.ctrl && !key.meta && inputChar.length === 1) {
+          fileSearch.setFileSearchQuery(prev => prev + inputChar);
+          return;
+        }
+
+        return;
+      }
+
+      // Regular input mode
       if (key.upArrow) {
-        fileSearch.navigateFileResults('up');
-        return;
-      }
+        const newInput = promptHistory.navigateHistory('up', input);
+        setInput(newInput);
+      } else if (key.downArrow) {
+        const newInput = promptHistory.navigateHistory('down', input);
+        setInput(newInput);
+      } else if (key.return) {
+        if (input.trim()) {
+          sendMessage();
+        }
+      } else if (key.backspace || key.delete) {
+        if (promptHistory.historyIndex >= 0) {
+          promptHistory.exitHistoryMode();
+        }
+        const newInput = input.slice(0, -1);
+        setInput(newInput);
 
-      if (key.downArrow) {
-        fileSearch.navigateFileResults('down');
-        return;
-      }
-
-      if (key.return) {
-        fileSearch.selectCurrentFile();
-        return;
-      }
-
-      if (key.backspace || key.delete) {
-        if (fileSearch.fileSearchQuery.length > 0) {
-          fileSearch.setFileSearchQuery(prev => prev.slice(0, -1));
-        } else {
+        // Check if we need to exit file search mode
+        if (newInput.endsWith('@')) {
+          fileSearch.setIsFileSearchMode(true);
+          fileSearch.setFileSearchQuery('');
+        } else if (fileSearch.isFileSearchMode && !newInput.includes('@')) {
           fileSearch.exitFileSearch();
         }
-        return;
-      }
+      } else if (inputChar && !key.ctrl && !key.meta && inputChar.length === 1) {
+        if (promptHistory.historyIndex >= 0) {
+          promptHistory.exitHistoryMode();
+        }
 
-      if (inputChar && !key.ctrl && !key.meta && inputChar.length === 1) {
-        fileSearch.setFileSearchQuery(prev => prev + inputChar);
-        return;
-      }
+        const newInput = input + inputChar;
+        setInput(newInput);
 
-      return;
-    }
-
-    // Regular input mode
-    if (key.upArrow) {
-      const newInput = promptHistory.navigateHistory('up', input);
-      setInput(newInput);
-    } else if (key.downArrow) {
-      const newInput = promptHistory.navigateHistory('down', input);
-      setInput(newInput);
-    } else if (key.return) {
-      if (input.trim()) {
-        sendMessage();
+        // Check for @ symbol to enter file search mode
+        if (inputChar === '@' && !fileSearch.isFileSearchMode) {
+          fileSearch.setIsFileSearchMode(true);
+          fileSearch.setFileSearchQuery('');
+        }
       }
-    } else if (key.backspace || key.delete) {
-      if (promptHistory.historyIndex >= 0) {
-        promptHistory.exitHistoryMode();
+    } catch (error) {
+      // Handle raw mode errors gracefully
+      if (
+        error instanceof Error &&
+        (error.message.includes('Raw mode') || error.message.includes('raw mode'))
+      ) {
+        console.log('\n❌ Interactive mode not supported in this environment');
+        console.log('💡 Try using: fosscode chat "your message" --non-interactive');
+        process.exit(1);
       }
-      const newInput = input.slice(0, -1);
-      setInput(newInput);
-
-      // Check if we need to exit file search mode
-      if (newInput.endsWith('@')) {
-        fileSearch.setIsFileSearchMode(true);
-        fileSearch.setFileSearchQuery('');
-      } else if (fileSearch.isFileSearchMode && !newInput.includes('@')) {
-        fileSearch.exitFileSearch();
-      }
-    } else if (inputChar && !key.ctrl && !key.meta && inputChar.length === 1) {
-      if (promptHistory.historyIndex >= 0) {
-        promptHistory.exitHistoryMode();
-      }
-
-      const newInput = input + inputChar;
-      setInput(newInput);
-
-      // Check for @ symbol to enter file search mode
-      if (inputChar === '@' && !fileSearch.isFileSearchMode) {
-        fileSearch.setIsFileSearchMode(true);
-        fileSearch.setFileSearchQuery('');
-      }
+      // Re-throw other errors
+      throw error;
     }
   });
 

@@ -1,5 +1,5 @@
 import { ConfigManager } from '../config/ConfigManager.js';
-import { PermissionManager, ToolNames } from '../utils/PermissionManager.js';
+import { PermissionManager } from '../utils/PermissionManager.js';
 import { ProviderType, Message, ProviderResponse, LLMProvider } from '../types/index.js';
 import { cancellationManager } from '../utils/CancellationManager.js';
 import { ChatLogger } from '../config/ChatLogger.js';

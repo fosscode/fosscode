@@ -51,7 +51,7 @@ export function calculateEffectiveTokenLimit(
   mode?: 'code' | 'thinking',
   messages?: Message[]
 ): number {
-  const contextLimit = getContextLimit(provider, model) || 128000;
+  const contextLimit = getContextLimit(provider, model) ?? 128000;
   const systemPromptTokens = estimateSystemPromptTokens(provider, model, mode, messages);
 
   // Reserve space for system prompt, user input, and AI response
