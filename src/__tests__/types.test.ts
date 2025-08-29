@@ -19,6 +19,7 @@ describe('Type Definitions', () => {
         'sonicfree',
         'mcp',
         'anthropic',
+        'mock',
       ];
 
       providers.forEach(provider => {
@@ -30,7 +31,8 @@ describe('Type Definitions', () => {
           'sonicfree',
           'mcp',
           'anthropic',
-        ]).toContain(provider);
+          'mock',
+        ]).toContain(provider); // Added mock provider to expected types
       });
     });
   });
@@ -204,6 +206,7 @@ describe('Type Definitions', () => {
             sonicfree: {},
             mcp: {},
             anthropic: {},
+            mock: {},
           },
           cachedModels: {
             openai: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
@@ -213,6 +216,7 @@ describe('Type Definitions', () => {
             sonicfree: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
             mcp: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
             anthropic: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
+            mock: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
           },
         };
         expect(['dark', 'light']).toContain(config.theme);
