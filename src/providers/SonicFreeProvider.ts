@@ -45,8 +45,7 @@ export class SonicFreeProvider implements LLMProvider {
       // Generate system prompt
       const systemPrompt = await generateSystemPrompt('sonicfree', config.model ?? 'sonic', mode);
 
-      // eslint-disable-next-line prefer-const
-      const openaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+      let openaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: 'system', content: systemPrompt },
         ...messages.map(msg => ({
           role: msg.role as 'user' | 'assistant',
