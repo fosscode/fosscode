@@ -52,7 +52,8 @@ export class OpenAIProvider implements LLMProvider {
   async sendMessage(
     messages: Message[],
     config: LLMConfig,
-    mode?: 'code' | 'thinking'
+    mode?: 'code' | 'thinking',
+    chatLogger?: any
   ): Promise<ProviderResponse> {
     if (!config.apiKey) {
       throw new Error('OpenAI API key not configured');
@@ -204,7 +205,7 @@ export class OpenAIProvider implements LLMProvider {
           if (!content.trim()) {
             content = 'Executing tools to help with your request...\n\n';
           }
-          const toolResult = await executeToolCalls(assistantMessage.tool_calls, mode);
+          const toolResult = await executeToolCalls(assistantMessage.tool_calls, mode, chatLogger);
 
           // Add tool results as tool messages
           for (const toolCall of assistantMessage.tool_calls) {

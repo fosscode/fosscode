@@ -5,6 +5,11 @@ import { ProviderType, Message, QueuedMessage } from './types/index.js';
 import { ConfigDefaults } from './config/ConfigDefaults.js';
 import { MessageQueue } from './utils/MessageQueue.js';
 import { cancellationManager } from './utils/CancellationManager.js';
+import {
+  enhanceWithContext,
+  formatContextDisplay,
+  getContextWarningMessage,
+} from './utils/contextUtils.js';
 
 export class BinaryChatCommand {
   private configManager: ConfigManager;
@@ -85,6 +90,8 @@ export class BinaryChatCommand {
       provider,
       model,
       verbose: Boolean(message.options.verbose),
+      showContext: true, // Default to showing context for queued messages
+      contextFormat: 'both',
     });
   }
 
@@ -95,6 +102,8 @@ export class BinaryChatCommand {
       model?: string;
       verbose?: boolean;
       queue?: boolean;
+      showContext?: boolean;
+      contextFormat?: 'percentage' | 'tokens' | 'both';
     }
   ): Promise<void> {
     try {
@@ -152,6 +161,8 @@ export class BinaryChatCommand {
           provider: options.provider!,
           model: options.model!,
           verbose: Boolean(options.verbose),
+          showContext: options.showContext ?? true,
+          contextFormat: options.contextFormat ?? 'both',
         });
       }
     } catch (error) {
@@ -188,6 +199,8 @@ export class BinaryChatCommand {
       provider: string;
       model: string;
       verbose: boolean;
+      showContext?: boolean;
+      contextFormat?: 'percentage' | 'tokens' | 'both';
     }
   ): Promise<string> {
     // Check if cancellation was requested
@@ -215,6 +228,13 @@ export class BinaryChatCommand {
         options.verbose
       );
 
+      // Enhance response with context information
+      const enhancedResponse = enhanceWithContext(
+        response,
+        options.provider as ProviderType,
+        options.model
+      );
+
       let output = '';
       if (options.verbose) {
         console.log(chalk.green('🤖'), response.content);
@@ -224,12 +244,39 @@ export class BinaryChatCommand {
         output += response.content;
       }
 
+      // Display token usage
       if (response.usage) {
         const usageInfo = chalk.gray(
           `\n📊 Tokens: ${response.usage.totalTokens} (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
         );
         console.log(usageInfo);
         output += '\n' + usageInfo;
+      }
+
+      // Display context information if enabled
+      const config = this.configManager.getConfig();
+      const showContext = options.showContext ?? config.contextDisplay?.enabled ?? true;
+      const contextFormat = options.contextFormat ?? config.contextDisplay?.format ?? 'both';
+
+      if (showContext && enhancedResponse.context) {
+        const contextDisplay = formatContextDisplay(enhancedResponse.context, contextFormat);
+
+        if (contextDisplay) {
+          const contextInfo = chalk.cyan(`\n💭 Context: ${contextDisplay}`);
+          console.log(contextInfo);
+          output += '\n' + contextInfo;
+        }
+
+        // Show context warning if enabled and threshold exceeded
+        const showWarnings = config.contextDisplay?.showWarnings ?? true;
+        if (showWarnings) {
+          const warningMessage = getContextWarningMessage(enhancedResponse.context);
+          if (warningMessage) {
+            const warning = chalk.yellow(`\n⚠️  ${warningMessage}`);
+            console.log(warning);
+            output += '\n' + warning;
+          }
+        }
       }
 
       return output;

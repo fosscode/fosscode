@@ -29,7 +29,8 @@ export class SonicFreeProvider implements LLMProvider {
   async sendMessage(
     messages: Message[],
     config: LLMConfig,
-    mode?: 'code' | 'thinking'
+    mode?: 'code' | 'thinking',
+    chatLogger?: any
   ): Promise<ProviderResponse> {
     if (!this.client) {
       this.client = new OpenAI({
@@ -150,7 +151,11 @@ export class SonicFreeProvider implements LLMProvider {
           const toolStartTime = Date.now();
           let toolResult;
           try {
-            toolResult = await executeToolCalls(assistantMessage.tool_calls, mode);
+            toolResult = await executeToolCalls(
+              assistantMessage.tool_calls,
+              mode,
+              chatLogger || this.chatLogger
+            );
           } catch (toolError) {
             // Log tool execution error
             await this.chatLogger.logError(

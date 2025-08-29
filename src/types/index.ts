@@ -98,6 +98,12 @@ export interface AppConfig {
   providers: Record<ProviderType, LLMConfig>;
   cachedModels: Record<ProviderType, CachedModels>;
   messagingPlatforms?: Record<MessagingPlatformType, { enabled: boolean; botToken?: string }>;
+  contextDisplay?: {
+    enabled: boolean;
+    format: 'percentage' | 'tokens' | 'both';
+    showWarnings: boolean;
+    warningThreshold: number;
+  };
 }
 
 export interface PerformanceMetrics {
@@ -112,7 +118,8 @@ export interface LLMProvider {
   sendMessage(
     messages: Message[],
     config: LLMConfig,
-    mode?: 'code' | 'thinking'
+    mode?: 'code' | 'thinking',
+    chatLogger?: any
   ): Promise<ProviderResponse>;
   listModels(config: LLMConfig): Promise<string[]>;
   validateConfig(config: LLMConfig): Promise<boolean>;

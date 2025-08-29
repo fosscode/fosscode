@@ -158,7 +158,9 @@ export class MessagingModeHandler {
         options.provider as ProviderType,
         history,
         options.model,
-        options.verbose ?? false
+        options.verbose ?? false,
+        undefined, // mode
+        this.chatLogger
       );
 
       // Add assistant response to history

@@ -59,7 +59,9 @@ export class SingleMessageHandler {
         options.provider as ProviderType,
         [chatMessage],
         options.model,
-        options.verbose ?? false
+        options.verbose ?? false,
+        undefined, // mode
+        this.chatLogger
       );
 
       const responseTime = Date.now() - startTime;

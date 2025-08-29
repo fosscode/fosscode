@@ -30,6 +30,12 @@ export class ConfigDefaults {
         anthropic: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
         mock: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
       },
+      contextDisplay: {
+        enabled: true,
+        format: 'both',
+        showWarnings: true,
+        warningThreshold: 80,
+      },
     };
   }
 

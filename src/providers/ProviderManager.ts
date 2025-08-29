@@ -1,6 +1,7 @@
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ProviderType, Message, ProviderResponse, LLMProvider } from '../types/index.js';
 import { cancellationManager } from '../utils/CancellationManager.js';
+import { ChatLogger } from '../config/ChatLogger.js';
 import { OpenAIProvider } from './OpenAIProvider.js';
 import { GrokProvider } from './GrokProvider.js';
 import { LMStudioProvider } from './LMStudioProvider.js';
@@ -54,7 +55,8 @@ export class ProviderManager {
     messages: Message[],
     model?: string,
     verbose?: boolean,
-    mode?: 'code' | 'thinking'
+    mode?: 'code' | 'thinking',
+    chatLogger?: ChatLogger
   ): Promise<ProviderResponse> {
     // Check if cancellation was requested before starting
     if (cancellationManager.shouldCancel()) {
@@ -75,7 +77,7 @@ export class ProviderManager {
     }
 
     try {
-      return await provider.sendMessage(messages, config, mode);
+      return await provider.sendMessage(messages, config, mode, chatLogger);
     } catch (error) {
       // Check if this was a cancellation
       if (cancellationManager.shouldCancel()) {

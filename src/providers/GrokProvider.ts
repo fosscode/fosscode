@@ -36,7 +36,8 @@ export class GrokProvider implements LLMProvider {
   async sendMessage(
     messages: Message[],
     config: LLMConfig,
-    mode?: 'code' | 'thinking'
+    mode?: 'code' | 'thinking',
+    chatLogger?: any
   ): Promise<ProviderResponse> {
     if (!config.apiKey) {
       throw new Error('Grok API key not configured');
@@ -120,7 +121,11 @@ export class GrokProvider implements LLMProvider {
               content = 'Executing tools to help with your request...\n\n';
             }
             try {
-              const toolResult = await executeToolCalls(choice.message.tool_calls, mode);
+              const toolResult = await executeToolCalls(
+                choice.message.tool_calls,
+                mode,
+                chatLogger
+              );
               content += toolResult.content;
             } catch (error) {
               // If tool execution fails, continue with the original response
