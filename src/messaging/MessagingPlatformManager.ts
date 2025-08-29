@@ -44,15 +44,13 @@ export class MessagingPlatformManager {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async startListening(
     type: MessagingPlatformType,
-    config: any,
-    messageHandler: (_message: MessagingPlatformMessage) => Promise<void>
+    messageHandler: (message: MessagingPlatformMessage) => Promise<void>
   ): Promise<void> {
     const platform = this.getPlatform(type);
     if (platform) {
-      await platform.startListening(config, messageHandler);
+      await platform.startListening(messageHandler);
     }
   }
 

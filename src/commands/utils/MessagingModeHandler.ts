@@ -79,13 +79,9 @@ export class MessagingModeHandler {
     }
 
     // Start listening for messages
-    await this.messagingManager.startListening(
-      options.messagingPlatform,
-      platformConfig,
-      async message => {
-        await this.handleIncomingMessage(message, options);
-      }
-    );
+    await this.messagingManager.startListening(options.messagingPlatform, async message => {
+      await this.handleIncomingMessage(message, options);
+    });
 
     this.setupShutdownHandlers();
   }

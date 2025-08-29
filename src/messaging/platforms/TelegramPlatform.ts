@@ -85,13 +85,38 @@ export class TelegramPlatform implements MessagingPlatform {
     }
   }
 
-  async startListening(): Promise<void> {
+  async startListening(messageHandler?: (message: any) => Promise<void>): Promise<void> {
     if (!this.bot) {
       throw new Error('Telegram bot is not initialized');
     }
 
     if (this.isListening) {
       throw new Error('Already listening for messages');
+    }
+
+    // Set up message handler if provided
+    if (messageHandler) {
+      this.bot.on('message', async ctx => {
+        try {
+          // Convert Telegram message to MessagingPlatformMessage format
+          const message = {
+            id: ctx.message?.message_id?.toString() || '',
+            content: ctx.message?.text || '',
+            userName: ctx.from?.first_name || ctx.from?.username || 'Unknown',
+            userId: ctx.from?.id?.toString() || '',
+            chatId: ctx.chat?.id?.toString() || '',
+            platform: 'telegram' as const,
+            timestamp: new Date(),
+          };
+
+          // Only process text messages
+          if (message.content && message.content.trim()) {
+            await messageHandler(message);
+          }
+        } catch (error) {
+          console.error('Error handling Telegram message:', error);
+        }
+      });
     }
 
     // Start the bot with error handling

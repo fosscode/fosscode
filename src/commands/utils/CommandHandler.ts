@@ -49,6 +49,10 @@ export class CommandHandler {
         await this.handleCompressCommand(message, platformType);
         break;
 
+      case '/quit':
+        await this.handleQuitCommand(message, platformType);
+        break;
+
       default:
         await this.messagingManager.sendMessage(
           platformType,
@@ -82,6 +86,7 @@ export class CommandHandler {
       `• /clear - Clear conversation history\n` +
       `• /compress - Compress conversation history to save space\n` +
       `• /help - Show this help message\n` +
+      `• /quit - Exit the bot and terminate all processes\n` +
       `• /status - Check bot health and status\n` +
       `• /timeouts - Show timeout settings\n\n` +
       `Just type your message normally to chat with me!`;
@@ -209,6 +214,44 @@ Summary:`;
           `❌ Error compressing conversation for chat ${message.chatId}: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       );
+    }
+  }
+
+  private async handleQuitCommand(
+    message: MessagingPlatformMessage,
+    platformType: MessagingPlatformType
+  ): Promise<void> {
+    try {
+      // Send farewell message
+      await this.messagingManager.sendMessage(
+        platformType,
+        message.chatId,
+        '👋 Goodbye! Shutting down the bot...\n\nThe agent will exit and all processes will be terminated.'
+      );
+
+      console.log(
+        chalk.yellow(`👋 Quit command received from chat ${message.chatId}. Shutting down...`)
+      );
+
+      // Stop all messaging platform listeners
+      await this.messagingManager.stopAllListeners();
+
+      // Kill any child processes
+      process.kill(process.pid, 'SIGTERM');
+
+      // Exit the process after a short delay to allow cleanup
+      setTimeout(() => {
+        console.log(chalk.green('✅ Bot shutdown complete'));
+        process.exit(0);
+      }, 1000);
+    } catch (error) {
+      console.error(
+        chalk.red(
+          `❌ Error during shutdown: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      );
+      // Force exit if graceful shutdown fails
+      process.exit(1);
     }
   }
 }

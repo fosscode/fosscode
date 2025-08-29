@@ -48,6 +48,8 @@ program
     '--mcp <servers>',
     'Enable specific MCP servers (comma-separated, e.g., "playwright,context7")'
   )
+  .option('--show-context', 'Display context usage information')
+  .option('--context-format <format>', 'Context display format (percentage, tokens, both)', 'both')
   .action(async (message, options) => {
     try {
       // Initialize tools with verbose setting

@@ -2,14 +2,22 @@ import chalk from 'chalk';
 import { ProviderManager } from '../../providers/ProviderManager.js';
 import { ChatLogger } from '../../config/ChatLogger.js';
 import { Message, ProviderType } from '../../types/index.js';
+import {
+  enhanceWithContext,
+  formatContextDisplay,
+  getContextWarningMessage,
+} from '../../utils/contextUtils.js';
+import { ConfigManager } from '../../config/ConfigManager.js';
 
 export class SingleMessageHandler {
   private providerManager: ProviderManager;
   private chatLogger: ChatLogger;
+  private configManager: ConfigManager;
 
   constructor(providerManager: ProviderManager, chatLogger: ChatLogger) {
     this.providerManager = providerManager;
     this.chatLogger = chatLogger;
+    this.configManager = new ConfigManager();
   }
 
   async sendSingleMessage(
@@ -59,15 +67,20 @@ export class SingleMessageHandler {
         options.provider as ProviderType,
         [chatMessage],
         options.model,
-        options.verbose ?? false,
-        undefined, // mode
-        this.chatLogger
+        options.verbose ?? false
       );
 
       const responseTime = Date.now() - startTime;
 
       // Log the response received
       await this.chatLogger.logMessageReceived(response, responseTime);
+
+      // Enhance response with context information
+      const enhancedResponse = enhanceWithContext(
+        response,
+        options.provider as ProviderType,
+        options.model
+      );
 
       // For verbose mode, the response is already streamed to stdout
       // For non-verbose mode, show the response
@@ -86,6 +99,31 @@ export class SingleMessageHandler {
             `\n📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
           )
         );
+      }
+
+      // Display context information if enabled
+      const config = this.configManager.getConfig();
+      const showContext = options.showContext ?? config.contextDisplay?.enabled ?? true;
+      const contextFormat =
+        (options.contextFormat as 'percentage' | 'tokens' | 'both') ??
+        config.contextDisplay?.format ??
+        'both';
+
+      if (showContext && enhancedResponse.context) {
+        const contextDisplay = formatContextDisplay(enhancedResponse.context, contextFormat);
+
+        if (contextDisplay) {
+          console.log(chalk.cyan(`\n💭 Context: ${contextDisplay}`));
+        }
+
+        // Show context warning if enabled and threshold exceeded
+        const showWarnings = config.contextDisplay?.showWarnings ?? true;
+        if (showWarnings) {
+          const warningMessage = getContextWarningMessage(enhancedResponse.context);
+          if (warningMessage) {
+            console.log(chalk.yellow(`\n⚠️  ${warningMessage}`));
+          }
+        }
       }
 
       // End session successfully
