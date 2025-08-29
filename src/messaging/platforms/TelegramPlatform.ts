@@ -94,9 +94,6 @@ export class TelegramPlatform implements MessagingPlatform {
       throw new Error('Already listening for messages');
     }
 
-    // Record startup time to filter out old messages
-    this.startupTime = new Date();
-
     // Start the bot with error handling
     try {
       await this.bot.start();
