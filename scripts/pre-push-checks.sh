@@ -75,6 +75,7 @@ print_status $? "Linting check passed"
 
 # 3. Run typecheck
 echo "🔍 Running TypeScript typecheck..."
+echo "   (This may take a minute...)"
 timeout 120 bun run typecheck > /dev/null 2>&1
 print_status $? "TypeScript typecheck passed"
 
@@ -85,6 +86,7 @@ print_status $? "Build completed successfully"
 
 # 5. Run tests
 echo "🧪 Running tests..."
+echo "   (This may take a few minutes...)"
 timeout 300 bun run test > /dev/null 2>&1
 print_status $? "All tests passed"
 
