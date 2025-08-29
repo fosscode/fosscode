@@ -1,4 +1,6 @@
 import { execSync } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Tmux detection and pane size utilities
@@ -128,14 +130,14 @@ function processBatchedCommands() {
 }
 
 // Resize detection state
-let resizeListeners: ResizeCallback[] = [];
+const resizeListeners: ResizeCallback[] = [];
 let resizeDebounceTimer: NodeJS.Timeout | null = null;
 const RESIZE_DEBOUNCE_MS = 250; // 250ms debounce
 let isMonitoringResize = false;
 let resizeMonitorInterval: NodeJS.Timeout | null = null;
 
 // Key binding state
-let keyBindingListeners: KeyBindingCallback[] = [];
+const keyBindingListeners: KeyBindingCallback[] = [];
 let keyBindingMonitorInterval: NodeJS.Timeout | null = null;
 const KEY_BINDING_CHECK_INTERVAL = 100; // Check every 100ms
 
@@ -321,8 +323,8 @@ export function getEffectiveTerminalSize(): { width: number; height: number } {
 
   // Fallback to standard terminal dimensions
   return {
-    width: process.stdout.columns || 80,
-    height: process.stdout.rows || 24,
+    width: process.stdout.columns ?? 80,
+    height: process.stdout.rows ?? 24,
   };
 }
 
@@ -428,7 +430,7 @@ export function checkForResizeEvents() {
   const currentSize = getEffectiveTerminalSize();
   const previousInfo = tmuxInfoCache;
 
-  if (!previousInfo || !previousInfo.paneWidth || !previousInfo.paneHeight) {
+  if (!previousInfo?.paneWidth || !previousInfo?.paneHeight) {
     return;
   }
 
@@ -487,7 +489,7 @@ export function addKeyBindingListener(callback: KeyBindingCallback): () => void 
  * Start monitoring for key binding events
  */
 function startKeyBindingMonitoring() {
-  if (keyBindingMonitorInterval || !isInTmux()) return;
+  if (keyBindingMonitorInterval !== null || !isInTmux()) return;
 
   keyBindingMonitorInterval = setInterval(() => {
     checkForKeyBindingEvents();
@@ -618,9 +620,6 @@ export function saveChatHistoryToSession(history: any[]): boolean {
   if (!storageKey) return false;
 
   try {
-    const fs = require('fs');
-    const path = require('path');
-
     // Create temp directory if it doesn't exist
     const tempDir = '/tmp/tmux-chat-sessions';
     if (!fs.existsSync(tempDir)) {
@@ -645,9 +644,6 @@ export function loadChatHistoryFromSession(): any[] | null {
   if (!storageKey) return null;
 
   try {
-    const fs = require('fs');
-    const path = require('path');
-
     const tempDir = '/tmp/tmux-chat-sessions';
     const filePath = path.join(tempDir, `${storageKey}.json`);
 
@@ -668,9 +664,6 @@ export function loadChatHistoryFromSession(): any[] | null {
  */
 export function cleanupOldSessionFiles() {
   try {
-    const fs = require('fs');
-    const path = require('path');
-
     const tempDir = '/tmp/tmux-chat-sessions';
     if (!fs.existsSync(tempDir)) return;
 
