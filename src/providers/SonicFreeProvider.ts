@@ -64,10 +64,14 @@ export class SonicFreeProvider implements LLMProvider {
       let finishReason: 'stop' | 'length' | 'error' = 'stop';
       let finalIteration = 0;
 
-      // Agent loop for tool calling
+      // Agent loop for tool calling with convergence detection
+      let previousContent = '';
+      let noProgressCount = 0;
+      const maxNoProgress = 3; // Stop if no progress for 3 iterations
+
       for (let iteration = 0; iteration < 15; iteration++) {
         finalIteration = iteration;
-        // Max 15 iterations to allow more attempts at solving problems
+        // Max 15 iterations with early stopping for convergence
         const response = await this.client.chat.completions.create({
           model: config.model ?? 'sonic',
           messages: openaiMessages,
@@ -106,6 +110,23 @@ export class SonicFreeProvider implements LLMProvider {
         }
 
         let content = assistantMessage.content ?? '';
+
+        // Check for convergence (no significant progress)
+        if (iteration > 0 && content && previousContent) {
+          const similarity =
+            content.length > 0 ? content.split(' ').length / previousContent.split(' ').length : 0;
+          if (similarity > 0.8 && similarity < 1.2) {
+            // Content is very similar
+            noProgressCount++;
+            if (noProgressCount >= maxNoProgress) {
+              console.log(`🔄 Stopping early at iteration ${iteration + 1} due to convergence`);
+              break;
+            }
+          } else {
+            noProgressCount = 0; // Reset counter on progress
+          }
+        }
+        previousContent = content || '';
 
         // Show LLM thinking/response for this iteration
         if (content.trim()) {

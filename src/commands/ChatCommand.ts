@@ -139,8 +139,8 @@ export class ChatCommand {
           providerManager: this.providerManager,
           chatLogger: this.chatLogger,
           verbose: options.verbose ?? false,
-          onModelChange: (newModel: string) => {
-            this.currentModel = newModel;
+          onModelChange: (_newModel: string) => {
+            // Model change callback - could be used for future features
           },
         })
       );
