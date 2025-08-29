@@ -159,12 +159,14 @@ export class EditTool implements Tool {
    * @returns Number of occurrences
    */
   private countOccurrences(content: string, searchString: string): number {
+    if (!searchString) return 0;
+
     let count = 0;
     let index = 0;
 
     while ((index = content.indexOf(searchString, index)) !== -1) {
       count++;
-      index += searchString.length;
+      index += 1; // Move by 1 to catch overlapping occurrences
     }
 
     return count;

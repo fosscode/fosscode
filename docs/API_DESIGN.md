@@ -17,6 +17,41 @@ fosscode provides multiple API layers for different use cases:
 fosscode <command> [subcommand] [options] [arguments]
 ```
 
+### Execution Modes
+
+fosscode supports two execution modes with different capabilities:
+
+#### Interactive Mode (`src/index.ts`)
+
+- **Full TUI Experience**: Text-based user interface with React/Ink
+- **Real-time Chat**: Interactive conversation with streaming responses
+- **File Attachments**: Drag-and-drop file support
+- **Command History**: Arrow key navigation through previous commands
+- **Theme Support**: Dark/light theme switching
+- **Messaging Platforms**: Telegram, Discord, Slack integration
+- **MCP Server Management**: Enable/disable MCP servers dynamically
+
+#### Binary Mode (`src/binary.ts`)
+
+- **Non-interactive Only**: Single message processing without TUI
+- **Queue Support**: Message queuing for batch processing
+- **Cancellation Support**: Escape key cancellation during execution
+- **Compact Output**: Streamlined output for automation
+- **CI/CD Friendly**: Optimized for automated environments
+- **Limited Commands**: Subset of interactive mode commands
+
+### Mode Selection
+
+The mode is automatically selected based on the entry point:
+
+```bash
+# Interactive mode (full TUI)
+bun run src/index.ts chat
+
+# Binary mode (single message)
+bun run src/binary.ts chat "message"
+```
+
 ### Core Commands
 
 #### `chat` - Interactive Chat

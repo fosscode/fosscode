@@ -6,6 +6,10 @@ import { EditTool } from './EditTool.js';
 import { WebFetchTool } from './WebFetchTool.js';
 import { ListTool } from './ListTool.js';
 import { BashTool } from './BashTool.js';
+import { GlobTool } from './GlobTool.js';
+import { MultieditTool } from './MultieditTool.js';
+import { TodoWriteTool, TodoReadTool } from './TodoTool.js';
+import { DuckDuckGoTool } from './DuckDuckGoTool.js';
 
 /**
  * Initialize and register all agent tools
@@ -22,12 +26,21 @@ export function initializeTools(verbose: boolean = false): void {
   toolRegistry.register(new WriteTool());
   toolRegistry.register(new EditTool());
   toolRegistry.register(new ListTool());
+  toolRegistry.register(new GlobTool());
+  toolRegistry.register(new MultieditTool());
 
   // Register system tools
   toolRegistry.register(new BashTool());
 
   // Register web tools
   toolRegistry.register(new WebFetchTool());
+
+  // Register task management tools
+  toolRegistry.register(new TodoWriteTool());
+  toolRegistry.register(new TodoReadTool());
+
+  // Register search tools
+  toolRegistry.register(new DuckDuckGoTool());
 
   if (verbose) {
     console.log(`✅ Registered ${toolRegistry.getToolCount()} tools:`);

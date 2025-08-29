@@ -224,7 +224,7 @@ export class GlobTool implements Tool {
       .replace(/\?/g, '[^/]'); // ? matches any single character except /
 
     // Handle {ext1,ext2} patterns
-    regex = regex.replace(/\{([^}]+)\}/g, (match, options) => {
+    regex = regex.replace(/\{([^}]+)\}/g, (_, options) => {
       const alternatives = options.split(',').map((opt: string) => opt.trim());
       return `(${alternatives.join('|')})`;
     });
@@ -241,17 +241,20 @@ export class GlobTool implements Tool {
   ): Array<{ path: string; type: 'file' | 'directory'; size?: number; modified?: Date }> {
     return [...matches].sort((a, b) => {
       switch (sortBy) {
-        case 'path':
+        case 'path': {
           return a.path.localeCompare(b.path);
-        case 'modified':
-          const aTime = a.modified?.getTime() || 0;
-          const bTime = b.modified?.getTime() || 0;
+        }
+        case 'modified': {
+          const aTime = a.modified?.getTime() ?? 0;
+          const bTime = b.modified?.getTime() ?? 0;
           return bTime - aTime; // Newest first
+        }
         case 'name':
-        default:
+        default: {
           const aName = path.basename(a.path);
           const bName = path.basename(b.path);
           return aName.localeCompare(bName);
+        }
       }
     });
   }

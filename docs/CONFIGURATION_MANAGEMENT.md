@@ -770,20 +770,85 @@ function validateConfigStructure(config: any): config is AppConfig {
     typeof config.defaultProvider === 'string' &&
     typeof config.defaultModel === 'string' &&
     typeof config.providers === 'object'
-  )
+  );
 }
+```
+
+### Environment Variable Precedence
+
+Configuration values can be overridden using environment variables with the `FOSSCODE_` prefix:
+
+#### Precedence Order (highest to lowest)
+
+1. **Environment Variables**: `FOSSCODE_*` prefixed variables
+2. **Configuration File**: `~/.config/fosscode/config.json`
+3. **Default Values**: Built-in defaults
+
+#### Supported Environment Variables
+
+```bash
+# Provider settings
+FOSSCODE_OPENAI_API_KEY="sk-..."
+FOSSCODE_GROK_API_KEY="xai-..."
+FOSSCODE_ANTHROPIC_API_KEY="sk-ant-..."
+FOSSCODE_OPENROUTER_API_KEY="sk-or-v1-..."
+
+# Provider configurations
+FOSSCODE_LMSTUDIO_BASE_URL="http://localhost:1234"
+FOSSCODE_SONICFREE_BASE_URL="https://gateway.opencode.ai/v1"
+
+# Global settings
+FOSSCODE_DEFAULT_PROVIDER="openai"
+FOSSCODE_DEFAULT_MODEL="gpt-4"
+FOSSCODE_THEME="dark"
+
+# MCP settings
+FOSSCODE_MCP_SERVER_COMMAND="npx"
+FOSSCODE_MCP_SERVER_ARGS='["@playwright/mcp@latest"]'
+```
+
+#### Environment Variable Loading
+
+```typescript
+function loadEnvironmentOverrides(config: AppConfig): AppConfig {
+  // API keys
+  if (process.env.FOSSCODE_OPENAI_API_KEY) {
+    config.providers.openai.apiKey = process.env.FOSSCODE_OPENAI_API_KEY;
+  }
+
+  // Provider settings
+  if (process.env.FOSSCODE_DEFAULT_PROVIDER) {
+    config.defaultProvider = process.env.FOSSCODE_DEFAULT_PROVIDER as ProviderType;
+  }
+
+  // Model settings
+  if (process.env.FOSSCODE_DEFAULT_MODEL) {
+    config.defaultModel = process.env.FOSSCODE_DEFAULT_MODEL;
+  }
+
+  return config;
+}
+```
+
+#### Use Cases
+
+- **CI/CD Pipelines**: Set API keys without committing secrets
+- **Development**: Override settings per environment
+- **Testing**: Use different configurations for different test scenarios
+- **Docker**: Pass configuration via environment variables
 
 // Validate provider configurations
 async validateAllProviders(config: AppConfig): Promise<void> {
-  for (const [provider, providerConfig] of Object.entries(config.providers)) {
-    try {
-      await ConfigValidator.validateProvider(provider as ProviderType, providerConfig)
-    } catch (error) {
-      console.warn(`Provider ${provider} configuration invalid: ${error.message}`)
-    }
-  }
+for (const [provider, providerConfig] of Object.entries(config.providers)) {
+try {
+await ConfigValidator.validateProvider(provider as ProviderType, providerConfig)
+} catch (error) {
+console.warn(`Provider ${provider} configuration invalid: ${error.message}`)
 }
-```
+}
+}
+
+````
 
 ## Debugging Configuration
 
@@ -802,7 +867,7 @@ fosscode config cache --status
 # Clear model cache
 fosscode config cache --clear
 fosscode config cache --clear --provider openai
-```
+````
 
 ### Common Configuration Issues
 

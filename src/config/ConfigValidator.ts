@@ -40,6 +40,11 @@ export class ConfigValidator {
       return;
     }
 
+    // For Mock provider, no configuration is required
+    if (provider === 'mock') {
+      return;
+    }
+
     // For other providers, we need an API key
     if (!providerConfig.apiKey) {
       throw new Error(

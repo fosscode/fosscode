@@ -11,12 +11,18 @@ import { ModelsCommand } from './commands/ModelsCommand.js';
 import { AuthCommand } from './commands/AuthCommand.js';
 import { ThemesCommand } from './commands/ThemesCommand.js';
 import { MCPCommand } from './commands/MCPCommand.js';
+import { ConfigManager } from './config/ConfigManager.js';
+import { ProviderManager } from './providers/ProviderManager.js';
 import { initializeTools } from './tools/init.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 const version = packageJson.version;
+
+// Initialize managers for commands that need them
+const configManager = new ConfigManager();
+const providerManager = new ProviderManager(configManager);
 
 const program = new Command();
 
@@ -69,7 +75,7 @@ program
   .command('providers')
   .description('List available LLM providers')
   .action(() => {
-    const providersCommand = new ProvidersCommand();
+    const providersCommand = new ProvidersCommand(providerManager);
     providersCommand.execute();
   });
 
@@ -78,7 +84,7 @@ program
   .description('List available models for a provider (or all providers if none specified)')
   .option('-p, --provider <provider>', 'Filter by specific provider')
   .action(async (providerArg?: string, options?: { provider?: string }) => {
-    const modelsCommand = new ModelsCommand();
+    const modelsCommand = new ModelsCommand(configManager, providerManager);
     await modelsCommand.execute(providerArg, options);
   });
 

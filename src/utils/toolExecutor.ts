@@ -1,5 +1,6 @@
 import { listAvailableTools, getTool } from '../tools/init.js';
 import { ToolResult } from '../types/index.js';
+import { ChatLogger } from '../config/ChatLogger.js';
 
 /**
  * Tool execution result interface
@@ -252,11 +253,13 @@ function indentText(text: string, spaces: number): string {
  * Executes tool calls from an OpenAI-style tool_calls array
  * @param toolCalls Array of tool calls from LLM response
  * @param mode Current mode (code or thinking) to restrict tools
+ * @param chatLogger Optional ChatLogger instance for logging tool calls
  * @returns Formatted execution results
  */
 export async function executeToolCalls(
   toolCalls: any[],
-  mode?: 'code' | 'thinking'
+  mode?: 'code' | 'thinking',
+  chatLogger?: ChatLogger
 ): Promise<ToolExecutionResult> {
   let content = 'Executing tools to help with your request...\n\n';
   content += '[Tool Calls Executed]:\n';
@@ -277,10 +280,27 @@ export async function executeToolCalls(
         }
 
         if (tool) {
+          // Log tool call start
+          if (chatLogger) {
+            await chatLogger.logToolCall(toolCall.function.name, args);
+          }
+
           const result = await tool.execute(args);
           content += formatToolResult(toolCall.function.name, result) + '\n';
+
+          // Log tool call result
+          if (chatLogger) {
+            await chatLogger.logToolCall(toolCall.function.name, args, result);
+          }
         } else {
           content += `❌ ${toolCall.function.name}: Tool not found\n`;
+          // Log tool not found error
+          if (chatLogger) {
+            await chatLogger.logBackendMessage(
+              'ERROR',
+              `Tool not found: ${toolCall.function.name}`
+            );
+          }
         }
       } catch (parseError) {
         content += `❌ ${toolCall.function.name}: Invalid arguments - ${parseError instanceof Error ? parseError.message : 'Unknown error'}\n`;

@@ -7,10 +7,17 @@ import { ProvidersCommand } from './commands/ProvidersCommand.js';
 import { ModelsCommand } from './commands/ModelsCommand.js';
 import { AuthCommand } from './commands/AuthCommand.js';
 import { ThemesCommand } from './commands/ThemesCommand.js';
+
+import { ConfigManager } from './config/ConfigManager.js';
+import { ProviderManager } from './providers/ProviderManager.js';
 import { initializeTools } from './tools/init.js';
+
+// Initialize managers for commands that need them
+const configManager = new ConfigManager();
+const providerManager = new ProviderManager(configManager);
 import { cancellationManager } from './utils/CancellationManager.js';
 
-const version = '0.0.27'; // Hardcoded for binary builds
+const version = '0.0.42'; // Hardcoded for binary builds
 
 const program = new Command();
 
@@ -70,7 +77,7 @@ program
   .command('providers')
   .description('List available LLM providers')
   .action(() => {
-    const providersCommand = new ProvidersCommand();
+    const providersCommand = new ProvidersCommand(providerManager);
     providersCommand.execute();
   });
 
@@ -79,7 +86,7 @@ program
   .description('List available models for a provider (or all providers if none specified)')
   .option('-p, --provider <provider>', 'Filter by specific provider')
   .action(async (providerArg?: string, options?: { provider?: string }) => {
-    const modelsCommand = new ModelsCommand();
+    const modelsCommand = new ModelsCommand(configManager, providerManager);
     await modelsCommand.execute(providerArg, options);
   });
 

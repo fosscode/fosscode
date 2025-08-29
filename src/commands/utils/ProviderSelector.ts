@@ -21,6 +21,12 @@ export class ProviderSelector {
       'sonicfree',
       'anthropic',
     ];
+
+    // Add mock provider if environment variable is set
+    if (process.env.FOSSCODE_PROVIDER === 'mock' || process.env.NODE_ENV === 'test') {
+      availableProviders.push('mock');
+    }
+
     const configuredProviders: string[] = [];
 
     console.log(chalk.blue('🔍 Checking configured providers...'));

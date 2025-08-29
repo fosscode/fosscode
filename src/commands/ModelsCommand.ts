@@ -7,9 +7,9 @@ export class ModelsCommand {
   private configManager: ConfigManager;
   private providerManager: ProviderManager;
 
-  constructor() {
-    this.configManager = new ConfigManager();
-    this.providerManager = new ProviderManager(this.configManager);
+  constructor(configManager?: ConfigManager, providerManager?: ProviderManager) {
+    this.configManager = configManager ?? new ConfigManager();
+    this.providerManager = providerManager ?? new ProviderManager(this.configManager);
   }
 
   async execute(providerArg?: string, options?: { provider?: string }): Promise<void> {
@@ -19,10 +19,10 @@ export class ModelsCommand {
 
       if (provider) {
         // Validate provider exists
-        if (!['openai', 'grok', 'lmstudio', 'openrouter', 'sonicfree'].includes(provider)) {
+        if (!['openai', 'grok', 'lmstudio', 'openrouter', 'sonicfree', 'mock'].includes(provider)) {
           console.error(chalk.red(`Unknown provider: ${provider}`));
           console.log(
-            chalk.yellow('Available providers: openai, grok, lmstudio, openrouter, sonicfree')
+            chalk.yellow('Available providers: openai, grok, lmstudio, openrouter, sonicfree, mock')
           );
           process.exit(1);
         }

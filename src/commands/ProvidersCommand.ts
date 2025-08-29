@@ -1,12 +1,26 @@
 import chalk from 'chalk';
+import { ProviderManager } from '../providers/ProviderManager.js';
 
 export class ProvidersCommand {
+  constructor(private providerManager: ProviderManager) {}
+
   execute(): void {
+    const providers = this.providerManager.getAvailableProviders();
+    const descriptions = {
+      openai: 'OpenAI GPT models',
+      grok: 'xAI Grok models',
+      lmstudio: 'Local LMStudio models',
+      openrouter: 'OpenRouter unified API',
+      sonicfree: 'Free OpenAI-compatible models',
+      mcp: 'Model Context Protocol provider',
+      anthropic: 'Anthropic Claude models',
+      mock: 'Mock provider for testing',
+    };
+
     console.log(chalk.blue('Available providers:'));
-    console.log('  • openai - OpenAI GPT models');
-    console.log('  • grok - xAI Grok models');
-    console.log('  • lmstudio - Local LMStudio models');
-    console.log('  • openrouter - OpenRouter unified API');
-    console.log('  • sonicfree - Free OpenAI-compatible models');
+    providers.forEach(provider => {
+      const description = descriptions[provider as keyof typeof descriptions] || 'Unknown provider';
+      console.log(`  • ${provider} - ${description}`);
+    });
   }
 }

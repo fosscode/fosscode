@@ -18,7 +18,9 @@ ToolRegistry (Singleton)
 ├── WebFetchTool      (HTTP requests)
 ├── WriteTool         (File writing)
 ├── TodoTool          (Task management)
-└── DuckDuckGoTool    (Web search)
+├── DuckDuckGoTool    (Web search)
+├── GlobTool          (File pattern matching)
+└── MultieditTool     (Bulk file editing)
 ```
 
 ### Core Components
@@ -382,6 +384,74 @@ Web search integration for information retrieval.
 - **Summary Extraction**: Key information extraction
 - **Rate Limiting**: API rate limit compliance
 
+### GlobTool
+
+**Location**: `src/tools/GlobTool.ts`
+
+#### Purpose
+
+Fast file pattern matching with glob patterns for efficient file discovery.
+
+#### Features
+
+- **Glob Patterns**: Support for complex patterns like `**/*.ts`, `src/**/*.js`
+- **Recursive Search**: Deep directory traversal
+- **Ignore Patterns**: Exclude files/directories with patterns
+- **Result Limiting**: Control maximum results returned
+- **Sorting Options**: Sort by name, path, or modification time
+- **Directory Inclusion**: Option to include directories in results
+- **Performance Optimized**: Fast pattern matching for large codebases
+
+#### Parameters
+
+```typescript
+{
+  pattern: string,           // Required: Glob pattern (e.g., "**/*.ts")
+  path?: string,            // Optional: Search directory (default: cwd)
+  ignore?: string[],        // Optional: Patterns to ignore
+  maxResults?: number,      // Optional: Limit results (default: 1000)
+  includeDirs?: boolean,    // Optional: Include directories
+  sortBy?: string          // Optional: Sort criteria ("name", "path", "modified")
+}
+```
+
+### MultieditTool
+
+**Location**: `src/tools/MultieditTool.ts`
+
+#### Purpose
+
+Bulk find-and-replace operations across multiple files with transaction-like safety.
+
+#### Features
+
+- **Pattern-Based Selection**: Use glob patterns to select files
+- **Bulk Operations**: Process multiple files simultaneously
+- **Preview Mode**: Preview changes before applying
+- **Regex Support**: Regular expression find-and-replace
+- **Case Sensitivity**: Configurable case sensitivity
+- **Whole Word Matching**: Match complete words only
+- **Transaction Safety**: Atomic operations with backup creation
+- **Result Limiting**: Control maximum files processed
+
+#### Parameters
+
+```typescript
+{
+  pattern: string,          // Required: Glob pattern for file selection
+  find: string,            // Required: Text to find
+  replace: string,         // Required: Replacement text
+  path?: string,           // Optional: Search directory
+  include?: string[],      // Optional: Additional include patterns
+  exclude?: string[],      // Optional: Exclude patterns
+  maxFiles?: number,       // Optional: Maximum files to process
+  preview?: boolean,       // Optional: Preview mode
+  caseSensitive?: boolean, // Optional: Case sensitivity
+  wholeWord?: boolean,     // Optional: Whole word matching
+  regex?: boolean         // Optional: Use regex patterns
+}
+```
+
 ## Security Manager
 
 ### Location
@@ -592,15 +662,18 @@ All tools available for full development capabilities.
 
 **Available Tools:**
 
-- BashTool (full command execution)
+- BashTool (command execution)
 - EditTool (file modification)
 - WriteTool (file creation)
 - ReadTool (file reading)
 - GrepTool (content search)
 - ListTool (directory listing)
 - WebFetchTool (HTTP requests)
-- TodoTool (task management)
+- TodoWriteTool (task management - write)
+- TodoReadTool (task management - read)
 - DuckDuckGoTool (web search)
+- GlobTool (file pattern matching)
+- MultieditTool (bulk file editing)
 
 ### Thinking Mode
 
@@ -612,13 +685,17 @@ Read-only tools for information gathering and analysis.
 - GrepTool (content search only)
 - ListTool (directory listing only)
 - WebFetchTool (HTTP requests only)
+- TodoReadTool (task reading only)
+- GlobTool (file pattern matching)
 
 **Restricted Tools:**
 
 - BashTool (command execution blocked)
 - EditTool (file modification blocked)
 - WriteTool (file creation blocked)
-- TodoTool (state modification blocked)
+- TodoWriteTool (task modification blocked)
+- MultieditTool (bulk editing blocked)
+- DuckDuckGoTool (web search blocked)
 
 ## Tool Registration System
 

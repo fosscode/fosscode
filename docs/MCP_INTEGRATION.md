@@ -135,7 +135,7 @@ const initRequest = {
     },
     clientInfo: {
       name: 'fosscode',
-      version: '0.0.41',
+      version: '0.0.42',
     },
   },
 };
@@ -721,6 +721,80 @@ function formatMCPResult(result: MCPToolResult): string {
 ```
 
 **Tools**: `status`, `diff`, `commit`, `push`, `pull`, `branch`
+
+### Database MCP Servers
+
+#### SQLite MCP
+
+**Purpose**: SQLite database operations
+**Installation**: `npm install -g @sqlite/mcp`
+**Configuration**:
+
+```json
+{
+  "name": "sqlite",
+  "command": "npx",
+  "args": ["@sqlite/mcp@latest"],
+  "env": {
+    "DATABASE_PATH": "/path/to/database.db"
+  }
+}
+```
+
+**Tools**: `query`, `execute`, `describe_table`, `list_tables`
+
+#### PostgreSQL MCP
+
+**Purpose**: PostgreSQL database operations
+**Installation**: `npm install -g @postgresql/mcp`
+**Configuration**:
+
+```json
+{
+  "name": "postgres",
+  "command": "npx",
+  "args": ["@postgresql/mcp@latest"],
+  "env": {
+    "DATABASE_URL": "postgresql://user:pass@localhost:5432/db"
+  }
+}
+```
+
+**Tools**: `query`, `execute`, `describe_table`, `list_tables`, `migrations`
+
+### Development Tools
+
+#### ESLint MCP
+
+**Purpose**: JavaScript/TypeScript linting and fixing
+**Installation**: `npm install -g @eslint/mcp`
+**Configuration**:
+
+```json
+{
+  "name": "eslint",
+  "command": "npx",
+  "args": ["@eslint/mcp@latest"]
+}
+```
+
+**Tools**: `lint`, `fix`, `format`, `check_config`
+
+#### TypeScript MCP
+
+**Purpose**: TypeScript compilation and type checking
+**Installation**: `npm install -g @typescript/mcp`
+**Configuration**:
+
+```json
+{
+  "name": "typescript",
+  "command": "npx",
+  "args": ["@typescript/mcp@latest"]
+}
+```
+
+**Tools**: `compile`, `check`, `build`, `watch`
 
 ## Usage Examples
 

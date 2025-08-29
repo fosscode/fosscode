@@ -27,8 +27,8 @@ export class ProviderManager {
     this.providers.set('sonicfree', new SonicFreeProvider());
     this.providers.set('anthropic', new AnthropicProvider());
 
-    // Conditionally register MockProvider for testing
-    if (process.env.FOSSCODE_PROVIDER === 'mock') {
+    // Always register MockProvider in development/test environments
+    if (process.env.NODE_ENV === 'test' || process.env.FOSSCODE_PROVIDER === 'mock') {
       this.providers.set('mock', new MockProvider());
     }
   }
