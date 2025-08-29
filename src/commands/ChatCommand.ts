@@ -128,12 +128,17 @@ export class ChatCommand {
 
     // Interactive mode: start TUI
     try {
+      // Initialize chat logger and start session for interactive mode
+      await this.chatLogger.initialize();
+      await this.chatLogger.startSession(options.provider as ProviderType, options.model!);
+
       render(
         React.createElement(App, {
           provider: options.provider as ProviderType,
           model: options.model,
           providerManager: this.providerManager,
           verbose: options.verbose ?? false,
+          chatLogger: this.chatLogger,
           onModelChange: (newModel: string) => {
             console.log(chalk.yellow(`\n🔄 Model selected: ${newModel}`));
             console.log(

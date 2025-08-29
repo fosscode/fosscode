@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Box, useStdout, useInput } from 'ink';
 import { ProviderManager } from '../providers/ProviderManager.js';
 import { Message, ProviderType } from '../types/index.js';
+import { ChatLogger } from '../config/ChatLogger.js';
 import { useFileSearch } from './hooks/useFileSearch.js';
 import { useCommandHistory } from './hooks/useCommandHistory.js';
 import { useTheme } from './hooks/useTheme.js';
@@ -19,11 +20,19 @@ interface AppProps {
   provider: ProviderType;
   model: string;
   providerManager: ProviderManager;
+  chatLogger: ChatLogger;
   onModelChange?: (newModel: string) => void;
   verbose?: boolean;
 }
 
-function App({ provider, model, providerManager, verbose = false }: AppProps) {
+function App({
+  provider,
+  model,
+  providerManager,
+  chatLogger: _chatLogger,
+  verbose = false,
+}: AppProps) {
+  // Note: chatLogger is used for session management, initialized in ChatCommand
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

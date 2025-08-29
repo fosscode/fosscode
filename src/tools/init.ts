@@ -8,6 +8,7 @@ import { ListTool } from './ListTool.js';
 import { BashTool } from './BashTool.js';
 import { GlobTool } from './GlobTool.js';
 import { MultieditTool } from './MultieditTool.js';
+import { PatchTool } from './PatchTool.js';
 import { TodoWriteTool, TodoReadTool } from './TodoTool.js';
 import { DuckDuckGoTool } from './DuckDuckGoTool.js';
 
@@ -28,6 +29,7 @@ export function initializeTools(verbose: boolean = false): void {
   toolRegistry.register(new ListTool());
   toolRegistry.register(new GlobTool());
   toolRegistry.register(new MultieditTool());
+  toolRegistry.register(new PatchTool());
 
   // Register system tools
   toolRegistry.register(new BashTool());
