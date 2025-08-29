@@ -1,9 +1,11 @@
-import { ProviderResponse, ProviderType } from '../types/index.js';
+import { ProviderResponse, ProviderType, Message } from '../types/index.js';
 import {
   getContextLimit,
   calculateContextPercentage,
   formatContextUsage,
 } from './contextLimits.js';
+import { encode } from 'gpt-tokenizer';
+import type { ProviderManager } from '../providers/ProviderManager.js';
 
 export interface ContextInfo {
   usedTokens: number;
@@ -15,6 +17,43 @@ export interface ContextInfo {
 
 export interface EnhancedProviderResponse extends ProviderResponse {
   context?: ContextInfo;
+}
+
+export function countTokens(text: string): number {
+  return encode(text).length;
+}
+
+export async function summarize(
+  messages: Message[],
+  provider: ProviderType,
+  model: string,
+  sendMessage: ProviderManager['sendMessage']
+): Promise<Message> {
+  const summarizationPrompt = `Please provide a detailed but concise summary of our conversation above. Focus on information that would be helpful for continuing the conversation, including what we did, what we're doing, which files we're working on, and what we're going to do next.`;
+
+  const messagesToSummarize = messages.filter(m => m.role !== 'summary');
+
+  const response = await sendMessage(
+    provider,
+    [
+      ...messagesToSummarize,
+      {
+        role: 'user',
+        content: summarizationPrompt,
+        timestamp: new Date(),
+      },
+    ],
+    model,
+    false, // isVerbose
+    'thinking' // mode
+  );
+
+  return {
+    role: 'summary',
+    content: response.content,
+    timestamp: new Date(),
+    ...(response.usage && { usage: response.usage }),
+  };
 }
 
 export function enhanceWithContext(

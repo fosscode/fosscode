@@ -21,6 +21,8 @@ import { FileSearch } from './components/FileSearch.js';
 import { AttachedFilesIndicator } from './components/AttachedFilesIndicator.js';
 import { MessageInput } from './components/MessageInput.js';
 import { AppFooter } from './components/AppFooter.js';
+import { summarize } from '../utils/contextUtils.js';
+import { getContextLimit } from '../utils/contextLimits.js';
 
 export { App };
 
@@ -337,13 +339,46 @@ function App({
         return;
       }
 
+      // Auto-summarization logic
+      const lastMessage = messages.filter((x) => x.role === 'assistant').at(-1);
+      let currentMessages = messages;
+
+      if (lastMessage && lastMessage.usage) {
+        const modelContextLimit = getContextLimit(provider, model) ?? 8192;
+        const outputLimit = 4096;
+        const threshold = Math.max((modelContextLimit - outputLimit) * 0.9, 0);
+
+        if (lastMessage.usage.totalTokens > threshold) {
+          setIsLoading(true);
+          setError(null);
+          try {
+            const summaryMessage = await summarize(
+              messages,
+              provider,
+              model,
+              providerManager.sendMessage.bind(providerManager)
+            );
+            currentMessages = [summaryMessage];
+            setMessages(currentMessages);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error occurred');
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      }
+
       // Handle regular messages
       let messageContent = trimmedInput;
       if (fileSearch.attachedFiles.length > 0) {
         const fileContents = fileSearch.attachedFiles
-          .map(file => `## File: ${file.path}\n\`\`\`\n${file.content}\n\`\`\`\n`)
+          .map(file => `## File: ${file.path}\n\
+\
+${file.content}\
+`)
           .join('\n');
-        messageContent = `${fileContents}\n${trimmedInput}`;
+        messageContent = `${fileContents}\
+${trimmedInput}`;
       }
 
       const userMessage: Message = {
@@ -366,12 +401,11 @@ function App({
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, thinkingMessage]);
-          // Removed stdout.write('') as it interferes with Ink rendering
         }
 
         const response = await providerManager.sendMessage(
           provider,
-          [...messages, userMessage],
+          [...currentMessages, userMessage],
           model,
           isVerbose,
           currentMode
@@ -383,20 +417,20 @@ function App({
             if (newMessages[newMessages.length - 1]?.content === '🤔 Thinking...') {
               newMessages.pop();
             }
-            return [
-              ...newMessages,
-              {
+            const assistantMessage: Message = {
                 role: 'assistant',
                 content: response.content,
                 timestamp: new Date(),
-              },
-            ];
+                ...(response.usage && { usage: response.usage }),
+            };
+            return [...newMessages, assistantMessage];
           });
         } else {
           const assistantMessage: Message = {
             role: 'assistant',
             content: response.content,
             timestamp: new Date(),
+            ...(response.usage && { usage: response.usage }),
           };
           setMessages(prev => [...prev, assistantMessage]);
         }
@@ -406,6 +440,7 @@ function App({
         setIsLoading(false);
       }
     },
+
     [
       input,
       isLoading,
@@ -418,6 +453,7 @@ function App({
       theme,
       fileSearch,
       commandHistory,
+      promptHistory,
       toggleTheme,
     ]
   );
