@@ -31,6 +31,7 @@ export function initializeTools(verbose: boolean = false): void {
   toolRegistry.register(new GlobTool());
   toolRegistry.register(new MultieditTool());
   toolRegistry.register(new PatchTool());
+  toolRegistry.register(new LSPDiagnosticsTool());
 
   // Register system tools
   toolRegistry.register(new BashTool());

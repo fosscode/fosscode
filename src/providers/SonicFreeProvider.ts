@@ -64,12 +64,21 @@ export class SonicFreeProvider implements LLMProvider {
       let finishReason: 'stop' | 'length' | 'error' = 'stop';
       let finalIteration = 0;
 
-      // Agent loop for tool calling with convergence detection
+      // Agent loop with token-based limits and convergence detection
       let previousContent = '';
       let noProgressCount = 0;
       const maxNoProgress = 3; // Stop if no progress for 3 iterations
+      const maxTotalTokens = 15000; // Total token budget across all iterations
+      let totalTokensUsed = 0;
 
       for (let iteration = 0; iteration < 15; iteration++) {
+        // Check token budget before making API call
+        if (totalTokensUsed >= maxTotalTokens) {
+          console.log(
+            `🛑 Stopping at iteration ${iteration + 1} due to token limit (${totalTokensUsed}/${maxTotalTokens})`
+          );
+          break;
+        }
         finalIteration = iteration;
         // Max 15 iterations with early stopping for convergence
         const response = await this.client.chat.completions.create({
@@ -86,11 +95,12 @@ export class SonicFreeProvider implements LLMProvider {
           throw new Error('No response from SonicFree');
         }
 
-        // Accumulate usage
+        // Accumulate usage and track token budget
         if (response.usage) {
           totalUsage.prompt_tokens += response.usage.prompt_tokens;
           totalUsage.completion_tokens += response.usage.completion_tokens;
           totalUsage.total_tokens += response.usage.total_tokens;
+          totalTokensUsed += response.usage.total_tokens;
         }
 
         const assistantMessage = choice.message;
