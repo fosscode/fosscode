@@ -65,6 +65,7 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
     // Clear existing interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
 
     // Only create interval for non-static types
@@ -79,6 +80,16 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
       }
     };
   }, [type, speed, updateAnimation]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
 
   const getColor = useCallback(
     (charIndex?: number): string => {

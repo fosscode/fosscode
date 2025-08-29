@@ -6,7 +6,7 @@
 [![Bluesky](https://img.shields.io/badge/Bluesky-Follow-blue)](https://bsky.app/profile/fosscode.bsky.social)
 [![Instagram](https://img.shields.io/badge/Instagram-Follow-pink.svg)](https://www.instagram.com/fosscode/)
 
-A lightweight, fast command-line application with a text user interface (TUI) for performing code agent interactions with Large Language Models (LLMs).
+A command-line application with a text user interface (TUI) for performing code agent interactions with Large Language Models (LLMs).
 
 ## Features
 

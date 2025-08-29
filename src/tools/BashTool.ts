@@ -280,6 +280,9 @@ export class BashTool implements Tool {
     executionTime: number;
   }> {
     return new Promise((resolve, reject) => {
+      // Print the command being executed
+      console.log(`🔧 Executing: ${command}`);
+
       // Check if cancellation was requested before starting
       if (cancellationManager.shouldCancel()) {
         reject(new Error('Command cancelled by user'));
@@ -344,10 +347,37 @@ export class BashTool implements Tool {
         clearTimeout(timer);
         const executionTime = Date.now() - startTime;
 
+        // Print last few lines of output
+        const finalStdout = stdout.trim();
+        const finalStderr = stderr.trim();
+
+        if (finalStdout) {
+          const lines = finalStdout.split('\n');
+          const lastLines = lines.slice(-5); // Last 5 lines
+          console.log(`📄 Output (last ${lastLines.length} lines):`);
+          lastLines.forEach(line => console.log(`  ${line}`));
+        }
+
+        if (finalStderr) {
+          const lines = finalStderr.split('\n');
+          const lastLines = lines.slice(-3); // Last 3 lines of stderr
+          console.log(`⚠️  Error output (last ${lastLines.length} lines):`);
+          lastLines.forEach(line => console.log(`  ${line}`));
+        }
+
+        // Display execution time and exit code with color
+        const exitCode = code ?? -1;
+        const isSuccess = exitCode === 0;
+        const exitColor = isSuccess ? '\x1b[32m' : '\x1b[31m'; // Green for success, red for error
+        const resetColor = '\x1b[0m';
+
+        console.log(`⏱️  Execution time: ${executionTime}ms`);
+        console.log(`${exitColor}📊 Exit code: ${exitCode}${resetColor}`);
+
         resolve({
-          exitCode: code ?? -1,
-          stdout: stdout.trim(),
-          stderr: stderr.trim(),
+          exitCode,
+          stdout: finalStdout,
+          stderr: finalStderr,
           timedOut,
           executionTime,
         });

@@ -10,6 +10,8 @@ import { GlobTool } from './GlobTool.js';
 import { MultieditTool } from './MultieditTool.js';
 import { PatchTool } from './PatchTool.js';
 import { LSPDiagnosticsTool } from './LSPDiagnosticsTool.js';
+import { LSPHoverTool } from './LSPHoverTool.js';
+import { WebSearchTool } from './WebSearchTool.js';
 import { TodoWriteTool, TodoReadTool } from './TodoTool.js';
 import { DuckDuckGoTool } from './DuckDuckGoTool.js';
 
@@ -32,6 +34,8 @@ export function initializeTools(verbose: boolean = false): void {
   toolRegistry.register(new MultieditTool());
   toolRegistry.register(new PatchTool());
   toolRegistry.register(new LSPDiagnosticsTool());
+  toolRegistry.register(new LSPHoverTool());
+  toolRegistry.register(new WebSearchTool());
 
   // Register system tools
   toolRegistry.register(new BashTool());

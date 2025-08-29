@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Box, useStdout, useInput } from 'ink';
 import { ProviderManager } from '../providers/ProviderManager.js';
 import { Message, ProviderType } from '../types/index.js';
@@ -7,6 +7,11 @@ import { useFileSearch } from './hooks/useFileSearch.js';
 import { useCommandHistory } from './hooks/useCommandHistory.js';
 import { useTheme } from './hooks/useTheme.js';
 import { handleCommand, toggleMode } from './utils/commandHandler.js';
+import {
+  getEffectiveTerminalSize,
+  getTmuxResponsiveBreakpoints,
+  isInTmux,
+} from '../utils/tmuxUtils.js';
 import { AppHeader } from './components/AppHeader.js';
 import { MessageList } from './components/MessageList.js';
 import { FileSearch } from './components/FileSearch.js';
@@ -45,21 +50,53 @@ function App({
   const commandHistory = useCommandHistory();
   const { theme, toggleTheme, themeColors } = useTheme();
 
-  // Get terminal dimensions for responsive design
+  // Get terminal dimensions for responsive design (tmux-aware)
   const { stdout } = useStdout();
-  const terminalWidth = stdout?.columns ?? process.stdout.columns ?? 80;
-  const terminalHeight = stdout?.rows ?? process.stdout.rows ?? 24;
 
-  // Determine if we're on a small screen (mobile-like)
-  const isSmallScreen = terminalWidth < 60 || terminalHeight < 15;
-  const isVerySmallScreen = terminalWidth < 40 || terminalHeight < 10;
+  // Use tmux-aware dimensions when available
+  const effectiveDimensions = useMemo(() => {
+    if (isInTmux()) {
+      return getEffectiveTerminalSize();
+    }
+    return {
+      width: stdout?.columns ?? process.stdout.columns ?? 80,
+      height: stdout?.rows ?? process.stdout.rows ?? 24,
+    };
+  }, [stdout]);
+
+  const terminalWidth = effectiveDimensions.width;
+  const terminalHeight = effectiveDimensions.height;
+
+  // Get tmux-aware responsive breakpoints
+  const responsiveBreakpoints = useMemo(() => {
+    if (isInTmux()) {
+      return getTmuxResponsiveBreakpoints();
+    }
+    return {
+      isSmallScreen: terminalWidth < 60 || terminalHeight < 15,
+      isVerySmallScreen: terminalWidth < 40 || terminalHeight < 10,
+      isExtraSmallScreen: false, // Not used in non-tmux mode
+    };
+  }, [terminalWidth, terminalHeight]);
+
+  const isSmallScreen = responsiveBreakpoints.isSmallScreen;
+  const isVerySmallScreen = responsiveBreakpoints.isVerySmallScreen;
 
   // Force immediate re-render when messages change to prevent buffering
   useEffect(() => {
     if (messages.length > 0) {
-      process.stdout.write('\r');
+      // Removed stdout.write() as it interferes with Ink rendering
+      // Ink handles re-rendering automatically
     }
   }, [messages]);
+
+  // Limit message history to prevent memory issues and rendering performance problems
+  const maxMessages = 100; // Keep last 100 messages
+  useEffect(() => {
+    if (messages.length > maxMessages) {
+      setMessages(prev => prev.slice(-maxMessages));
+    }
+  }, [messages.length]);
 
   // Handle input and navigation
   useInput((inputChar, key) => {
@@ -240,7 +277,7 @@ function App({
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, thinkingMessage]);
-          process.stdout.write('');
+          // Removed stdout.write('') as it interferes with Ink rendering
         }
 
         const response = await providerManager.sendMessage(

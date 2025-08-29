@@ -14,7 +14,7 @@ export function AppFooter({ messagesLength, isVerySmallScreen, isSmallScreen }: 
   }
 
   return (
-    <Box marginTop={1}>
+    <Box marginTop={isVerySmallScreen ? 2 : isSmallScreen ? 2 : 1}>
       {isVerySmallScreen ? (
         <FlashyText type="static" speed={400} colors={['gray', 'white']}>
           Enter send • Ctrl+C exit
@@ -26,7 +26,7 @@ export function AppFooter({ messagesLength, isVerySmallScreen, isSmallScreen }: 
               ? 'Enter to send, Ctrl+C to exit'
               : 'Type your message and press Enter to send, Ctrl+C to exit'}
           </FlashyText>
-          {!isSmallScreen && (
+          {!isSmallScreen && messagesLength === 0 && (
             <FlashyText type="static" speed={300} colors={['cyan', 'magenta', 'yellow']}>
               Commands: /verbose (toggle), /clear (clear), /compress (summarize), /themes (switch),
               /mode (toggle) | Tab to toggle mode | ↑↓ for history

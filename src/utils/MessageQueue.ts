@@ -165,10 +165,14 @@ export class MessageQueue extends EventEmitter {
 
       let completed = 0;
       let result: any;
+      let hasError = false;
 
       const callback = (err: Error | null, res?: any) => {
+        if (hasError) return; // Prevent multiple rejections
+
         completed++;
         if (err) {
+          hasError = true;
           reject(err);
           return;
         }
@@ -181,6 +185,13 @@ export class MessageQueue extends EventEmitter {
 
       this.emit(event, ...args, callback);
     });
+  }
+
+  /**
+   * Clean up all event listeners to prevent memory leaks
+   */
+  cleanup(): void {
+    this.removeAllListeners();
   }
 
   /**

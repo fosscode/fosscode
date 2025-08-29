@@ -75,24 +75,16 @@ export class AnthropicProvider implements LLMProvider {
         });
 
         let currentContent = '';
-        let hasStarted = false;
 
         for await (const chunk of stream) {
           if (chunk.type === 'content_block_delta' && chunk.delta?.type === 'text_delta') {
             const text = chunk.delta.text;
             if (text) {
               currentContent += text;
-              if (!hasStarted) {
-                process.stdout.write('🤖 ');
-                hasStarted = true;
-              }
-              process.stdout.write(text);
+              // Removed stdout.write() calls as they interfere with Ink rendering
+              // Content is still accumulated and will be displayed by the UI
             }
           }
-        }
-
-        if (hasStarted) {
-          process.stdout.write('\n');
         }
 
         return {

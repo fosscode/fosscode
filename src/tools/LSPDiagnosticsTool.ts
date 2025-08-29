@@ -245,8 +245,8 @@ export class LSPDiagnosticsTool implements Tool {
       // Check for common syntax issues
       if (language === 'javascript' || language === 'typescript') {
         // Unclosed brackets
-        const openBrackets = (line.match(/[\[\{\(]/g) || []).length;
-        const closeBrackets = (line.match(/[\]\}\)]/g) || []).length;
+        const openBrackets = (line.match(/[{()[]/g) ?? []).length;
+        const closeBrackets = (line.match(/[})[]/g) ?? []).length;
 
         if (openBrackets > closeBrackets) {
           diagnostics.push({
@@ -296,7 +296,7 @@ export class LSPDiagnosticsTool implements Tool {
     }
 
     // Check for TODO comments
-    const todoMatches = content.match(/\/\/\s*TODO|\/\*\s*TODO|\#\s*TODO/g);
+    const todoMatches = content.match(/\/\/\s*TODO|\/\*\s*TODO|# \s*TODO/g);
     if (todoMatches) {
       diagnostics.push({
         range: { start: { line: 1, character: 0 }, end: { line: 1, character: 1 } },

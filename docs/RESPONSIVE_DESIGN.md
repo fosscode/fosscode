@@ -78,6 +78,42 @@ COLUMNS=35 LINES=10 node dist/index.js chat --provider sonicfree
 - Gracefully handles cases where terminal size detection fails
 - Maintains functionality while optimizing space usage
 
+## Tmux Support
+
+fosscode provides comprehensive support for tmux (terminal multiplexer) environments to ensure optimal user experience in multiplexed terminal sessions.
+
+### Tmux Detection
+
+- **Automatic Detection**: The application automatically detects when running inside tmux
+- **Pane Size Awareness**: Adapts to individual tmux pane dimensions rather than the full terminal size
+- **Dynamic Updates**: Responds to tmux pane resizing in real-time
+
+### Tmux-Specific Features
+
+1. **Pane-Aware Responsiveness**: Uses tmux pane dimensions for responsive breakpoints instead of full terminal size
+2. **Status Line Integration**: Compatible with tmux status lines and pane borders
+3. **Split Pane Support**: Works seamlessly in tmux split-pane layouts
+4. **Session Persistence**: Maintains state across tmux session detach/reattach
+
+### Implementation Details
+
+- **Detection Method**: Uses environment variables and terminal capabilities to identify tmux sessions
+- **Size Detection**: Queries tmux for actual pane dimensions when available
+- **Fallback Behavior**: Gracefully falls back to standard terminal detection if tmux detection fails
+- **Performance**: Minimal overhead when running outside tmux environments
+
+### Testing Tmux Support
+
+```bash
+# Test in tmux pane
+tmux new-session -d -s test
+tmux send-keys -t test 'cd /path/to/fosscode && node dist/index.js chat --provider sonicfree' C-m
+tmux attach-session -t test
+
+# Test responsive behavior in different pane sizes
+# Split panes and resize to test breakpoints
+```
+
 ## Future Enhancements
 
 Potential improvements for even better mobile support:

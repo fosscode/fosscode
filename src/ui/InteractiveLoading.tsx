@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Box } from 'ink';
 import Spinner from 'ink-spinner';
 import { FlashyText } from './FlashyText.js';
+import { isInTmux } from '../utils/tmuxUtils.js';
 
 interface InteractiveLoadingProps {
   frames?: string[][];
@@ -45,13 +46,13 @@ export function InteractiveLoading({ frames = defaultFrames }: InteractiveLoadin
   const [currentMessage, setCurrentMessage] = useState(0);
 
   // Detect if running in tmux and adjust animation speed
-  const isInTmux = useMemo(() => {
-    return process.env.TMUX !== undefined;
+  const tmuxDetected = useMemo(() => {
+    return isInTmux();
   }, []);
 
   // Slower animation in tmux to reduce flickering
-  const frameInterval = isInTmux ? 1200 : 600;
-  const messageInterval = isInTmux ? 1600 : 800;
+  const frameInterval = tmuxDetected ? 1200 : 600;
+  const messageInterval = tmuxDetected ? 1600 : 800;
 
   useEffect(() => {
     const frameTimer = setInterval(() => {
@@ -80,7 +81,7 @@ export function InteractiveLoading({ frames = defaultFrames }: InteractiveLoadin
         </FlashyText>
       </Box>
       {/* Only show emoji animation if not in tmux to reduce flickering */}
-      {!isInTmux && (
+      {!tmuxDetected && (
         <Box marginTop={1}>
           {currentEmojis.map((emoji, index) => (
             <Box key={index} marginRight={1}>
