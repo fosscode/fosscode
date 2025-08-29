@@ -38,15 +38,33 @@ export class E2ETestHelper {
     this.mockResponses = [];
   }
 
-  static async runCliCommand(args: string[], options?: { timeout?: number }) {
+  static async runCliCommand(args: string[], options?: { timeout?: number; provider?: string }) {
     return new Promise<{ stdout: string; stderr: string; exitCode: number }>((resolve, reject) => {
+      // Determine provider from args or options
+      let provider = 'mock'; // default
+      if (options?.provider) {
+        provider = options.provider;
+      } else {
+        // Check if provider is specified in args
+        const providerIndex = args.findIndex(arg => arg.startsWith('--provider='));
+        if (providerIndex !== -1) {
+          provider = args[providerIndex].split('=')[1];
+        }
+      }
+
+      const env: Record<string, string> = {
+        ...process.env,
+        FOSSCODE_PROVIDER: provider,
+        NODE_ENV: 'test',
+      };
+
+      // Only set mock responses for mock provider
+      if (provider === 'mock') {
+        env.MOCK_RESPONSES = JSON.stringify(this.mockResponses);
+      }
+
       const child = spawn('node', [E2ETestHelper.distPath, ...args], {
-        env: {
-          ...process.env,
-          FOSSCODE_PROVIDER: 'mock',
-          NODE_ENV: 'test',
-          MOCK_RESPONSES: JSON.stringify(this.mockResponses),
-        },
+        env,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
 
