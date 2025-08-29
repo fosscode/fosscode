@@ -137,13 +137,13 @@ export class ChatCommand {
           provider: options.provider as ProviderType,
           model: options.model,
           providerManager: this.providerManager,
-          verbose: options.verbose ?? false,
           chatLogger: this.chatLogger,
+          verbose: options.verbose ?? false,
           onModelChange: (newModel: string) => {
-            console.log(chalk.yellow(`\n🔄 Model selected: ${newModel}`));
-            console.log(
-              chalk.gray(`💡 To use this model, restart with: fosscode chat --model ${newModel}\n`)
-            );
+            this.currentModel = newModel;
+          },
+        })
+      );
           },
         })
       );
