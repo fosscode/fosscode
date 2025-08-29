@@ -5,6 +5,26 @@ import { generate as generateSystemPrompt } from '../prompts/SystemPrompt.js';
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic | null = null;
 
+  /**
+   * Parse thinking blocks from Anthropic response
+   * Thinking blocks are wrapped in <thinking>...</thinking> tags
+   */
+  private parseThinkingBlocks(content: string): { content: string; thinkingBlocks: string[] } {
+    const thinkingRegex = /<thinking>([\s\S]*?)<\/thinking>/g;
+    const thinkingBlocks: string[] = [];
+    let match;
+
+    // Extract thinking blocks
+    while ((match = thinkingRegex.exec(content)) !== null) {
+      thinkingBlocks.push(match[1].trim());
+    }
+
+    // Remove thinking blocks from content
+    const cleanContent = content.replace(thinkingRegex, '').trim();
+
+    return { content: cleanContent, thinkingBlocks };
+  }
+
   async validateConfig(config: LLMConfig): Promise<boolean> {
     if (!config.apiKey) {
       return false;
@@ -101,8 +121,11 @@ export class AnthropicProvider implements LLMProvider {
           stream: false,
         });
 
-        return {
-          content: response.content[0]?.type === 'text' ? response.content[0].text : '',
+        const rawContent = response.content[0]?.type === 'text' ? response.content[0].text : '';
+        const { content, thinkingBlocks } = this.parseThinkingBlocks(rawContent);
+
+        const result: any = {
+          content,
           usage: response.usage
             ? {
                 promptTokens: response.usage.input_tokens,
@@ -112,6 +135,12 @@ export class AnthropicProvider implements LLMProvider {
             : undefined,
           finishReason: response.stop_reason as 'stop' | 'length' | 'error',
         };
+
+        if (thinkingBlocks.length > 0) {
+          result.thinkingBlocks = thinkingBlocks;
+        }
+
+        return result;
       }
     } catch (error) {
       throw new Error(

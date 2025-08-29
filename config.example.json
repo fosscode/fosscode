@@ -80,5 +80,15 @@
       "lastUpdated": "2024-01-01T00:00:00.000Z",
       "expiresAt": "2024-01-02T00:00:00.000Z"
     }
+  },
+  "contextDisplay": {
+    "enabled": true,
+    "format": "both",
+    "showWarnings": true,
+    "warningThreshold": 80
+  },
+  "thinkingDisplay": {
+    "enabled": true,
+    "showThinkingBlocks": true
   }
 }

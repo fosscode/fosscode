@@ -11,6 +11,7 @@ import { ModelsCommand } from './commands/ModelsCommand.js';
 import { AuthCommand } from './commands/AuthCommand.js';
 import { ThemesCommand } from './commands/ThemesCommand.js';
 import { MCPCommand } from './commands/MCPCommand.js';
+import { ThinkingCommand } from './commands/ThinkingCommand.js';
 import { ConfigManager } from './config/ConfigManager.js';
 import { ProviderManager } from './providers/ProviderManager.js';
 import { initializeTools } from './tools/init.js';
@@ -114,6 +115,16 @@ program
   .action(async (subcommand?: string, args?: string[]) => {
     const mcpCommand = new MCPCommand();
     await mcpCommand.execute(subcommand, ...(args || []));
+  });
+
+program
+  .command('thinking [action]')
+  .description('Control thinking blocks display from AI providers')
+  .action(async (action?: string) => {
+    const thinkingCommand = new ThinkingCommand(configManager);
+    const args = action ? [action] : [];
+    const result = await thinkingCommand.execute(args);
+    console.log(result);
   });
 
 // Handle unhandled promise rejections

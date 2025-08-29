@@ -36,6 +36,10 @@ export class ConfigDefaults {
         showWarnings: true,
         warningThreshold: 80,
       },
+      thinkingDisplay: {
+        enabled: true,
+        showThinkingBlocks: true,
+      },
     };
   }
 

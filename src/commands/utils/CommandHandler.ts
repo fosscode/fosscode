@@ -3,12 +3,14 @@ import { MessagingPlatformManager } from '../../messaging/MessagingPlatformManag
 import { ProviderManager } from '../../providers/ProviderManager.js';
 import { ConfigManager } from '../../config/ConfigManager.js';
 import { Message, MessagingPlatformType, MessagingPlatformMessage } from '../../types/index.js';
+import { ThinkingCommand } from '../ThinkingCommand.js';
 
 export class CommandHandler {
   private messagingManager: MessagingPlatformManager;
   private providerManager: ProviderManager;
   private configManager: ConfigManager;
   private conversationHistory: Map<string, Message[]>;
+  private thinkingCommand: ThinkingCommand;
 
   constructor(
     messagingManager: MessagingPlatformManager,
@@ -20,6 +22,7 @@ export class CommandHandler {
     this.providerManager = providerManager;
     this.configManager = configManager;
     this.conversationHistory = conversationHistory;
+    this.thinkingCommand = new ThinkingCommand(configManager);
   }
 
   async handleCommand(
@@ -27,6 +30,12 @@ export class CommandHandler {
     platformType: MessagingPlatformType
   ): Promise<void> {
     const command = message.content.toLowerCase().trim();
+
+    // Handle thinking command with arguments
+    if (command.startsWith('/thinking')) {
+      await this.handleThinkingCommand(message, platformType);
+      return;
+    }
 
     switch (command) {
       case '/clear':
@@ -88,6 +97,7 @@ export class CommandHandler {
       `• /help - Show this help message\n` +
       `• /quit - Exit the bot and terminate all processes\n` +
       `• /status - Check bot health and status\n` +
+      `• /thinking - Control thinking blocks display (on/off/toggle/status)\n` +
       `• /timeouts - Show timeout settings\n\n` +
       `Just type your message normally to chat with me!`;
     await this.messagingManager.sendMessage(platformType, message.chatId, helpMessage);
@@ -213,6 +223,25 @@ Summary:`;
         chalk.red(
           `❌ Error compressing conversation for chat ${message.chatId}: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
+      );
+    }
+  }
+
+  private async handleThinkingCommand(
+    message: MessagingPlatformMessage,
+    platformType: MessagingPlatformType
+  ): Promise<void> {
+    try {
+      // Parse command arguments
+      const args = message.content.trim().split(/\s+/).slice(1); // Remove '/thinking' and get remaining args
+      const response = await this.thinkingCommand.execute(args);
+
+      await this.messagingManager.sendMessage(platformType, message.chatId, response);
+    } catch (error) {
+      await this.messagingManager.sendMessage(
+        platformType,
+        message.chatId,
+        `❌ Error executing thinking command: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }

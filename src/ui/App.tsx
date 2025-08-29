@@ -28,6 +28,7 @@ interface AppProps {
   chatLogger: ChatLogger;
   onModelChange?: (newModel: string) => void;
   verbose?: boolean;
+  showThinkingBlocks?: boolean;
 }
 
 function App({
@@ -36,6 +37,7 @@ function App({
   providerManager,
   chatLogger: _chatLogger,
   verbose = false,
+  showThinkingBlocks = true,
 }: AppProps) {
   // Note: chatLogger is used for session management, initialized in ChatCommand
   const [messages, setMessages] = useState<Message[]>([]);
@@ -357,6 +359,7 @@ function App({
         isLoading={isLoading}
         error={error}
         isVerySmallScreen={isVerySmallScreen}
+        showThinkingBlocks={showThinkingBlocks}
       />
 
       <FileSearch

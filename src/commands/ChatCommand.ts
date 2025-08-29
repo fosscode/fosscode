@@ -132,6 +132,10 @@ export class ChatCommand {
       await this.chatLogger.initialize();
       await this.chatLogger.startSession(options.provider as ProviderType, options.model!);
 
+      // Get thinking display configuration
+      const config = this.configManager.getConfig();
+      const showThinkingBlocks = config.thinkingDisplay?.showThinkingBlocks ?? true;
+
       render(
         React.createElement(App, {
           provider: options.provider as ProviderType,
@@ -139,6 +143,7 @@ export class ChatCommand {
           providerManager: this.providerManager,
           chatLogger: this.chatLogger,
           verbose: options.verbose ?? false,
+          showThinkingBlocks,
           onModelChange: (_newModel: string) => {
             // Model change callback - could be used for future features
           },

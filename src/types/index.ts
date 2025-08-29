@@ -82,6 +82,7 @@ export interface ProviderResponse {
       }
     | undefined;
   finishReason: 'stop' | 'length' | 'error';
+  thinkingBlocks?: string[];
 }
 
 export interface CachedModels {
@@ -103,6 +104,10 @@ export interface AppConfig {
     format: 'percentage' | 'tokens' | 'both';
     showWarnings: boolean;
     warningThreshold: number;
+  };
+  thinkingDisplay?: {
+    enabled: boolean;
+    showThinkingBlocks: boolean;
   };
 }
 
