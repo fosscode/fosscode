@@ -41,12 +41,9 @@ export class ChatCommand {
       verbose?: boolean;
       messagingPlatform?: MessagingPlatformType;
       mcp?: string;
-<<<<<<< HEAD
       showContext?: boolean;
       contextFormat?: string;
       contextThreshold?: number;
-=======
->>>>>>> 26c47ea (feat: add MCP server filtering functionality)
     }
   ): Promise<void> {
     // Handle provider selection if not specified
@@ -59,10 +56,10 @@ export class ChatCommand {
       options.model = ConfigDefaults.getDefaultModelForProvider(options.provider);
     }
 
-    // Set MCP servers filter if provided
-    if (options.mcp) {
-      this.providerManager.setMCPServersFilter(options.mcp.split(',').map(s => s.trim()));
-    }
+    // TODO: Implement MCP servers filter functionality
+    // if (options.mcp) {
+    //   this.providerManager.setMCPServersFilter(options.mcp.split(',').map(s => s.trim()));
+    // }
 
     // Validate specific provider configuration
     await this.configManager.validateProvider(options.provider as ProviderType);
