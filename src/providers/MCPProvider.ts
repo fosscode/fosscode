@@ -328,57 +328,6 @@ export class MCPProvider implements LLMProvider {
     return ['mcp-server'];
   }
 
-<<<<<<< HEAD
-=======
-  getAvailableMCPServers(config: LLMConfig): string[] {
-    if (config.mcpServers) {
-      return Object.keys(config.mcpServers).filter(
-        name => config.mcpServers![name].enabled !== false
-      );
-    }
-    return [];
-  }
-
-  private getCurrentServerInfo(config: LLMConfig, serverName?: string): string {
-    if (config.mcpServers && Object.keys(config.mcpServers).length > 1) {
-      const availableServers = this.getAvailableMCPServers(config);
-      const currentServer =
-        serverName ?? (availableServers.length > 0 ? availableServers[0] : 'unknown');
-      return ` (${currentServer})`;
-    }
-    return '';
-  }
-
-  // Public method to initialize MCP tools for AI provider access
-  async initializeMCPTools(config: LLMConfig, serverName?: string): Promise<void> {
-    // If multiple servers are enabled and no specific server requested,
-    // connect to all enabled servers
-    if (config.mcpServers && !serverName) {
-      const enabledServers = Object.entries(config.mcpServers).filter(
-        ([, server]) => server.enabled !== false
-      );
-
-      if (enabledServers.length > 1) {
-        console.log(`🔧 Connecting to ${enabledServers.length} MCP servers...`);
-        for (const [name, serverConfig] of enabledServers) {
-          try {
-            console.log(`🔧 Connecting to MCP server: ${name}`);
-            await this.connectToMCPServer({ ...config, ...serverConfig }, name);
-          } catch (error) {
-            console.warn(`⚠️ Failed to connect to MCP server '${name}':`, error);
-            // Continue with other servers
-          }
-        }
-        return;
-      }
-    }
-
-    // Single server connection (existing logic)
-    await this.connectToMCPServer(config, serverName);
-    // Tools are automatically registered during connection
-  }
-
->>>>>>> 26c47ea (feat: add MCP server filtering functionality)
   // Cleanup method to be called when done
   async cleanup(): Promise<void> {
     await this.disconnectFromMCPServer();

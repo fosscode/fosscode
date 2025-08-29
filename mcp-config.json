@@ -1,21 +1,8 @@
 {
-  "defaultProvider": "mcp",
-  "defaultModel": "mcp-server",
-  "maxConversations": 100,
-  "theme": "dark",
+  "defaultProvider": "sonicfree",
   "providers": {
-    "mcp": {
-      "mcpServerCommand": "npx",
-      "mcpServerArgs": ["@playwright/mcp@latest"],
-      "timeout": 30000,
-      "verbose": true
-    }
-  },
-  "cachedModels": {
-    "mcp": {
-      "models": ["mcp-server"],
-      "lastUpdated": "2024-01-01T00:00:00.000Z",
-      "expiresAt": "2024-01-02T00:00:00.000Z"
+    "sonicfree": {
+      "baseURL": "https://gateway.opencode.ai/v1"
     }
   }
 }

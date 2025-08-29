@@ -143,11 +143,8 @@ export class SonicFreeProvider implements LLMProvider {
           intermediateContent += '\n';
 
           // Log tool execution start
-          await this.chatLogger.logBackendOperation(
-            'tool_calls_started',
-            { toolCalls: assistantMessage.tool_calls.length, mode },
-            undefined,
-            true
+          console.log(
+            `🔧 Starting tool execution: ${assistantMessage.tool_calls.length} tools in ${mode} mode`
           );
 
           const toolStartTime = Date.now();
@@ -157,8 +154,7 @@ export class SonicFreeProvider implements LLMProvider {
           } catch (toolError) {
             // Log tool execution error
             await this.chatLogger.logError(
-              toolError instanceof Error ? toolError : new Error('Tool execution failed'),
-              `Tool calls: ${assistantMessage.tool_calls.length}`
+              toolError instanceof Error ? toolError : new Error('Tool execution failed')
             );
             // Continue with error message in content
             toolResult = {
@@ -169,26 +165,11 @@ export class SonicFreeProvider implements LLMProvider {
           const toolDuration = Date.now() - toolStartTime;
 
           // Log individual tool executions
-          for (const toolCall of assistantMessage.tool_calls) {
-            await this.chatLogger.logToolExecution(
-              toolCall.function?.name || 'unknown',
-              toolCall.function?.arguments ? JSON.parse(toolCall.function.arguments) : {},
-              toolResult.hasToolCalls ? 'executed' : 'failed',
-              toolDuration,
-              toolResult.hasToolCalls
-            );
-          }
+          console.log(`📊 Tool execution completed in ${toolDuration}ms`);
 
-          // Log tool execution completion
-          await this.chatLogger.logBackendOperation(
-            'tool_calls_completed',
-            {
-              toolCalls: assistantMessage.tool_calls.length,
-              hasResults: toolResult.hasToolCalls,
-              resultLength: toolResult.content.length,
-            },
-            toolDuration,
-            toolResult.hasToolCalls
+          // Tool execution completed
+          console.log(
+            `✅ Tool execution completed with ${toolResult.hasToolCalls ? 'results' : 'no results'}`
           );
 
           // Include tool execution results in the response content
@@ -210,15 +191,12 @@ export class SonicFreeProvider implements LLMProvider {
           // Accumulate final response
           if (content.trim()) {
             intermediateContent += `✅ **Final Response:**\n${content}\n\n`;
-<<<<<<< HEAD
           } else {
             // Log when we get an empty response for debugging
             console.warn(
               `⚠️ SonicFree returned empty content for iteration ${iteration + 1}. Finish reason: ${choice.finish_reason}`
             );
             intermediateContent += `⚠️ **Response Issue:** The AI returned an empty response. This might indicate content filtering or a service limitation.\n\n`;
-=======
->>>>>>> 47998aa (feat: enhance SonicFree provider verbosity in regular mode)
           }
           finalContent = intermediateContent;
           finishReason = choice.finish_reason as 'stop' | 'length' | 'error';
@@ -226,18 +204,9 @@ export class SonicFreeProvider implements LLMProvider {
         }
       }
 
-      // Log final response details for debugging
-      await this.chatLogger.logBackendOperation(
-        'response_finalized',
-        {
-          contentLength: finalContent.length,
-          hasContent: finalContent.trim().length > 0,
-          iterations: finalIteration + 1,
-          finishReason,
-          totalTokens: totalUsage.total_tokens,
-        },
-        undefined,
-        finalContent.trim().length > 0
+      // Final response details
+      console.log(
+        `📋 Response finalized: ${finalContent.length} chars, ${finalIteration + 1} iterations, ${totalUsage.total_tokens} tokens`
       );
 
       return {
