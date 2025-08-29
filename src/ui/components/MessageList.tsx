@@ -14,7 +14,7 @@ export function MessageList({ messages, isLoading, error, isVerySmallScreen }: M
   const renderedMessages = messages.map((message, index) => (
     <Box key={index} marginBottom={isVerySmallScreen ? 0 : 1}>
       <FlashyText
-        type={message.role === 'user' ? 'pulse' : 'wave'}
+        type="static"
         speed={message.role === 'user' ? 400 : 200}
         colors={
           message.role === 'user'

@@ -21,7 +21,7 @@ export function MessageInput({
       </FlashyText>
       <Text>
         {input || (
-          <FlashyText type="wave" speed={250} colors={['gray', 'white']}>
+          <FlashyText type="static" speed={250} colors={['gray', 'white']}>
             {isVerySmallScreen
               ? 'Msg...'
               : isSmallScreen
