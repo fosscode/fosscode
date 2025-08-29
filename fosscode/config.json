@@ -1,0 +1,13 @@
+{
+  "defaultProvider": "sonicfree",
+  "defaultModel": "sonic",
+  "providers": {
+    "sonicfree": {
+      "baseURL": "https://gateway.opencode.ai/v1",
+      "timeout": 30000,
+      "maxRetries": 3,
+      "model": "sonic",
+      "verbose": false
+    }
+  }
+}

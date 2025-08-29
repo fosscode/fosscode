@@ -10,7 +10,7 @@ import { ThemesCommand } from './commands/ThemesCommand.js';
 import { initializeTools } from './tools/init.js';
 import { cancellationManager } from './utils/CancellationManager.js';
 
-const version = '0.0.12'; // Hardcoded for binary builds
+const version = '0.0.27'; // Hardcoded for binary builds
 
 const program = new Command();
 
