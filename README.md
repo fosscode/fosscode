@@ -55,6 +55,64 @@ fosscode includes a comprehensive set of built-in tools for various development 
 
 External tools can be added via Model Context Protocol (MCP) servers, extending functionality with custom capabilities.
 
+## Context Awareness & Performance
+
+### Intelligent Context Management
+
+fosscode features advanced context management that enhances AI interactions:
+
+- **Prompt History Tracking**: Maintains conversation history across sessions for better continuity
+- **File Access Tracking**: Tracks recently accessed files and their usage patterns
+- **Dynamic System Prompts**: Automatically includes relevant context in AI interactions
+- **Session Awareness**: Remembers your current workspace and focus areas
+
+### Performance Monitoring
+
+Built-in performance testing framework for monitoring tool efficiency:
+
+- **Performance Benchmarks**: Automated testing of resource-intensive operations
+- **Memory Usage Tracking**: Monitor memory consumption during tool execution
+- **Execution Time Analysis**: Measure and optimize tool response times
+- **Comprehensive Reporting**: Generate detailed performance reports and comparisons
+
+### Context Features
+
+```bash
+# Context display options
+fosscode chat --show-context --context-format both
+fosscode chat --no-context  # Disable context display
+
+# Performance testing
+npm run test:performance  # Run performance test suite
+```
+
+## Advanced Configuration
+
+### Context Display Settings
+
+```json
+{
+  "contextDisplay": {
+    "enabled": true,
+    "format": "both", // "percentage", "tokens", or "both"
+    "showWarnings": true
+  }
+}
+```
+
+### Performance Thresholds
+
+Configure performance monitoring thresholds in your test configuration:
+
+```javascript
+// Performance test configuration
+{
+  maxExecutionTime: 5000,    // 5 seconds
+  maxMemoryDelta: 52428800,  // 50MB
+  warningThreshold: 0.8      // 80% of max
+}
+```
+
 ## Installation
 
 ### Development Setup
@@ -183,6 +241,40 @@ bun run lint         # Lint
 bun run start        # Run app
 ```
 
+### Testing
+
+fosscode includes comprehensive testing suites:
+
+```bash
+bun test              # Run all tests
+bun run test:unit     # Run unit tests only
+bun run test:e2e      # Run end-to-end tests
+bun run test:perf     # Run performance tests
+bun run test:coverage # Generate coverage report
+```
+
+**Test Categories:**
+
+- **Unit Tests**: Individual component testing
+- **Integration Tests**: Cross-component interaction testing
+- **E2E Tests**: Full workflow testing with mock providers
+- **Performance Tests**: Resource usage and execution time benchmarking
+
+**Performance Testing:**
+
+```bash
+# Run performance tests for specific tools
+npm run test -- --testPathPattern="performance/WebFetchTool"
+
+# Generate performance report
+./scripts/run-performance-tests.sh
+
+# Run performance test runner
+node scripts/performance-test-runner.js
+```
+
+Performance reports are saved to `performance-reports/` directory with detailed metrics on execution time, memory usage, and CPU consumption.
+
 ## Deployment
 
 **Docker (Recommended):**
@@ -203,11 +295,19 @@ git clone <repo> && cd fosscode && bun install && bun run start chat
 
 ```
 src/
+├── binary-chat.ts     # Chat command implementation
 ├── index.ts           # CLI entry
-├── types/             # Type defs
-├── config/            # Config mgmt
-├── providers/         # LLM providers
-└── ui/                # TUI components
+├── types/             # Type definitions
+├── config/            # Configuration management
+├── providers/         # LLM provider implementations
+├── prompts/           # System prompt generation
+├── tools/             # Tool implementations
+├── utils/             # Utility functions
+├── ui/                # TUI components
+└── __tests__/         # Test suites
+    ├── performance/   # Performance tests
+    ├── e2e/          # End-to-end tests
+    └── *.test.ts     # Unit and integration tests
 ```
 
 ## Donations

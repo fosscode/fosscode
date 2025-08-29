@@ -15,6 +15,7 @@ import { MessagingModeHandler } from './utils/MessagingModeHandler.js';
 import { MCPManager } from '../mcp/index.js';
 
 import { PermissionManager } from '../utils/PermissionManager.js';
+import { fileTrackerManager } from '../utils/FileTrackerManager.js';
 
 export class ChatCommand {
   private configManager: ConfigManager;
@@ -117,6 +118,9 @@ export class ChatCommand {
         process.exit(1);
       }
 
+      // Initialize file tracker for the new session
+      fileTrackerManager.startNewSession();
+
       await this.singleMessageHandler.sendSingleMessage(message, {
         provider: options.provider!,
         model: options.model!,
@@ -144,6 +148,9 @@ export class ChatCommand {
       // Initialize chat logger and start session for interactive mode
       await this.chatLogger.initialize();
       await this.chatLogger.startSession(options.provider as ProviderType, options.model!);
+
+      // Initialize file tracker for the new session
+      fileTrackerManager.startNewSession();
 
       // Get thinking display configuration
       const config = this.configManager.getConfig();

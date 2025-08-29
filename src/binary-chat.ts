@@ -5,6 +5,7 @@ import { ProviderType, Message, QueuedMessage } from './types/index.js';
 import { ConfigDefaults } from './config/ConfigDefaults.js';
 import { MessageQueue } from './utils/MessageQueue.js';
 import { cancellationManager } from './utils/CancellationManager.js';
+import { PromptHistoryManager } from './utils/PromptHistoryManager.js';
 import {
   enhanceWithContext,
   formatContextDisplay,
@@ -15,6 +16,7 @@ export class BinaryChatCommand {
   private configManager: ConfigManager;
   private providerManager: ProviderManager;
   private messageQueue: MessageQueue;
+  private promptHistoryManager: PromptHistoryManager;
   private currentProvider?: string;
   private currentModel?: string;
 
@@ -22,7 +24,18 @@ export class BinaryChatCommand {
     this.configManager = new ConfigManager();
     this.providerManager = new ProviderManager(this.configManager);
     this.messageQueue = new MessageQueue();
+    this.promptHistoryManager = new PromptHistoryManager();
     this.setupQueueListeners();
+    this.initializePromptHistory();
+  }
+
+  private async initializePromptHistory(): Promise<void> {
+    try {
+      await this.promptHistoryManager.initialize();
+    } catch (error) {
+      // Silently ignore prompt history initialization errors
+      console.error('Failed to initialize prompt history:', error);
+    }
   }
 
   /**
@@ -206,6 +219,13 @@ export class BinaryChatCommand {
     // Check if cancellation was requested
     if (cancellationManager.shouldCancel()) {
       throw new Error('Message cancelled by user');
+    }
+
+    // Track the prompt in history
+    try {
+      await this.promptHistoryManager.addPrompt(message);
+    } catch (error) {
+      // Silently ignore prompt history tracking errors
     }
 
     const userMessage: Message = {

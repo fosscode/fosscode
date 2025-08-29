@@ -4,6 +4,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import { listAvailableTools } from '../tools/init.js';
 import { fileTrackerManager } from '../utils/FileTrackerManager.js';
+import { PromptHistoryManager } from '../utils/PromptHistoryManager.js';
 import { Message } from '../types/index.js';
 
 // Base system prompt for fosscode - CLI tool behavior
@@ -378,6 +379,34 @@ export function fileContext(): string[] {
   }
 }
 
+export async function promptHistoryContext(): Promise<string[]> {
+  try {
+    const promptHistory = new PromptHistoryManager();
+    await promptHistory.initialize();
+    const history = promptHistory.getHistory();
+
+    if (history.length === 0) {
+      return [];
+    }
+
+    // Get the most recent prompts (limit to last 10 for context window management)
+    const recentPrompts = history.slice(-10);
+    const historyLines = recentPrompts.map((prompt, index) => {
+      const promptNumber = history.length - recentPrompts.length + index + 1;
+      return `${promptNumber}. ${prompt}`;
+    });
+
+    return [
+      `## Recent Prompt History\n${historyLines.join('\n')}`,
+      '',
+      "This shows your recent prompts in this session. Use this context to understand the user's current focus and avoid repeating recent work.",
+    ];
+  } catch (error) {
+    // Silently ignore prompt history errors
+    return [];
+  }
+}
+
 /**
  * Generate a complete system prompt for a provider
  */
@@ -392,6 +421,7 @@ export async function generate(
   const customRulesInfo = await customRules();
   const conversationInfo = messages ? conversationContext(messages) : [];
   const filesInfo = fileContext();
+  const promptHistoryInfo = await promptHistoryContext();
 
   const parts = [
     ...provider(providerID, modelID),
@@ -399,6 +429,7 @@ export async function generate(
     ...projectStructureInfo,
     ...conversationInfo,
     ...filesInfo,
+    ...promptHistoryInfo,
     mode
       ? [
           `## Current Mode\nYou are currently in **${mode} mode**. ${mode === 'thinking' ? 'You can only use read-only tools (read, grep, list, webfetch). You cannot make any changes to files or run commands.' : 'You can use all available tools including those that modify files and run commands.'}`,
