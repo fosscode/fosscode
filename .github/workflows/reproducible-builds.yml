@@ -38,17 +38,31 @@ jobs:
           export LANG=C
           export LC_ALL=C
           export TZ=UTC
+          export TMPDIR="/tmp/reproducible-build-$SOURCE_DATE_EPOCH"
+          export TEMP="$TMPDIR"
+          export TMP="$TMPDIR"
+          export ZERO_AR_DATE=1
+          export AR_FLAGS="D"
+          mkdir -p "$TMPDIR"
           umask 022
           echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> $GITHUB_ENV
           echo "LANG=C" >> $GITHUB_ENV
           echo "LC_ALL=C" >> $GITHUB_ENV
           echo "TZ=UTC" >> $GITHUB_ENV
+          echo "TMPDIR=$TMPDIR" >> $GITHUB_ENV
+          echo "TEMP=$TMPDIR" >> $GITHUB_ENV
+          echo "TMP=$TMPDIR" >> $GITHUB_ENV
+          echo "ZERO_AR_DATE=1" >> $GITHUB_ENV
+          echo "AR_FLAGS=D" >> $GITHUB_ENV
           echo "Build environment configured for reproducibility"
           echo "SOURCE_DATE_EPOCH: $SOURCE_DATE_EPOCH ($(date -u -d @$SOURCE_DATE_EPOCH))"
+          echo "TMPDIR: $TMPDIR"
 
       - name: Test basic reproducibility
         run: |
           echo "Testing basic build reproducibility..."
+          echo "Note: Bun compilation includes non-deterministic elements that cannot be fully controlled."
+          echo "This test documents current reproducibility status and tracks improvements."
           chmod +x scripts/test-reproducibility-with-fixes.sh
           ./scripts/test-reproducibility-with-fixes.sh
 
@@ -106,20 +120,38 @@ jobs:
           export LANG=C
           export LC_ALL=C
           export TZ=UTC
+          export TMPDIR="/tmp/reproducible-build-$SOURCE_DATE_EPOCH"
+          export TEMP="$TMPDIR"
+          export TMP="$TMPDIR"
+          export ZERO_AR_DATE=1
+          export AR_FLAGS="D"
+          mkdir -p "$TMPDIR"
           umask 022
           echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> $GITHUB_ENV
           echo "LANG=C" >> $GITHUB_ENV
           echo "LC_ALL=C" >> $GITHUB_ENV
           echo "TZ=UTC" >> $GITHUB_ENV
+          echo "TMPDIR=$TMPDIR" >> $GITHUB_ENV
+          echo "TEMP=$TMPDIR" >> $GITHUB_ENV
+          echo "TMP=$TMPDIR" >> $GITHUB_ENV
+          echo "ZERO_AR_DATE=1" >> $GITHUB_ENV
+          echo "AR_FLAGS=D" >> $GITHUB_ENV
 
       - name: Set up reproducible build environment (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          $timestamp = git log -1 --format=%ct
-          echo "SOURCE_DATE_EPOCH=$timestamp" >> $env:GITHUB_ENV
-          echo "LANG=C" >> $env:GITHUB_ENV
-          echo "LC_ALL=C" >> $env:GITHUB_ENV
-          echo "TZ=UTC" >> $env:GITHUB_ENV
+         if: runner.os == 'Windows'
+         run: |
+           $timestamp = git log -1 --format=%ct
+           $tmpdir = "C:\tmp\reproducible-build-$timestamp"
+           New-Item -ItemType Directory -Force -Path $tmpdir | Out-Null
+           echo "SOURCE_DATE_EPOCH=$timestamp" >> $env:GITHUB_ENV
+           echo "LANG=C" >> $env:GITHUB_ENV
+           echo "LC_ALL=C" >> $env:GITHUB_ENV
+           echo "TZ=UTC" >> $env:GITHUB_ENV
+           echo "TMPDIR=$tmpdir" >> $env:GITHUB_ENV
+           echo "TEMP=$tmpdir" >> $env:GITHUB_ENV
+           echo "TMP=$tmpdir" >> $env:GITHUB_ENV
+           echo "ZERO_AR_DATE=1" >> $env:GITHUB_ENV
+           echo "AR_FLAGS=D" >> $env:GITHUB_ENV
 
       - name: Test platform-specific reproducibility
         shell: bash

@@ -15,13 +15,25 @@ Reproducible builds ensure that building the same source code multiple times pro
 - SOURCE_DATE_EPOCH timestamp normalization
 - Reproducibility testing infrastructure
 - Build manifest generation
+- Post-processing attempts to normalize differences
+- Cross-platform reproducibility testing
 
 ### Known Limitations ❌
 
-- Bun includes build timestamps in compiled binaries
-- Temporary build paths embedded in binaries (`/tmp/bun-node-*`)
-- Memory addresses and UUIDs in binary output
-- No upstream Bun support for SOURCE_DATE_EPOCH
+- **Build Path Embedding**: Bun embeds temporary paths like `/tmp/bun-node-7c45ed97d/` despite TMPDIR settings
+- **Embedded Timestamps**: Components like rustc include build dates in binaries
+- **Memory Address Randomization**: ASLR affects embedded memory addresses
+- **UUID Generation**: Random identifiers included in compiled output
+- **No Bun SOURCE_DATE_EPOCH Support**: Upstream Bun doesn't respect this standard
+
+### Recent Testing Results
+
+Latest reproducibility tests show:
+
+- Binaries are not byte-for-byte identical
+- Size consistency: ✅ (same file sizes across builds)
+- Functional consistency: ✅ (binaries work identically)
+- Hash consistency: ❌ (different SHA256 hashes due to embedded differences)
 
 ## Build Scripts
 

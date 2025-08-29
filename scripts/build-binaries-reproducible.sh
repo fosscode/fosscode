@@ -69,6 +69,16 @@ export TZ=UTC
 # Set deterministic umask
 umask 022
 
+# Set deterministic temporary directory
+export TMPDIR="/tmp/reproducible-build-$SOURCE_DATE_EPOCH"
+export TEMP="$TMPDIR"
+export TMP="$TMPDIR"
+mkdir -p "$TMPDIR"
+
+# Additional environment variables for reproducible builds
+export ZERO_AR_DATE=1
+export AR_FLAGS="D"
+
 echo "🔍 Reproducible build environment:"
 echo "   SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH"
 echo "   LANG=$LANG"
@@ -121,17 +131,22 @@ build_binary() {
     local platform=$1
     local output=$2
     local target_flag=$3
-    
+
     echo "Building $platform..."
-    
+
     # Set consistent build environment for this binary
     env \
         SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" \
         LANG=C \
         LC_ALL=C \
         TZ=UTC \
+        TMPDIR="$TMPDIR" \
+        TEMP="$TMPDIR" \
+        TMP="$TMPDIR" \
+        ZERO_AR_DATE=1 \
+        AR_FLAGS="D" \
     bun build src/binary.ts --target node --compile --outfile "$output" $target_flag
-    
+
     # Get file info
     local size=$(stat -f%z "$output" 2>/dev/null || stat -c%s "$output")
     local hash=$(shasum -a 256 "$output" | cut -d' ' -f1)
