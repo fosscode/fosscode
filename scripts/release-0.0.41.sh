@@ -45,9 +45,7 @@ echo "🧪 Running typecheck..."
 npm run typecheck
 # npm test  # Temporarily disabled due to long test execution
 
-echo "📝 Committing version change..."
-git add package.json
-git commit -m "chore: bump version to $VERSION"
+echo "📝 Version already committed"
 
 echo "⬆️  Pushing to GitHub..."
 git push origin main
