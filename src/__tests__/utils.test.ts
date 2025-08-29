@@ -50,6 +50,7 @@ describe('Utility Functions', () => {
         sonicfree: 'sonic',
         mcp: 'mcp-model',
         anthropic: 'claude-3-haiku-20240307',
+        mock: 'mock-model',
       };
 
       Object.entries(providerModelMap).forEach(([provider, expectedModel]) => {
@@ -63,6 +64,7 @@ describe('Utility Functions', () => {
           'sonicfree',
           'mcp',
           'anthropic',
+          'mock',
         ]).toContain(provider);
       });
     });

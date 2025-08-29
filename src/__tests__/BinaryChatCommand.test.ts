@@ -2,7 +2,6 @@ import { BinaryChatCommand } from '../binary-chat.js';
 import { MessageQueue } from '../utils/MessageQueue.js';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ProviderManager } from '../providers/ProviderManager.js';
-import { jest } from '@jest/globals';
 
 // Mock dependencies
 jest.mock('../config/ConfigManager.js');

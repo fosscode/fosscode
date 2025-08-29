@@ -165,6 +165,7 @@ describe('Type Definitions', () => {
           sonicfree: { baseURL: 'https://gateway.opencode.ai/v1' },
           mcp: {},
           anthropic: {},
+          mock: {},
         },
         cachedModels: {
           openai: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
@@ -174,6 +175,7 @@ describe('Type Definitions', () => {
           sonicfree: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
           mcp: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
           anthropic: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
+          mock: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
         },
       };
 

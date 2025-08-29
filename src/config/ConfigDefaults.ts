@@ -18,6 +18,7 @@ export class ConfigDefaults {
         sonicfree: { baseURL: 'https://gateway.opencode.ai/v1' },
         mcp: { mcpServerCommand: 'npx', mcpServerArgs: ['@playwright/mcp@latest'] },
         anthropic: {},
+        mock: {},
       },
       cachedModels: {
         openai: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
@@ -27,6 +28,7 @@ export class ConfigDefaults {
         sonicfree: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
         mcp: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
         anthropic: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
+        mock: { models: [], lastUpdated: new Date(0), expiresAt: new Date(0) },
       },
     };
   }
@@ -50,6 +52,8 @@ export class ConfigDefaults {
         return 'mcp-server';
       case 'anthropic':
         return 'claude-3-sonnet-20240229';
+      case 'mock':
+        return 'mock-model';
       default:
         return 'gpt-3.5-turbo';
     }

@@ -1,7 +1,10 @@
 import { ToolResult, ProviderType } from './types/index.js';
 
 // Pricing constants (per 1K tokens, in USD)
-export const TOKEN_PRICING: Record<ProviderType, Record<string, { input: number; output: number }>> = {
+export const TOKEN_PRICING: Record<
+  ProviderType,
+  Record<string, { input: number; output: number }>
+> = {
   openai: {
     'gpt-4': { input: 0.03, output: 0.06 },
     'gpt-4-turbo': { input: 0.01, output: 0.03 },
@@ -30,6 +33,9 @@ export const TOKEN_PRICING: Record<ProviderType, Record<string, { input: number;
   },
   mcp: {
     default: { input: 0, output: 0 }, // Local
+  },
+  mock: {
+    default: { input: 0, output: 0 }, // Mock, no cost
   },
 };
 
