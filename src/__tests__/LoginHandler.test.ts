@@ -1,5 +1,3 @@
-// Commented out to isolate hanging test
-/*
 import { LoginHandler } from '../auth/LoginHandler';
 import { ConfigManager } from '../config/ConfigManager';
 
@@ -40,4 +38,3 @@ describe('LoginHandler', () => {
     });
   });
 });
-*/

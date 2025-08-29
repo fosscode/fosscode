@@ -1,5 +1,3 @@
-// Commented out to isolate hanging test
-/*
 import { GrepTool } from '../tools/GrepTool';
 
 // Mock fs
@@ -232,4 +230,3 @@ describe('GrepTool', () => {
     });
   });
 });
-*/
