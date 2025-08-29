@@ -452,6 +452,311 @@ Bulk find-and-replace operations across multiple files with transaction-like saf
 }
 ```
 
+### PatchTool
+
+**Location**: `src/tools/PatchTool.ts`
+
+#### Purpose
+
+Apply diff patches to files with validation and rollback capability. Supports unified diff format for code review integration and automated fixes.
+
+#### Features
+
+- **Unified Diff Support**: Standard diff format compatibility
+- **Validation Mode**: Preview patches without applying changes
+- **Backup Creation**: Automatic backup before modifications
+- **Path Stripping**: Flexible path component removal
+- **Reverse Patches**: Apply patches in reverse for rollback
+- **Security Validation**: Path and content validation
+- **Error Recovery**: Detailed error reporting and recovery
+
+#### Parameters
+
+```typescript
+{
+  patch: string,          // Required: The diff patch content (unified format)
+  path?: string,          // Optional: Base directory path (default: cwd)
+  validateOnly?: boolean, // Optional: Only validate without applying
+  createBackup?: boolean, // Optional: Create backup files (default: true)
+  strip?: number,         // Optional: Path components to strip (default: 0)
+  reverse?: boolean       // Optional: Apply patch in reverse
+}
+```
+
+#### Security Features
+
+- **Path Validation**: Secure path resolution and traversal prevention
+- **Content Validation**: Patch format and content verification
+- **Backup Protection**: Automatic backup creation and management
+- **File Type Restrictions**: Only allowed file extensions
+
+#### Usage Examples
+
+**Apply a simple patch:**
+
+```typescript
+{
+  patch: `--- a/example.txt
++++ b/example.txt
+@@ -1 +1 @@
+-hello world
++hello universe`,
+  path: "/tmp",
+  createBackup: true
+}
+```
+
+**Validate patch without applying:**
+
+```typescript
+{
+  patch: diffContent,
+  validateOnly: true
+}
+```
+
+**Apply patch with path stripping:**
+
+```typescript
+{
+  patch: diffContent,
+  strip: 1  // Remove first path component
+}
+```
+
+### LSPDiagnosticsTool
+
+**Location**: `src/tools/LSPDiagnosticsTool.ts`
+
+#### Purpose
+
+Analyze code files using Language Server Protocol for diagnostics, errors, and warnings. Provides static code analysis with support for multiple programming languages.
+
+#### Features
+
+- **Multi-Language Support**: TypeScript, JavaScript, Python, and other LSP-supported languages
+- **Severity Filtering**: Filter diagnostics by error, warning, information, or hint levels
+- **Source Code Integration**: Include code snippets with diagnostic messages
+- **Batch Processing**: Analyze multiple files simultaneously
+- **Result Limiting**: Control maximum number of diagnostics returned
+- **Working Directory Support**: Specify analysis context
+- **Performance Optimized**: Efficient LSP server communication
+
+#### Parameters
+
+```typescript
+{
+  files: string[],           // Required: Array of file paths to analyze
+  language?: string,         // Optional: Programming language
+  severity?: string,         // Optional: Filter by severity (error/warning/info/hint/all)
+  includeSource?: boolean,   // Optional: Include source code snippets (default: true)
+  maxResults?: number,       // Optional: Maximum diagnostics to return (default: 100)
+  workingDirectory?: string  // Optional: Working directory for analysis
+}
+```
+
+#### Security Features
+
+- **Path Validation**: Secure file path resolution
+- **File Type Restrictions**: Only allowed programming file types
+- **Working Directory Validation**: Safe directory context validation
+- **Result Size Limits**: Prevent excessive output
+
+#### Usage Examples
+
+**Analyze TypeScript files for errors:**
+
+```typescript
+{
+  files: ["src/main.ts", "src/utils.ts"],
+  language: "typescript",
+  severity: "error",
+  includeSource: true
+}
+```
+
+**Get all diagnostics for Python files:**
+
+```typescript
+{
+  files: ["*.py"],
+  language: "python",
+  severity: "all",
+  maxResults: 50
+}
+```
+
+**Quick syntax check:**
+
+```typescript
+{
+  files: ["script.js"],
+  severity: "error",
+  includeSource: false
+}
+```
+
+### WebSearchTool
+
+**Location**: `src/tools/WebSearchTool.ts`
+
+#### Purpose
+
+Perform web searches using various search engines and return structured results with summaries, links, and metadata. Provides comprehensive web search functionality for information retrieval.
+
+#### Features
+
+- **Multi-Engine Support**: Google, Bing, DuckDuckGo, and SearX search engines
+- **Structured Results**: Organized search results with titles, URLs, and descriptions
+- **Content Filtering**: Safe search controls and content filtering
+- **Language Support**: Multi-language search capabilities
+- **Result Customization**: Configurable result limits and content inclusion
+- **Metadata Extraction**: Additional result metadata and timestamps
+- **Rate Limiting**: Built-in rate limiting and error handling
+
+#### Parameters
+
+```typescript
+{
+  query: string,           // Required: The search query to execute
+  engine?: string,         // Optional: Search engine (google/bing/duckduckgo/searx)
+  maxResults?: number,     // Optional: Maximum results to return (default: 10)
+  includeSnippets?: boolean, // Optional: Include result snippets (default: true)
+  includeMetadata?: boolean, // Optional: Include metadata (default: true)
+  safeSearch?: string,     // Optional: Safe search level (strict/moderate/off)
+  language?: string,       // Optional: Search language (default: 'en')
+  timeRange?: string,      // Optional: Time range (day/week/month/year)
+  siteSearch?: string,     // Optional: Restrict to specific site
+  excludeTerms?: string[]  // Optional: Terms to exclude from results
+}
+```
+
+#### Security Features
+
+- **Query Sanitization**: Input validation and sanitization
+- **Rate Limiting**: Prevents excessive API usage
+- **Content Filtering**: Safe search and content controls
+- **URL Validation**: Safe URL handling and validation
+
+#### Usage Examples
+
+**Basic web search:**
+
+```typescript
+{
+  query: "TypeScript best practices",
+  maxResults: 5,
+  includeSnippets: true
+}
+```
+
+**Safe search for educational content:**
+
+```typescript
+{
+  query: "machine learning tutorials",
+  engine: "duckduckgo",
+  safeSearch: "strict",
+  language: "en"
+}
+```
+
+**Site-specific search:**
+
+```typescript
+{
+  query: "API documentation",
+  siteSearch: "developer.mozilla.org",
+  maxResults: 3
+}
+```
+
+**Recent news search:**
+
+```typescript
+{
+  query: "artificial intelligence news",
+  timeRange: "week",
+  includeMetadata: true
+}
+```
+
+### LSPHoverTool
+
+**Location**: `src/tools/LSPHoverTool.ts`
+
+#### Purpose
+
+Get documentation and type information for code symbols using Language Server Protocol hover functionality. Provides contextual information about functions, variables, classes, and other code elements.
+
+#### Features
+
+- **Symbol Documentation**: Extract documentation for code symbols
+- **Type Information**: Get type hints and signatures
+- **Multi-Language Support**: TypeScript, JavaScript, Python, and other LSP-supported languages
+- **Precise Location**: Line and character position targeting
+- **Definition Links**: Include definition location information
+- **Range Information**: Symbol range and scope details
+- **Context Lines**: Surrounding code context
+
+#### Parameters
+
+```typescript
+{
+  file: string,            // Required: Path to the file to analyze
+  line: number,            // Required: Line number (1-based) where symbol is located
+  character: number,       // Required: Character position (0-based) within the line
+  language?: string,       // Optional: Programming language
+  includeRange?: boolean,  // Optional: Include symbol range (default: true)
+  includeDefinition?: boolean, // Optional: Include definition location
+  contextLines?: number    // Optional: Number of context lines to include
+}
+```
+
+#### Security Features
+
+- **Path Validation**: Secure file path resolution
+- **File Type Restrictions**: Only allowed programming file types
+- **Position Validation**: Valid line and character positions
+- **Content Size Limits**: Prevent excessive output
+
+#### Usage Examples
+
+**Get function documentation:**
+
+```typescript
+{
+  file: "src/utils.ts",
+  line: 15,
+  character: 10,
+  language: "typescript",
+  includeDefinition: true
+}
+```
+
+**Get type information for a variable:**
+
+```typescript
+{
+  file: "src/main.py",
+  line: 25,
+  character: 5,
+  language: "python",
+  contextLines: 2
+}
+```
+
+**Get symbol information at cursor:**
+
+```typescript
+{
+  file: "component.tsx",
+  line: 42,
+  character: 18,
+  includeRange: true
+}
+```
+
 ## Security Manager
 
 ### Location

@@ -18,6 +18,43 @@ A command-line application with a text user interface (TUI) for performing code 
 - 🔍 **Verbose Mode**: Toggle detailed tool execution output for debugging
 - 🛠️ **Tool Ecosystem**: Integrated tool system with MCP server support
 
+## Tools
+
+fosscode includes a comprehensive set of built-in tools for various development tasks:
+
+### File System Tools
+
+- **read** - Read file contents with line number support
+- **write** - Create or overwrite files
+- **edit** - Apply precise string replacements to files
+- **list** - List directory contents with filtering options
+- **grep** - Search for patterns in files using regex
+- **glob** - Advanced file pattern matching (e.g., `**/*.ts`)
+
+### Development Tools
+
+- **bash** - Execute shell commands with timeout and security controls
+- **test** - Run test suites and report results
+- **lsp-diagnostics** - Language server error reporting and analysis
+- **lsp-hover** - Language server documentation and type information
+
+### Web & Search Tools
+
+- **webfetch** - Fetch and convert web content to markdown
+- **websearch** - Comprehensive web search with result formatting
+- **duckduckgo** - Privacy-focused web search
+
+### Utility Tools
+
+- **multiedit** - Apply changes across multiple files simultaneously
+- **patch** - Apply diff patches to files
+- **todowrite** / **todoread** - Task list management for complex workflows
+- **invalid** - Error handling for invalid tool operations
+
+### MCP Integration
+
+External tools can be added via Model Context Protocol (MCP) servers, extending functionality with custom capabilities.
+
 ## Installation
 
 ### Development Setup
