@@ -2,10 +2,10 @@ import { PatchTool } from '../tools/PatchTool.js';
 import * as fs from 'fs';
 import { jest } from '@jest/globals';
 
-// Mock SecurityManager
+// Mock SecurityManager to avoid path validation issues in tests
 jest.mock('../tools/SecurityManager.js', () => ({
   securityManager: {
-    validateDirectoryOperation: jest.fn().mockResolvedValue('/test/path'),
+    validateDirectoryOperation: jest.fn().mockImplementation(path => Promise.resolve(path)),
   },
 }));
 
