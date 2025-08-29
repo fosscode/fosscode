@@ -2,11 +2,165 @@ import { Message } from '../../types/index.js';
 import { ProviderManager } from '../../providers/ProviderManager.js';
 import { ProviderType } from '../../types/index.js';
 import { ConfigManager } from '../../config/ConfigManager.js';
+import { MCPManager } from '../../mcp/index.js';
 
 export interface CommandResult {
   type: 'message' | 'clear' | 'none';
   message?: Message;
   shouldClearMessages?: boolean;
+}
+
+async function handleMCPCommand(command: string, timestamp: Date): Promise<CommandResult> {
+  const mcpManager = new MCPManager();
+  await mcpManager.initialize();
+
+  const parts = command.split(' ').filter(part => part.length > 0);
+  const subcommand = parts[1]; // /mcp is parts[0]
+
+  try {
+    switch (subcommand) {
+      case 'list': {
+        const servers = mcpManager.getAvailableServers();
+        if (servers.length === 0) {
+          return {
+            type: 'message',
+            message: {
+              role: 'assistant',
+              content:
+                'No MCP server configurations found.\n\nAdd configuration files to `~/.config/fosscode/mcp.d/`',
+              timestamp,
+            },
+          };
+        }
+
+        let content = 'Available MCP servers:\n\n';
+        for (const server of servers) {
+          const status = mcpManager.isServerEnabled(server.name) ? '● enabled' : '○ disabled';
+          content += `${status} **${server.name}**\n`;
+          content += `   ${server.description || 'No description'}\n`;
+          content += `   Command: \`${server.command} ${server.args?.join(' ') || ''}\`\n\n`;
+        }
+
+        return {
+          type: 'message',
+          message: {
+            role: 'assistant',
+            content,
+            timestamp,
+          },
+        };
+      }
+
+      case 'status': {
+        const serverStatus = mcpManager.getServerStatus();
+        if (serverStatus.length === 0) {
+          return {
+            type: 'message',
+            message: {
+              role: 'assistant',
+              content: 'No MCP server configurations found.',
+              timestamp,
+            },
+          };
+        }
+
+        let content = 'MCP Server Status:\n\n';
+        for (const { name, enabled, config } of serverStatus) {
+          const status = enabled ? '● enabled' : '○ disabled';
+          content += `${status} **${name}**\n`;
+          content += `   ${config.description || 'No description'}\n\n`;
+        }
+
+        return {
+          type: 'message',
+          message: {
+            role: 'assistant',
+            content,
+            timestamp,
+          },
+        };
+      }
+
+      case 'enable': {
+        const serverNames = parts.slice(2); // Skip /mcp enable
+        if (serverNames.length === 0) {
+          return {
+            type: 'message',
+            message: {
+              role: 'assistant',
+              content:
+                'Please specify server names to enable.\n\nUsage: `/mcp enable <server1> [server2] ...`',
+              timestamp,
+            },
+          };
+        }
+
+        await mcpManager.enableServers(serverNames);
+        return {
+          type: 'message',
+          message: {
+            role: 'assistant',
+            content: `✅ Enabled MCP servers: ${serverNames.join(', ')}`,
+            timestamp,
+          },
+        };
+      }
+
+      case 'disable': {
+        const serverNames = parts.slice(2); // Skip /mcp disable
+        if (serverNames.length === 0) {
+          return {
+            type: 'message',
+            message: {
+              role: 'assistant',
+              content:
+                'Please specify server names to disable.\n\nUsage: `/mcp disable <server1> [server2] ...`',
+              timestamp,
+            },
+          };
+        }
+
+        for (const serverName of serverNames) {
+          await mcpManager.disableServer(serverName);
+        }
+
+        return {
+          type: 'message',
+          message: {
+            role: 'assistant',
+            content: `✅ Disabled MCP servers: ${serverNames.join(', ')}`,
+            timestamp,
+          },
+        };
+      }
+
+      default: {
+        return {
+          type: 'message',
+          message: {
+            role: 'assistant',
+            content:
+              'MCP Server Management\n\n' +
+              'Available commands:\n' +
+              '• `/mcp` or `/mcp status` - Show server status\n' +
+              '• `/mcp list` - List available servers\n' +
+              '• `/mcp enable <server1> [server2] ...` - Enable servers\n' +
+              '• `/mcp disable <server1> [server2] ...` - Disable servers',
+            timestamp,
+          },
+        };
+      }
+    }
+  } catch (error) {
+    return {
+      type: 'message',
+      message: {
+        role: 'assistant',
+        content: `❌ MCP command failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        timestamp,
+      },
+    };
+  }
 }
 
 export async function handleCommand(
@@ -124,6 +278,11 @@ Summary:`;
       }
 
     default:
+      // Handle MCP commands
+      if (command.startsWith('/mcp')) {
+        return await handleMCPCommand(command, timestamp);
+      }
+
       return {
         type: 'none',
       };

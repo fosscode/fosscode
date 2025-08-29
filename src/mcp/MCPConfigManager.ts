@@ -8,7 +8,7 @@ export class MCPConfigManager {
 
   constructor() {
     // Use XDG config directory
-    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? '';
     this.configDir = path.join(homeDir, '.config', 'fosscode', 'mcp.d');
   }
 

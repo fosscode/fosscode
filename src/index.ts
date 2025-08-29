@@ -10,6 +10,7 @@ import { ProvidersCommand } from './commands/ProvidersCommand.js';
 import { ModelsCommand } from './commands/ModelsCommand.js';
 import { AuthCommand } from './commands/AuthCommand.js';
 import { ThemesCommand } from './commands/ThemesCommand.js';
+import { MCPCommand } from './commands/MCPCommand.js';
 import { initializeTools } from './tools/init.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -97,6 +98,14 @@ program
   .action(async (theme?: string) => {
     const themesCommand = new ThemesCommand();
     await themesCommand.execute(theme);
+  });
+
+program
+  .command('mcp [subcommand] [args...]')
+  .description('Manage MCP (Model Context Protocol) servers')
+  .action(async (subcommand?: string, args?: string[]) => {
+    const mcpCommand = new MCPCommand();
+    await mcpCommand.execute(subcommand, ...(args || []));
   });
 
 // Handle unhandled promise rejections

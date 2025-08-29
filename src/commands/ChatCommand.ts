@@ -12,12 +12,14 @@ import { TelegramPlatform } from '../messaging/platforms/TelegramPlatform.js';
 import { ProviderSelector } from './utils/ProviderSelector.js';
 import { SingleMessageHandler } from './utils/SingleMessageHandler.js';
 import { MessagingModeHandler } from './utils/MessagingModeHandler.js';
+import { MCPManager } from '../mcp/index.js';
 
 export class ChatCommand {
   private configManager: ConfigManager;
   private providerManager: ProviderManager;
   private chatLogger: ChatLogger;
   private messagingManager: MessagingPlatformManager;
+  private mcpManager: MCPManager;
   private conversationHistory: Map<string, Message[]> = new Map();
   private firstMessageSent: Map<string, boolean> = new Map();
 
@@ -34,6 +36,7 @@ export class ChatCommand {
     this.providerManager = new ProviderManager(this.configManager);
     this.chatLogger = new ChatLogger();
     this.messagingManager = new MessagingPlatformManager();
+    this.mcpManager = new MCPManager();
 
     // Register available messaging platforms
     this.messagingManager.registerPlatform(new TelegramPlatform());
@@ -77,10 +80,15 @@ export class ChatCommand {
       options.model = ConfigDefaults.getDefaultModelForProvider(options.provider!);
     }
 
-    // TODO: Implement MCP servers filter functionality
-    // if (options.mcp) {
-    //   this.providerManager.setMCPServersFilter(options.mcp.split(',').map(s => s.trim()));
-    // }
+    // Initialize MCP manager and enable specified servers
+    if (options.mcp) {
+      await this.mcpManager.initialize();
+      const serverNames = options.mcp.split(',').map(s => s.trim());
+      await this.mcpManager.enableServers(serverNames);
+      if (options.verbose) {
+        console.log(`Enabled MCP servers: ${serverNames.join(', ')}`);
+      }
+    }
 
     // Validate specific provider configuration
     await this.configManager.validateProvider(options.provider as ProviderType);
