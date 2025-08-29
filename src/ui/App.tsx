@@ -23,6 +23,7 @@ import { MessageInput } from './components/MessageInput.js';
 import { AppFooter } from './components/AppFooter.js';
 import { summarize } from '../utils/contextUtils.js';
 import { getContextLimit } from '../utils/contextLimits.js';
+import { PermissionManager } from '../utils/PermissionManager.js';
 
 export { App };
 
@@ -34,6 +35,7 @@ interface AppProps {
   onModelChange?: (newModel: string) => void;
   verbose?: boolean;
   showThinkingBlocks?: boolean;
+  permissionManager: PermissionManager;
 }
 
 function App({
@@ -43,6 +45,7 @@ function App({
   chatLogger: _chatLogger,
   verbose = false,
   showThinkingBlocks = true,
+  permissionManager,
 }: AppProps) {
   // Note: chatLogger is used for session management, initialized in ChatCommand
   const [messages, setMessages] = useState<Message[]>([]);
@@ -372,13 +375,9 @@ function App({
       let messageContent = trimmedInput;
       if (fileSearch.attachedFiles.length > 0) {
         const fileContents = fileSearch.attachedFiles
-          .map(file => `## File: ${file.path}\n\
-\
-${file.content}\
-`)
+          .map(file => `## File: ${file.path}\n\n${file.content}\n`)
           .join('\n');
-        messageContent = `${fileContents}\
-${trimmedInput}`;
+        messageContent = `${fileContents}\n${trimmedInput}`;
       }
 
       const userMessage: Message = {
@@ -408,7 +407,9 @@ ${trimmedInput}`;
           [...currentMessages, userMessage],
           model,
           isVerbose,
-          currentMode
+          currentMode,
+          _chatLogger,
+          permissionManager
         );
 
         if (isVerbose) {
@@ -455,6 +456,7 @@ ${trimmedInput}`;
       commandHistory,
       promptHistory,
       toggleTheme,
+      permissionManager,
     ]
   );
 

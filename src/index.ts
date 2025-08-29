@@ -15,6 +15,7 @@ import { ThinkingCommand } from './commands/ThinkingCommand.js';
 import { ConfigManager } from './config/ConfigManager.js';
 import { ProviderManager } from './providers/ProviderManager.js';
 import { initializeTools } from './tools/init.js';
+import { PermissionManager } from './utils/PermissionManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,13 +52,16 @@ program
   )
   .option('--show-context', 'Display context usage information')
   .option('--context-format <format>', 'Context display format (percentage, tokens, both)', 'both')
+  .option('--plan', 'Run in plan mode (agent suggests changes but does not execute them)')
   .action(async (message, options) => {
     try {
       // Initialize tools with verbose setting
       initializeTools(options.verbose);
 
+      const permissionManager = new PermissionManager(options.plan ?? false);
+
       const chatCommand = new ChatCommand(options.verbose);
-      await chatCommand.execute(message, options);
+      await chatCommand.execute(message, options, permissionManager);
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
       process.exit(1);

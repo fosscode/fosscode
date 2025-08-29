@@ -12,6 +12,8 @@ interface ModelInfo {
   [key: string]: unknown;
 }
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class GrokProvider implements LLMProvider {
   private readonly baseURL = 'https://api.x.ai/v1';
 
@@ -37,7 +39,8 @@ export class GrokProvider implements LLMProvider {
     messages: Message[],
     config: LLMConfig,
     mode?: 'code' | 'thinking',
-    chatLogger?: any
+    chatLogger?: any,
+    permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     if (!config.apiKey) {
       throw new Error('Grok API key not configured');
@@ -124,7 +127,8 @@ export class GrokProvider implements LLMProvider {
               const toolResult = await executeToolCalls(
                 choice.message.tool_calls,
                 mode,
-                chatLogger
+                chatLogger,
+                permissionManager
               );
               content += toolResult.content;
             } catch (error) {

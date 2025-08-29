@@ -5,6 +5,8 @@ import { MCPConnectionManager } from './utils/MCPConnectionManager.js';
 import { MCPToolManager } from './utils/MCPToolManager.js';
 import { MCPMessageParser } from './utils/MCPMessageParser.js';
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class MCPProvider implements LLMProvider {
   private protocolHandler: MCPProtocolHandler;
   private connectionManager: MCPConnectionManager;
@@ -26,7 +28,9 @@ export class MCPProvider implements LLMProvider {
   async sendMessage(
     messages: Message[],
     config: LLMConfig,
-    _mode?: 'code' | 'thinking'
+    _mode?: 'code' | 'thinking',
+    chatLogger?: any,
+    permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     await this.connectionManager.connectToMCPServer(config);
 

@@ -1,4 +1,5 @@
 import { ConfigManager } from '../config/ConfigManager.js';
+import { PermissionManager, ToolNames } from '../utils/PermissionManager.js';
 import { ProviderType, Message, ProviderResponse, LLMProvider } from '../types/index.js';
 import { cancellationManager } from '../utils/CancellationManager.js';
 import { ChatLogger } from '../config/ChatLogger.js';
@@ -56,7 +57,8 @@ export class ProviderManager {
     model?: string,
     verbose?: boolean,
     mode?: 'code' | 'thinking',
-    chatLogger?: ChatLogger
+    chatLogger?: ChatLogger,
+    permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     // Check if cancellation was requested before starting
     if (cancellationManager.shouldCancel()) {
@@ -77,7 +79,7 @@ export class ProviderManager {
     }
 
     try {
-      return await provider.sendMessage(messages, config, mode, chatLogger);
+      return await provider.sendMessage(messages, config, mode, chatLogger, permissionManager);
     } catch (error) {
       // Check if this was a cancellation
       if (cancellationManager.shouldCancel()) {

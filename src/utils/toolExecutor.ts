@@ -1,6 +1,7 @@
 import { listAvailableTools, getTool } from '../tools/init.js';
 import { ToolResult } from '../types/index.js';
 import { ChatLogger } from '../config/ChatLogger.js';
+import { PermissionManager, ToolNames } from './PermissionManager.js';
 
 /**
  * Tool execution result interface
@@ -259,7 +260,8 @@ function indentText(text: string, spaces: number): string {
 export async function executeToolCalls(
   toolCalls: any[],
   mode?: 'code' | 'thinking',
-  chatLogger?: ChatLogger
+  chatLogger?: ChatLogger,
+  permissionManager?: PermissionManager
 ): Promise<ToolExecutionResult> {
   let content = 'Executing tools to help with your request...\n\n';
   content += '[Tool Calls Executed]:\n';
@@ -277,6 +279,11 @@ export async function executeToolCalls(
             content += `❌ ${toolCall.function.name}: Tool not allowed in thinking mode\n`;
             continue;
           }
+        }
+
+        if (permissionManager && !permissionManager.canExecute(toolCall.function.name as ToolNames)) {
+          content += `❌ ${toolCall.function.name}: Tool not allowed in current mode (plan mode)\n`;
+          continue;
         }
 
         if (tool) {

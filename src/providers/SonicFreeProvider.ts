@@ -8,6 +8,8 @@ import {
 } from '../utils/toolExecutor.js';
 import { ChatLogger } from '../config/ChatLogger.js';
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class SonicFreeProvider implements LLMProvider {
   private client: OpenAI | null = null;
   private chatLogger: ChatLogger;
@@ -30,7 +32,8 @@ export class SonicFreeProvider implements LLMProvider {
     messages: Message[],
     config: LLMConfig,
     mode?: 'code' | 'thinking',
-    chatLogger?: any
+    chatLogger?: any,
+    permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     if (!this.client) {
       this.client = new OpenAI({
@@ -213,7 +216,8 @@ export class SonicFreeProvider implements LLMProvider {
             toolResult = await executeToolCalls(
               assistantMessage.tool_calls,
               mode,
-              chatLogger || this.chatLogger
+              chatLogger || this.chatLogger,
+              permissionManager
             );
           } catch (toolError) {
             // Log tool execution error

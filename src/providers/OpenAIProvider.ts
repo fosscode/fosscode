@@ -9,6 +9,8 @@ import {
 } from '../utils/toolExecutor.js';
 import { cancellationManager } from '../utils/CancellationManager.js';
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI | null = null;
 
@@ -53,7 +55,8 @@ export class OpenAIProvider implements LLMProvider {
     messages: Message[],
     config: LLMConfig,
     mode?: 'code' | 'thinking',
-    chatLogger?: any
+    chatLogger?: any,
+    permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     if (!config.apiKey) {
       throw new Error('OpenAI API key not configured');
@@ -197,7 +200,7 @@ export class OpenAIProvider implements LLMProvider {
           if (!content.trim()) {
             content = 'Executing tools to help with your request...\n\n';
           }
-          const toolResult = await executeToolCalls(assistantMessage.tool_calls, mode, chatLogger);
+          const toolResult = await executeToolCalls(assistantMessage.tool_calls, mode, chatLogger, permissionManager);
 
           // Add tool results as tool messages
           for (const toolCall of assistantMessage.tool_calls) {

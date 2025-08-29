@@ -5,6 +5,8 @@ interface MockResponse {
   response: string;
 }
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class MockProvider implements LLMProvider {
   private static cannedResponses: MockResponse[] = [];
 
@@ -21,7 +23,9 @@ export class MockProvider implements LLMProvider {
   async sendMessage(
     messages: Message[],
     _config: LLMConfig,
-    _mode?: 'code' | 'thinking'
+    _mode?: 'code' | 'thinking',
+    _chatLogger?: any,
+    _permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     // Reload responses from env in case they changed
     this.loadResponsesFromEnv();

@@ -8,6 +8,8 @@ interface ModelInfo {
   [key: string]: unknown;
 }
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class LMStudioProvider implements LLMProvider {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validateConfig(_config: LLMConfig): Promise<boolean> {
@@ -19,7 +21,9 @@ export class LMStudioProvider implements LLMProvider {
   async sendMessage(
     _messages: Message[],
     _config: LLMConfig,
-    _mode?: 'code' | 'thinking'
+    _mode?: 'code' | 'thinking',
+    _chatLogger?: any,
+    _permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     // TODO: Implement LMStudio API integration
     throw new Error('LMStudio provider not yet implemented');

@@ -1,3 +1,5 @@
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export type ProviderType =
   | 'openai'
   | 'grok'
@@ -129,7 +131,8 @@ export interface LLMProvider {
     messages: Message[],
     config: LLMConfig,
     mode?: 'code' | 'thinking',
-    chatLogger?: any
+    chatLogger?: any,
+    permissionManager?: PermissionManager
   ): Promise<ProviderResponse>;
   listModels(config: LLMConfig): Promise<string[]>;
   validateConfig(config: LLMConfig): Promise<boolean>;

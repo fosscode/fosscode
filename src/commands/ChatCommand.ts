@@ -14,6 +14,8 @@ import { SingleMessageHandler } from './utils/SingleMessageHandler.js';
 import { MessagingModeHandler } from './utils/MessagingModeHandler.js';
 import { MCPManager } from '../mcp/index.js';
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class ChatCommand {
   private configManager: ConfigManager;
   private providerManager: ProviderManager;
@@ -66,7 +68,9 @@ export class ChatCommand {
       showContext?: boolean;
       contextFormat?: string;
       contextThreshold?: number;
-    }
+      plan?: boolean;
+    },
+    permissionManager: PermissionManager
   ): Promise<void> {
     // Handle provider selection if not specified
     if (!options.provider) {
@@ -144,6 +148,7 @@ export class ChatCommand {
           chatLogger: this.chatLogger,
           verbose: options.verbose ?? false,
           showThinkingBlocks,
+          permissionManager: permissionManager,
           onModelChange: (_newModel: string) => {
             // Model change callback - could be used for future features
           },

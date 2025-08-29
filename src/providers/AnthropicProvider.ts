@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { Message, ProviderResponse, LLMConfig, LLMProvider } from '../types/index.js';
 import { generate as generateSystemPrompt } from '../prompts/SystemPrompt.js';
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic | null = null;
 
@@ -46,7 +48,9 @@ export class AnthropicProvider implements LLMProvider {
   async sendMessage(
     messages: Message[],
     config: LLMConfig,
-    mode?: 'code' | 'thinking'
+    mode?: 'code' | 'thinking',
+    chatLogger?: any,
+    permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     if (!config.apiKey) {
       throw new Error('Anthropic API key not configured');

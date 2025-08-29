@@ -2,14 +2,17 @@ import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { toolRegistry } from '../tools/ToolRegistry.js';
 import { MCPConnectionManager } from './MCPConnectionManager.js';
 import { MCPServerConfig, MCPTool, MCPRequest } from './types.js';
+import { PermissionManager, ToolNames } from '../utils/PermissionManager.js';
 
 export class MCPToolManager {
   private connectionManager: MCPConnectionManager;
   private serverTools: Map<string, MCPTool[]> = new Map();
   private registeredTools: Map<string, Set<string>> = new Map();
+  private permissionManager: PermissionManager | undefined;
 
-  constructor(connectionManager: MCPConnectionManager) {
+  constructor(connectionManager: MCPConnectionManager, permissionManager?: PermissionManager) {
     this.connectionManager = connectionManager;
+    this.permissionManager = permissionManager;
   }
 
   /**
@@ -65,6 +68,12 @@ export class MCPToolManager {
         description: mcpTool.description ?? `MCP tool: ${mcpTool.name} (${serverName})`,
         parameters: this.convertMCPParameters(mcpTool),
         execute: async (params: Record<string, any>): Promise<ToolResult> => {
+          if (this.permissionManager && !this.permissionManager.canExecute(toolName as ToolNames)) {
+            return {
+              success: false,
+              error: `Tool ${toolName} not allowed in current mode (plan mode)`,
+            };
+          }
           try {
             const protocolHandler = this.connectionManager.getProtocolHandler(serverName);
             if (!protocolHandler) {

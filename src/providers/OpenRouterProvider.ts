@@ -7,6 +7,8 @@ interface ModelInfo {
   [key: string]: unknown;
 }
 
+import { PermissionManager } from '../utils/PermissionManager.js';
+
 export class OpenRouterProvider implements LLMProvider {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validateConfig(_config: LLMConfig): Promise<boolean> {
@@ -18,7 +20,9 @@ export class OpenRouterProvider implements LLMProvider {
   async sendMessage(
     _messages: Message[],
     _config: LLMConfig,
-    _mode?: 'code' | 'thinking'
+    _mode?: 'code' | 'thinking',
+    _chatLogger?: any,
+    _permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     // TODO: Implement OpenRouter API integration
     throw new Error('OpenRouter provider not yet implemented');
