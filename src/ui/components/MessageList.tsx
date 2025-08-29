@@ -30,7 +30,7 @@ export function MessageList({ messages, isLoading, error, isVerySmallScreen }: M
             ? '👤 '
             : '🤖 '}
       </FlashyText>
-      <Text>{message.content || '[EMPTY]'}</Text>
+      <Text>{message.content || ''}</Text>
     </Box>
   ));
 

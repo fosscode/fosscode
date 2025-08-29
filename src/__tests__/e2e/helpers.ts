@@ -82,9 +82,10 @@ export class E2ETestHelper {
     });
   }
 
-  static async runChatCommand(message: string, options?: { timeout?: number }) {
+  static async runChatCommand(message: string, options?: { timeout?: number; provider?: string }) {
+    const provider = options?.provider || 'mock';
     return await E2ETestHelper.runCliCommand(
-      ['chat', '--provider=mock', '--non-interactive', message],
+      ['chat', `--provider=${provider}`, '--non-interactive', message],
       options
     );
   }

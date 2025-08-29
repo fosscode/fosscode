@@ -280,6 +280,17 @@ export class SonicFreeProvider implements LLMProvider {
           `${totalUsage.total_tokens}/${adaptiveTokenLimit} tokens`
       );
 
+      // Provide fallback content if the agent loop stopped early
+      if (!finalContent.trim()) {
+        if (totalTokensUsed >= adaptiveTokenLimit) {
+          finalContent = `⚠️ **Response stopped early due to token limit**\n\nThe AI agent reached the maximum token budget (${adaptiveTokenLimit} tokens) before completing the response. This usually happens with complex requests that require multiple iterations.\n\nTry:\n• Simplifying your request\n• Breaking it into smaller parts\n• Using a different model with higher token limits\n\n*Used ${totalTokensUsed} tokens in ${finalIteration + 1} iterations*`;
+        } else if (finalIteration === 0) {
+          finalContent = `⚠️ **No response generated**\n\nThe AI agent couldn't generate a response. This might be due to:\n• Content filtering by the AI service\n• Network issues\n• Service limitations\n\nPlease try again or rephrase your request.`;
+        } else {
+          finalContent = `⚠️ **Incomplete response**\n\nThe AI agent stopped after ${finalIteration + 1} iterations without completing the response. This might indicate:\n• The request was too complex\n• Content filtering occurred\n• Service limitations\n\n*Partial content may be available in the thinking trace above*`;
+        }
+      }
+
       console.log(
         `📋 Response finalized: ${finalContent.length} chars, ${finalIteration + 1} iterations, ${totalUsage.total_tokens} tokens`
       );
