@@ -5,7 +5,8 @@ export type ProviderType =
   | 'openrouter'
   | 'sonicfree'
   | 'mcp'
-  | 'anthropic';
+  | 'anthropic'
+  | 'mock';
 
 export type MessagingPlatformType = 'telegram' | 'discord' | 'slack' | 'terminal';
 
@@ -32,6 +33,7 @@ export interface MessagingPlatformResponse {
   error?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface MessagingPlatform {
   getPlatformType(): MessagingPlatformType;
   initialize(config: MessagingPlatformConfig): Promise<void>;
@@ -105,6 +107,7 @@ export interface PerformanceMetrics {
   bundleSize: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface LLMProvider {
   sendMessage(
     messages: Message[],
@@ -124,6 +127,7 @@ export interface ToolParameter {
   defaultValue?: any;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface Tool {
   name: string;
   description: string;
@@ -138,6 +142,7 @@ export interface ToolResult {
   metadata?: Record<string, any>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface ToolRegistry {
   register(tool: Tool): void;
   getTool(name: string): Tool | undefined;

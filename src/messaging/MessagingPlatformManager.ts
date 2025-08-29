@@ -1,4 +1,5 @@
 import { MessagingPlatformType, MessagingPlatformMessage } from '../types/index.js';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { TelegramPlatform } from './platforms/TelegramPlatform.js';
 
 export interface PlatformResponse {
@@ -43,10 +44,11 @@ export class MessagingPlatformManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async startListening(
     type: MessagingPlatformType,
     config: any,
-    messageHandler: (message: MessagingPlatformMessage) => Promise<void>
+    messageHandler: (_message: MessagingPlatformMessage) => Promise<void>
   ): Promise<void> {
     const platform = this.getPlatform(type);
     if (platform) {

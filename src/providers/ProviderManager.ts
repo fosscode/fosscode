@@ -8,6 +8,7 @@ import { MCPProvider } from './MCPProvider.js';
 import { OpenRouterProvider } from './OpenRouterProvider.js';
 import { SonicFreeProvider } from './SonicFreeProvider.js';
 import { AnthropicProvider } from './AnthropicProvider.js';
+import { MockProvider } from './MockProvider.js';
 
 export class ProviderManager {
   private providers: Map<ProviderType, LLMProvider>;
@@ -25,6 +26,11 @@ export class ProviderManager {
     this.providers.set('openrouter', new OpenRouterProvider());
     this.providers.set('sonicfree', new SonicFreeProvider());
     this.providers.set('anthropic', new AnthropicProvider());
+
+    // Conditionally register MockProvider for testing
+    if (process.env.FOSSCODE_PROVIDER === 'mock') {
+      this.providers.set('mock', new MockProvider());
+    }
   }
 
   async initializeProvider(providerType: ProviderType): Promise<void> {

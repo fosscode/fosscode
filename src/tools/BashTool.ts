@@ -1,4 +1,5 @@
 import * as child_process from 'child_process';
+/// <reference types="node" />
 import * as path from 'path';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { securityManager } from './SecurityManager.js';

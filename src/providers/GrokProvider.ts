@@ -1,4 +1,5 @@
 import { Message, ProviderResponse, LLMConfig, LLMProvider } from '../types/index.js';
+/// <reference types="node" />
 import { generate as generateSystemPrompt } from '../prompts/SystemPrompt.js';
 import {
   executeToolCalls,

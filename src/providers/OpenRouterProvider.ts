@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/// <reference types="node" />
 import { Message, ProviderResponse, LLMConfig, LLMProvider } from '../types/index.js';
 
 interface ModelInfo {
@@ -6,11 +8,13 @@ interface ModelInfo {
 }
 
 export class OpenRouterProvider implements LLMProvider {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validateConfig(_config: LLMConfig): Promise<boolean> {
     // TODO: Implement OpenRouter validation
     return !!_config.apiKey;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async sendMessage(
     _messages: Message[],
     _config: LLMConfig,

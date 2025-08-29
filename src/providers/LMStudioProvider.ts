@@ -1,3 +1,5 @@
+/// <reference types="node" />
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Message, ProviderResponse, LLMConfig, LLMProvider } from '../types/index.js';
 
 interface ModelInfo {
@@ -7,11 +9,13 @@ interface ModelInfo {
 }
 
 export class LMStudioProvider implements LLMProvider {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validateConfig(_config: LLMConfig): Promise<boolean> {
     // TODO: Implement LMStudio validation
     return true; // Assume local server is running
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async sendMessage(
     _messages: Message[],
     _config: LLMConfig,

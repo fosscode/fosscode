@@ -1,5 +1,3 @@
-// Commented out to isolate hanging test
-/*
 import { ToolRegistry } from '../tools/ToolRegistry';
 import { Tool } from '../types';
 
@@ -331,4 +329,3 @@ describe('ToolRegistry', () => {
     });
   });
 });
-*/

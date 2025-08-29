@@ -3,6 +3,10 @@
     "node": true,
     "es2022": true
   },
+  "globals": {
+    "BufferEncoding": "readonly",
+    "fetch": "readonly"
+  },
   "plugins": ["@typescript-eslint", "react", "react-hooks"],
   "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
   "parser": "@typescript-eslint/parser",
@@ -16,7 +20,10 @@
   },
   "ignorePatterns": ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"],
   "rules": {
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": ".*_", "varsIgnorePattern": ".*_" }
+    ],
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "warn",

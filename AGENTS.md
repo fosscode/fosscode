@@ -1,5 +1,9 @@
 # Agents
 
+## Code Guidelines
+
+- Keep code files under 300 lines where possible to maintain readability and maintainability
+
 ## User Notify Script
 
 Location: /home/dev/user_notify.py

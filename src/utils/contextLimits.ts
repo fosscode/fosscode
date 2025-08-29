@@ -72,11 +72,12 @@ export function formatContextUsage(
   };
 
   switch (format) {
-    case 'percentage':
+    case 'percentage': {
       const percentage = calculateContextPercentage(usedTokens, contextLimit);
       return percentage !== undefined
         ? `${percentage.toFixed(1)}%`
         : `${formatNumber(usedTokens)} tokens`;
+    }
 
     case 'tokens':
       if (contextLimit) {

@@ -1,4 +1,5 @@
 import * as path from 'path';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as os from 'os';
 import * as fs from 'fs';
 import { listAvailableTools } from '../tools/init.js';
@@ -184,6 +185,7 @@ user: Where are errors from the client handled?
 assistant: Clients are marked as failed in the \`connectToServer\` function in src/services/process.ts:712.
 </example>`;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function provider(_providerID: string, _modelID: string): string[] {
   // Use the same comprehensive system prompt for all providers
   return [BASE_SYSTEM_PROMPT];
