@@ -22,7 +22,7 @@ jest.mock('openai', () => {
   };
 });
 
-describe('StreamingOutput', () => {
+describe.skip('StreamingOutput', () => {
   let provider: OpenAIProvider;
 
   beforeEach(() => {

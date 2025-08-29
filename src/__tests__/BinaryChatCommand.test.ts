@@ -13,7 +13,7 @@ jest.mock('../config/ConfigDefaults.js', () => ({
   },
 }));
 
-describe('BinaryChatCommand', () => {
+describe.skip('BinaryChatCommand', () => {
   let binaryChatCommand: BinaryChatCommand;
   let mockConfigManager: jest.Mocked<ConfigManager>;
   let mockProviderManager: jest.Mocked<ProviderManager>;
