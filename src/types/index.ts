@@ -13,9 +13,32 @@ export interface MessagingPlatformMessage {
   id: string;
   content: string;
   userName: string;
+  userId: string;
   chatId: string;
   platform: MessagingPlatformType;
   timestamp: Date;
+}
+
+export interface MessagingPlatformConfig {
+  botToken?: string;
+  enabled?: boolean;
+  webhookUrl?: string;
+}
+
+export interface MessagingPlatformResponse {
+  success: boolean;
+  content?: string;
+  messageId?: string;
+  error?: string;
+}
+
+export interface MessagingPlatform {
+  getPlatformType(): MessagingPlatformType;
+  initialize(config: MessagingPlatformConfig): Promise<void>;
+  sendMessage(chatId: string, message: string): Promise<MessagingPlatformResponse>;
+  startListening(): Promise<void>;
+  stopListening(): Promise<void>;
+  isActive(): boolean;
 }
 
 export interface LLMConfig {

@@ -2,11 +2,8 @@ import { Message, ProviderType } from '../types/index.js';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export class ChatLogger {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _sessionId: string | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _sessionProvider: ProviderType | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _sessionModel: string | null = null;
 
   async initialize(): Promise<void> {
@@ -21,14 +18,18 @@ export class ChatLogger {
 
   async logMessageSent(message: Message): Promise<void> {
     // Log sent message
-    console.log(`[${new Date().toISOString()}] Sent: ${message.content.substring(0, 100)}...`);
+    const sessionInfo = this._sessionId ? ` [${this._sessionProvider}/${this._sessionModel}]` : '';
+    console.log(
+      `[${new Date().toISOString()}]${sessionInfo} Sent: ${message.content.substring(0, 100)}...`
+    );
   }
 
   async logMessageReceived(response: any, responseTime?: number): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // Log received message
+    const sessionInfo = this._sessionId ? ` [${this._sessionProvider}/${this._sessionModel}]` : '';
+    const timeInfo = responseTime ? ` (${responseTime}ms)` : '';
     console.log(
-      `[${new Date().toISOString()}] Received: ${response.content?.substring(0, 100)}...`
+      `[${new Date().toISOString()}]${sessionInfo} Received${timeInfo}: ${response.content?.substring(0, 100)}...`
     );
   }
 

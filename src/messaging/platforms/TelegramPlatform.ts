@@ -201,6 +201,33 @@ export class TelegramPlatform implements MessagingPlatform {
     }
   }
 
+  async startListening(): Promise<void> {
+    if (!this.bot) {
+      throw new Error('Telegram bot is not initialized');
+    }
+
+    if (this.isListening) {
+      throw new Error('Already listening for messages');
+    }
+
+    // Record startup time to filter out old messages
+    this.startupTime = new Date();
+
+    // Start the bot with error handling
+    try {
+      await this.bot.start();
+      this.isListening = true;
+      console.log('✅ Telegram bot started successfully');
+    } catch (error) {
+      console.error('Failed to start Telegram bot:', error);
+      throw error;
+    }
+  }
+
+  isActive(): boolean {
+    return this.isListening;
+  }
+
   async stopListening(): Promise<void> {
     if (this.bot && this.isListening) {
       this.bot.stop();
