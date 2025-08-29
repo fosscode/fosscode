@@ -70,22 +70,22 @@ fi
 
 # 2. Run linter
 echo "🔍 Running linter..."
-bun run lint > /dev/null 2>&1
+timeout 60 bun run lint > /dev/null 2>&1
 print_status $? "Linting check passed"
 
 # 3. Run typecheck
 echo "🔍 Running TypeScript typecheck..."
-bun run typecheck > /dev/null 2>&1
+timeout 120 bun run typecheck > /dev/null 2>&1
 print_status $? "TypeScript typecheck passed"
 
 # 4. Run build
 echo "🔨 Running build..."
-bun run build > /dev/null 2>&1
+timeout 120 bun run build > /dev/null 2>&1
 print_status $? "Build completed successfully"
 
 # 5. Run tests
 echo "🧪 Running tests..."
-bun run test > /dev/null 2>&1
+timeout 300 bun run test > /dev/null 2>&1
 print_status $? "All tests passed"
 
 # 6. Security audit
