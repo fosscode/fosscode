@@ -144,9 +144,6 @@ export class ChatCommand {
           },
         })
       );
-          },
-        })
-      );
     } catch (error) {
       // Fallback for environments where Ink/raw mode is not supported (e.g., tests, CI)
       if (error instanceof Error && error.message.includes('Raw mode is not supported')) {
