@@ -29,8 +29,8 @@ export class MCPProvider implements LLMProvider {
     messages: Message[],
     config: LLMConfig,
     _mode?: 'code' | 'thinking',
-    chatLogger?: any,
-    permissionManager?: PermissionManager
+    _chatLogger?: any,
+    _permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     await this.connectionManager.connectToMCPServer(config);
 
