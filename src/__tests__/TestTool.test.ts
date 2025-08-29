@@ -56,7 +56,7 @@ describe('TestTool', () => {
   });
 
   describe('framework detection', () => {
-    it('should detect Jest framework', () => {
+    it('should detect Jest framework', async () => {
       const tool = new TestTool() as any;
       // Test the private method by accessing it
       const fs = require('fs');
@@ -70,7 +70,7 @@ describe('TestTool', () => {
         return path.basename(filePath) === 'jest.config.js';
       });
 
-      const result = tool.detectTestFramework('/test/dir');
+      const result = await tool.detectTestFramework('/test/dir');
       expect(result).toBe('jest');
 
       // Restore original functions
@@ -102,7 +102,9 @@ Time:        3.2s
 ✓ Test 2
 ✗ Test 3
 ✓ Test 4
-5 passing (2.1s)
+✓ Test 5
+4 passing (2.1s)
+1 failing
       `;
 
       const result = tool.parseTestResults(mochaOutput, 'mocha');

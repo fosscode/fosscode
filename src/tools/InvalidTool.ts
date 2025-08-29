@@ -80,7 +80,7 @@ export class InvalidTool implements Tool {
   }
 
   private analyzeError(
-    operation: string,
+    _operation: string,
     reason: string,
     context: string
   ): {

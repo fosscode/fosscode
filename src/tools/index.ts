@@ -15,6 +15,9 @@ export { LSPDiagnosticsTool } from './LSPDiagnosticsTool.js';
 export { LSPHoverTool } from './LSPHoverTool.js';
 export { WebSearchTool } from './WebSearchTool.js';
 export { TodoWriteTool, TodoReadTool } from './TodoTool.js';
+export { TestTool } from './TestTool.js';
+export { InvalidTool } from './InvalidTool.js';
+export { ToolUtilities } from './ToolUtilities.js';
 
 // Export types
 export type {

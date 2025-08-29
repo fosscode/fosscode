@@ -64,7 +64,7 @@
     "typescript": "^5.0.0"
   },
   "jest": {
-    "preset": "ts-jest/presets/default-esm",
+    "preset": "ts-jest",
     "testEnvironment": "jsdom",
     "testRunner": "jest-circus/runner",
     "setupFilesAfterEnv": [
@@ -79,22 +79,8 @@
       "**/?(*.)+(spec|test).ts",
       "**/?(*.)+(spec|test).tsx"
     ],
-    "transform": {
-      "^.+\\.ts$": [
-        "ts-jest",
-        {
-          "useESM": true
-        }
-      ],
-      "^.+\\.tsx$": [
-        "ts-jest",
-        {
-          "useESM": true
-        }
-      ]
-    },
     "transformIgnorePatterns": [
-      "node_modules/(?!(cheerio|@modelcontextprotocol|ink|react|yoga-wasm-web|execa)/)"
+      "node_modules/(?!(cheerio|@modelcontextprotocol|ink|ink-testing-library|react|yoga-wasm-web|execa)/)"
     ],
     "collectCoverageFrom": [
       "src/**/*.ts",
@@ -104,12 +90,11 @@
     ],
     "moduleNameMapper": {
       "^(.{1,2}/.*).js$": "$1",
-      "^cheerio$": "<rootDir>/src/__mocks__/cheerio.js"
-    },
-    "extensionsToTreatAsEsm": [
-      ".ts",
-      ".tsx"
-    ]
+      "^cheerio$": "<rootDir>/src/__mocks__/cheerio.js",
+      "^ink$": "<rootDir>/src/__mocks__/ink.js",
+      "^ink-spinner$": "<rootDir>/src/__mocks__/ink-spinner.js",
+      "^ink-testing-library$": "<rootDir>/src/__mocks__/ink-testing-library.js"
+    }
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.60.0",

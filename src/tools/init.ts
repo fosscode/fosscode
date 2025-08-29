@@ -14,6 +14,8 @@ import { LSPHoverTool } from './LSPHoverTool.js';
 import { WebSearchTool } from './WebSearchTool.js';
 import { TodoWriteTool, TodoReadTool } from './TodoTool.js';
 import { DuckDuckGoTool } from './DuckDuckGoTool.js';
+import { TestTool } from './TestTool.js';
+import { InvalidTool } from './InvalidTool.js';
 
 /**
  * Initialize and register all agent tools
@@ -49,6 +51,10 @@ export function initializeTools(verbose: boolean = false): void {
 
   // Register search tools
   toolRegistry.register(new DuckDuckGoTool());
+
+  // Register development and utility tools
+  toolRegistry.register(new TestTool());
+  toolRegistry.register(new InvalidTool());
 
   if (verbose) {
     console.log(`✅ Registered ${toolRegistry.getToolCount()} tools:`);

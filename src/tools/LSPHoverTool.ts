@@ -681,22 +681,42 @@ export class LSPHoverTool implements Tool {
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i].trim();
 
-      if (line === '*/' && i > 0 && lines[i - 1].trim().startsWith('/**')) {
-        // Found the start of JSDoc comment
-        for (let j = i - 1; j < lines.length && !lines[j].trim().startsWith('*/'); j++) {
-          const commentLine = lines[j].trim();
-          if (commentLine.startsWith('/**') || commentLine.startsWith('*')) {
-            const cleanLine = commentLine
-              .replace(/\/\*\*/, '')
-              .replace(/\*\//, '')
-              .replace(/^\*\s*/, '')
-              .trim();
-            if (cleanLine) {
-              commentLines.unshift(cleanLine);
-            }
+      if (line === '*/') {
+        // Found the end of JSDoc comment, now find the start
+        let startIndex = -1;
+        for (let j = i - 1; j >= 0; j--) {
+          const prevLine = lines[j].trim();
+          if (prevLine.startsWith('/**')) {
+            startIndex = j;
+            break;
+          }
+          // Stop if we find another comment end without finding start
+          if (prevLine === '*/') {
+            break;
           }
         }
-        break;
+
+        if (startIndex !== -1) {
+          // Extract all lines between start and end
+          for (let j = startIndex; j <= i; j++) {
+            const commentLine = lines[j].trim();
+            if (
+              commentLine.startsWith('/**') ||
+              commentLine.startsWith('*') ||
+              commentLine === '*/'
+            ) {
+              const cleanLine = commentLine
+                .replace(/\/\*\*/, '')
+                .replace(/\*\//, '')
+                .replace(/^\*\s*/, '')
+                .trim();
+              if (cleanLine) {
+                commentLines.push(cleanLine);
+              }
+            }
+          }
+          break;
+        }
       }
     }
 

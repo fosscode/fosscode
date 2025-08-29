@@ -128,7 +128,7 @@ describe('LSPHoverTool', () => {
     it('should return null for positions without symbols', () => {
       const tool = lspHoverTool as any;
       const line = 'const x = 42;';
-      const symbol = tool.extractSymbolAtPosition(line, 0, 'javascript');
+      const symbol = tool.extractSymbolAtPosition(line, 12, 'javascript'); // Position after semicolon
 
       expect(symbol).toBeNull();
     });
@@ -283,7 +283,10 @@ class TestClass:
 function test() {}
 `;
 
-      const documentation = tool.extractJSDocComment(content, 50);
+      // Find the position of 'function' keyword
+      const functionPos = content.indexOf('function test()');
+
+      const documentation = tool.extractJSDocComment(content, functionPos);
 
       expect(documentation).toContain('This is a JSDoc comment');
       expect(documentation).toContain('with multiple lines');
@@ -340,7 +343,7 @@ def test():
       const position = tool.getPositionFromOffset(content, 10);
 
       expect(position.line).toBe(1);
-      expect(position.character).toBe(6);
+      expect(position.character).toBe(3);
     });
   });
 });

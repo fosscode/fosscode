@@ -269,7 +269,7 @@ export class TestTool implements Tool {
           resolve({
             success: true,
             output: 'Watch mode started',
-            exitCode: code || 0,
+            exitCode: code ?? 0,
             executionTime,
           });
         } else {
@@ -283,7 +283,7 @@ export class TestTool implements Tool {
           } = {
             success: code === 0,
             output: fullOutput,
-            exitCode: code || 0,
+            exitCode: code ?? 0,
             executionTime,
           };
           if (code !== 0) {

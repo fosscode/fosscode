@@ -90,7 +90,7 @@ export class ToolUtilities {
    */
   static sanitizePath(inputPath: string): string {
     // Remove any path traversal attempts
-    const sanitized = path.normalize(inputPath).replace(/^(\.\.[\/\\])+/, '');
+    const sanitized = path.normalize(inputPath).replace(/^(\.\.[/\\])+/, '');
 
     // Ensure path doesn't start with dangerous patterns
     if (
@@ -109,25 +109,25 @@ export class ToolUtilities {
    */
   static isPathSafe(filePath: string, allowedExtensions: string[] = []): boolean {
     try {
+      // Check if path contains suspicious patterns before sanitizing
+      const suspiciousPatterns = [
+        /\.\./, // Path traversal
+        /[<>"|?*]/, // Invalid filename characters
+        /^[/\\]/, // Absolute paths (depending on context)
+      ];
+
+      for (const pattern of suspiciousPatterns) {
+        if (pattern.test(filePath)) {
+          return false;
+        }
+      }
+
       const sanitized = this.sanitizePath(filePath);
       const ext = path.extname(sanitized).toLowerCase();
 
       // Check if file extension is allowed (if restrictions are specified)
       if (allowedExtensions.length > 0 && !allowedExtensions.includes(ext)) {
         return false;
-      }
-
-      // Check if path contains suspicious patterns
-      const suspiciousPatterns = [
-        /\.\./, // Path traversal
-        /[<>\"|?*]/, // Invalid filename characters
-        /^[\/\\]/, // Absolute paths (depending on context)
-      ];
-
-      for (const pattern of suspiciousPatterns) {
-        if (pattern.test(sanitized)) {
-          return false;
-        }
       }
 
       return true;
@@ -220,7 +220,7 @@ export class ToolUtilities {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Invalid JSON',
+        error: `Invalid JSON: ${error instanceof Error ? error.message : 'Unknown parsing error'}`,
       };
     }
   }
@@ -350,7 +350,7 @@ export class ToolUtilities {
 
     const cloned = {} as T;
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         cloned[key] = this.deepClone(obj[key]);
       }
     }

@@ -22,8 +22,13 @@ describe('ToolUtilities', () => {
 
   describe('validateParamTypes', () => {
     const paramDefs = [
-      { name: 'count', type: 'number' as const, required: true },
-      { name: 'enabled', type: 'boolean' as const, required: false },
+      { name: 'count', type: 'number' as const, required: true, description: 'Number of items' },
+      {
+        name: 'enabled',
+        type: 'boolean' as const,
+        required: false,
+        description: 'Whether feature is enabled',
+      },
     ];
 
     it('should validate correct types', () => {
@@ -45,8 +50,20 @@ describe('ToolUtilities', () => {
 
   describe('applyDefaults', () => {
     const paramDefs = [
-      { name: 'timeout', type: 'number' as const, required: false, defaultValue: 5000 },
-      { name: 'retries', type: 'number' as const, required: false, defaultValue: 3 },
+      {
+        name: 'timeout',
+        type: 'number' as const,
+        required: false,
+        defaultValue: 5000,
+        description: 'Timeout in milliseconds',
+      },
+      {
+        name: 'retries',
+        type: 'number' as const,
+        required: false,
+        defaultValue: 3,
+        description: 'Number of retry attempts',
+      },
     ];
 
     it('should apply default values when params are missing', () => {
