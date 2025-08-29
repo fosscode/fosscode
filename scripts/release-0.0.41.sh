@@ -35,9 +35,7 @@ if ! gh auth status &> /dev/null; then
   exit 1
 fi
 
-echo "📦 Setting version to $VERSION..."
-# Update version in package.json
-npm version "$VERSION" --no-git-tag-version
+echo "📦 Version is already set to $VERSION"
 
 echo "🔨 Building project..."
 npm run build
