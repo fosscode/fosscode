@@ -54,11 +54,11 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "ink-testing-library": "^4.0.0",
     "jest": "^29.0.0",
+    "jest-circus": "^29.0.0",
     "jest-environment-jsdom": "^30.0.5",
     "prettier": "^3.0.0",
     "ts-jest": "^29.4.1",
-    "typescript": "^5.0.0",
-    "jest-circus": "^29.0.0"
+    "typescript": "^5.0.0"
   },
   "resolutions": {
     "slice-ansi": "7.1.0",
@@ -106,8 +106,7 @@
     ],
     "moduleNameMapper": {
       "^(.{1,2}/.*).js$": "$1",
-      "^cheerio$": "<rootDir>/src/__mocks__/cheerio.js",
-      "^chalk$": "<rootDir>/src/__mocks__/chalk.js"
+      "^cheerio$": "<rootDir>/src/__mocks__/cheerio.js"
     },
     "extensionsToTreatAsEsm": [
       ".ts",
@@ -118,7 +117,7 @@
     "@anthropic-ai/sdk": "^0.60.0",
     "@modelcontextprotocol/sdk": "^1.17.4",
     "@playwright/mcp": "^0.0.35",
-    "chalk": "^5.0.0",
+    "chalk": "^4.1.2",
     "cheerio": "^1.1.2",
     "commander": "^11.0.0",
     "grammy": "^1.30.0",

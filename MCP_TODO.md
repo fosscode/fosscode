@@ -18,9 +18,13 @@
 ## 3. Configuration Management
 
 - [ ] Extend config schema to support MCP server settings
+- [ ] Implement ~/.config/fosscode/mcp.d/ directory structure for multiple server configs
+- [ ] Support reading multiple MCP server config files from ~/.config/fosscode/mcp.d/
+- [ ] Define file naming conventions for MCP server configs (e.g., server-name.json)
 - [ ] Update config.example.json with MCP configuration examples
 - [ ] Add validation for MCP server commands and arguments
 - [ ] Implement secure storage for MCP-specific settings
+- [ ] Add MCP server config discovery and loading mechanism
 
 ## 4. Authentication and Security
 
@@ -42,6 +46,10 @@
 - [ ] Add MCP server configuration command
 - [ ] Create MCP server configuration examples
 - [ ] Add verbose mode support for MCP tool execution
+- [ ] Implement /mcp command for enabling/disabling servers in chat
+- [ ] Add --mcp command line flag for enabling specific servers (e.g., --mcp playwright,context7)
+- [ ] Ensure MCP servers are off by default
+- [ ] Implement last-setting persistence for /mcp menu selections
 
 ## 7. Deployment and Packaging
 

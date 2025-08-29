@@ -1,0 +1,11 @@
+{
+  "name": "playwright",
+  "description": "Playwright MCP server for browser automation and testing",
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-playwright"],
+  "env": {
+    "PLAYWRIGHT_BROWSERS_PATH": "/usr/bin/chromium-browser"
+  },
+  "timeout": 30000,
+  "enabled": false
+}

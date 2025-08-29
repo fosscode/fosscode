@@ -1,0 +1,12 @@
+{
+  "name": "context7",
+  "description": "Context7 MCP server for context-aware operations",
+  "command": "context7-mcp-server",
+  "args": ["--port", "3000"],
+  "env": {
+    "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}",
+    "CONTEXT7_BASE_URL": "https://api.context7.ai"
+  },
+  "timeout": 15000,
+  "enabled": false
+}
