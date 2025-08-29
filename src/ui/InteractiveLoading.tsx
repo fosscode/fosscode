@@ -75,7 +75,7 @@ export function InteractiveLoading({ frames = defaultFrames }: InteractiveLoadin
     <Box flexDirection="column">
       <Box>
         <Spinner type="dots" />
-        <FlashyText type="rainbow" speed={150}>
+        <FlashyText type="static" speed={150}>
           {message}
         </FlashyText>
       </Box>
@@ -84,7 +84,7 @@ export function InteractiveLoading({ frames = defaultFrames }: InteractiveLoadin
         <Box marginTop={1}>
           {currentEmojis.map((emoji, index) => (
             <Box key={index} marginRight={1}>
-              <FlashyText type="pulse" speed={100}>
+              <FlashyText type="static" speed={100}>
                 {emoji}
               </FlashyText>
             </Box>

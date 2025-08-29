@@ -20,7 +20,7 @@
     "build:docker": "docker build -t fosscode .",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/**/*.ts --quiet",
-    "format": "prettier --write src/**/*.ts",
+    "format": "prettier --write src/**/*.{ts,tsx}",
     "test": "jest",
     "clean": "rm -rf dist",
     "start": "bun run src/index.ts",

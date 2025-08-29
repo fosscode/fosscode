@@ -30,7 +30,7 @@ export function AppHeader({
 
   return (
     <Box marginBottom={isVerySmallScreen ? 0 : 1}>
-      <FlashyText type="rainbow" speed={300}>
+      <FlashyText type="static" speed={300}>
         {headerText}
       </FlashyText>
     </Box>

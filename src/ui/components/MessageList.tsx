@@ -42,7 +42,7 @@ export function MessageList({ messages, isLoading, error, isVerySmallScreen }: M
 
       {error && (
         <Box>
-          <FlashyText type="flash" speed={150} colors={['red', 'orange', 'yellow']}>
+          <FlashyText type="static" speed={150} colors={['red', 'orange', 'yellow']}>
             {`🚨 Error: ${error}`}
           </FlashyText>
         </Box>

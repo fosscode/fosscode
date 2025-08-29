@@ -66,7 +66,7 @@ export function LoadingIndicator({ messages = defaultMessages }: LoadingIndicato
   return (
     <Box>
       <Spinner type="dots" />
-      <FlashyText type="neon" speed={100}>
+      <FlashyText type="static" speed={100}>
         {displayMessages[currentIndex]}
       </FlashyText>
     </Box>
