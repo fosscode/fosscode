@@ -202,6 +202,9 @@ export async function handleCommand(
       };
 
     case '/clear':
+    case '/new':
+    case '/nw':
+    case '/cl':
       return {
         type: 'clear',
         shouldClearMessages: true,

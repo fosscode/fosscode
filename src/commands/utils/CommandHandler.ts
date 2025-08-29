@@ -39,6 +39,9 @@ export class CommandHandler {
 
     switch (command) {
       case '/clear':
+      case '/new':
+      case '/nw':
+      case '/cl':
         await this.handleClearCommand(message, platformType);
         break;
 
@@ -92,7 +95,7 @@ export class CommandHandler {
   ): Promise<void> {
     const helpMessage =
       `🤖 *Available Commands:*\n\n` +
-      `• /clear - Clear conversation history\n` +
+      `• /clear, /new, /nw, /cl - Clear conversation history\n` +
       `• /compress - Compress conversation history to save space\n` +
       `• /help - Show this help message\n` +
       `• /quit - Exit the bot and terminate all processes\n` +

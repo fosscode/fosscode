@@ -165,7 +165,7 @@ export class ChatCommand {
         );
         console.log(
           chalk.gray(
-            'Commands: /verbose (toggle), /clear (clear), /compress (summarize), /themes (switch)'
+            'Commands: /verbose (toggle), /clear|/new|/nw|/cl (clear), /compress (summarize), /themes (switch)'
           )
         );
         console.log(
