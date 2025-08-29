@@ -8,9 +8,9 @@ interface FlashyTextProps {
   colors?: string[];
 }
 
-const rainbowColors = ['red', 'yellow', 'green', 'cyan', 'blue', 'magenta'];
-const neonColors = ['cyan', 'magenta', 'yellow', 'green', 'blue', 'red'];
-const gradientColors = ['blue', 'cyan', 'green', 'yellow', 'red', 'magenta'];
+const rainbowColors = ['yellow', 'green', 'cyan', 'blue', 'magenta', 'gray'];
+const neonColors = ['cyan', 'magenta', 'yellow', 'green', 'blue', 'gray'];
+const gradientColors = ['blue', 'cyan', 'green', 'yellow', 'magenta', 'gray'];
 
 export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: FlashyTextProps) {
   const [colorIndex, setColorIndex] = useState(0);

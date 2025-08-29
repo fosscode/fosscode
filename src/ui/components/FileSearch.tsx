@@ -49,7 +49,7 @@ export function FileSearch({
           )}
         </Box>
       ) : query ? (
-        <FlashyText type="static" speed={250} colors={['red', 'orange']}>
+        <FlashyText type="static" speed={250} colors={['orange', 'yellow']}>
           {`No files found matching "${query}"`}
         </FlashyText>
       ) : (
