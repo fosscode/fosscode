@@ -11,8 +11,10 @@ jest.mock('readline', () => ({
 
 // Mock chalk
 jest.mock('chalk', () => ({
-  cyan: jest.fn((text: string) => text),
-  red: jest.fn((text: string) => text),
+  default: {
+    cyan: jest.fn((text: string) => text),
+    red: jest.fn((text: string) => text),
+  },
 }));
 
 // Mock ConfigManager
