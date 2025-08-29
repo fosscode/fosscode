@@ -389,11 +389,14 @@ export class LSPDiagnosticsTool implements Tool {
   ): DiagnosticResult[] {
     const lines = content.split('\n');
 
-    return diagnostics.map(diag => ({
-      ...diag,
-      file: filePath,
-      sourceSnippet: this.getSourceSnippet(lines, diag.range),
-    }));
+    return diagnostics.map(diag => {
+      const sourceSnippet = this.getSourceSnippet(lines, diag.range);
+      return {
+        ...diag,
+        file: filePath,
+        ...(sourceSnippet && { sourceSnippet }),
+      };
+    });
   }
 
   /**
@@ -456,7 +459,11 @@ export class LSPDiagnosticsTool implements Tool {
     };
 
     for (const diag of diagnostics) {
-      summary[diag.severity]++;
+      if (diag.severity === 'error') {
+        summary.errors++;
+      } else {
+        (summary as any)[diag.severity]++;
+      }
     }
 
     return summary;

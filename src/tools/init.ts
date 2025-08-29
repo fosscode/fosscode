@@ -9,6 +9,7 @@ import { BashTool } from './BashTool.js';
 import { GlobTool } from './GlobTool.js';
 import { MultieditTool } from './MultieditTool.js';
 import { PatchTool } from './PatchTool.js';
+import { LSPDiagnosticsTool } from './LSPDiagnosticsTool.js';
 import { TodoWriteTool, TodoReadTool } from './TodoTool.js';
 import { DuckDuckGoTool } from './DuckDuckGoTool.js';
 
