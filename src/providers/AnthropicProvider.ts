@@ -68,7 +68,8 @@ export class AnthropicProvider implements LLMProvider {
       const systemPrompt = await generateSystemPrompt(
         'anthropic',
         config.model ?? 'claude-3-sonnet-20240229',
-        mode
+        mode,
+        messages
       );
 
       // Convert messages to Anthropic format

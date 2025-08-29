@@ -82,7 +82,8 @@ export class OpenAIProvider implements LLMProvider {
       const systemPrompt = await generateSystemPrompt(
         'openai',
         config.model ?? 'gpt-3.5-turbo',
-        mode
+        mode,
+        messages
       );
 
       // eslint-disable-next-line prefer-const
@@ -200,7 +201,12 @@ export class OpenAIProvider implements LLMProvider {
           if (!content.trim()) {
             content = 'Executing tools to help with your request...\n\n';
           }
-          const toolResult = await executeToolCalls(assistantMessage.tool_calls, mode, chatLogger, permissionManager);
+          const toolResult = await executeToolCalls(
+            assistantMessage.tool_calls,
+            mode,
+            chatLogger,
+            permissionManager
+          );
 
           // Add tool results as tool messages
           for (const toolCall of assistantMessage.tool_calls) {

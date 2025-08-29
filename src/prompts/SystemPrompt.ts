@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import { listAvailableTools } from '../tools/init.js';
+import { fileTrackerManager } from '../utils/FileTrackerManager.js';
+import { Message } from '../types/index.js';
 
 // Base system prompt for fosscode - CLI tool behavior
 export const BASE_SYSTEM_PROMPT = `You are an interactive CLI tool that helps users with software engineering tasks. Use the instructions below and the tools available to you to assist the user.
@@ -322,22 +324,81 @@ export function tools(mode?: 'code' | 'thinking'): string[] {
   return [`## Available Tools\n${toolDescriptions}`];
 }
 
+export function conversationContext(messages: Message[], maxMessages: number = 5): string[] {
+  if (!messages || messages.length === 0) {
+    return [];
+  }
+
+  // Get the most recent messages (excluding the current user message)
+  const recentMessages = messages
+    .filter(msg => msg.role !== 'user' || messages.indexOf(msg) !== messages.length - 1)
+    .slice(-maxMessages);
+
+  if (recentMessages.length === 0) {
+    return [];
+  }
+
+  const contextLines = recentMessages.map(msg => {
+    const role = msg.role === 'assistant' ? 'Assistant' : 'User';
+    const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
+    const timeStr = timestamp ? ` (${timestamp})` : '';
+    return `${role}${timeStr}: ${msg.content.substring(0, 200)}${msg.content.length > 200 ? '...' : ''}`;
+  });
+
+  return [
+    `## Recent Conversation Context\n${contextLines.join('\n')}`,
+    '',
+    'Use this context to maintain continuity in the conversation and avoid repeating information already discussed.',
+  ];
+}
+
+export function fileContext(): string[] {
+  try {
+    const fileTracker = fileTrackerManager.getFileTracker();
+    const recentFiles = fileTracker.getRecentlyAccessedFiles(30); // Last 30 minutes
+
+    if (recentFiles.length === 0) {
+      return [];
+    }
+
+    const fileLines = recentFiles.slice(0, 10).map(file => {
+      const tools = file.toolsUsed.length > 0 ? ` (used by: ${file.toolsUsed.join(', ')})` : '';
+      const timeAgo = Math.round((Date.now() - file.lastAccessed.getTime()) / 1000 / 60);
+      return `- ${path.relative(process.cwd(), file.filePath)} (${file.accessCount} accesses, ${timeAgo}min ago)${tools}`;
+    });
+
+    return [
+      `## Recently Accessed Files\n${fileLines.join('\n')}`,
+      '',
+      'These files have been accessed recently in this session. Consider their content when responding to user requests.',
+    ];
+  } catch (error) {
+    // Silently ignore file tracking errors
+    return [];
+  }
+}
+
 /**
  * Generate a complete system prompt for a provider
  */
 export async function generate(
   providerID: string,
   modelID: string,
-  mode?: 'code' | 'thinking'
+  mode?: 'code' | 'thinking',
+  messages?: Message[]
 ): Promise<string> {
   const environmentInfo = await environment();
   const projectStructureInfo = await projectStructure();
   const customRulesInfo = await customRules();
+  const conversationInfo = messages ? conversationContext(messages) : [];
+  const filesInfo = fileContext();
 
   const parts = [
     ...provider(providerID, modelID),
     ...environmentInfo,
     ...projectStructureInfo,
+    ...conversationInfo,
+    ...filesInfo,
     mode
       ? [
           `## Current Mode\nYou are currently in **${mode} mode**. ${mode === 'thinking' ? 'You can only use read-only tools (read, grep, list, webfetch). You cannot make any changes to files or run commands.' : 'You can use all available tools including those that modify files and run commands.'}`,

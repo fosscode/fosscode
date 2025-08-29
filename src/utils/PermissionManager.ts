@@ -1,4 +1,11 @@
-export type ToolNames = 'writeFile' | 'replace' | 'runShellCommand' | 'readFile' | 'listDirectory' | 'searchFileContent' | 'glob';
+export type ToolNames =
+  | 'writeFile'
+  | 'replace'
+  | 'runShellCommand'
+  | 'readFile'
+  | 'listDirectory'
+  | 'searchFileContent'
+  | 'glob';
 
 export class PermissionManager {
   private readonly isPlanMode: boolean;

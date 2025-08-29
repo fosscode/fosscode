@@ -47,7 +47,12 @@ export class GrokProvider implements LLMProvider {
     }
 
     // Generate system prompt
-    const systemPrompt = await generateSystemPrompt('grok', config.model ?? 'grok-4-0709', mode);
+    const systemPrompt = await generateSystemPrompt(
+      'grok',
+      config.model ?? 'grok-4-0709',
+      mode,
+      messages
+    );
 
     // xAI API uses a different format - send all messages but xAI might handle conversation differently
     const grokMessages = [

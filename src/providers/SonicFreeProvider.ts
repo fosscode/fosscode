@@ -7,7 +7,6 @@ import {
   hasAvailableTools,
 } from '../utils/toolExecutor.js';
 import { ChatLogger } from '../config/ChatLogger.js';
-
 import { PermissionManager } from '../utils/PermissionManager.js';
 
 export class SonicFreeProvider implements LLMProvider {
@@ -46,7 +45,12 @@ export class SonicFreeProvider implements LLMProvider {
 
     try {
       // Generate system prompt
-      const systemPrompt = await generateSystemPrompt('sonicfree', config.model ?? 'sonic', mode);
+      const systemPrompt = await generateSystemPrompt(
+        'sonicfree',
+        config.model ?? 'sonic',
+        mode,
+        messages
+      );
 
       let openaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: 'system', content: systemPrompt },

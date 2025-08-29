@@ -343,7 +343,7 @@ function App({
       }
 
       // Auto-summarization logic
-      const lastMessage = messages.filter((x) => x.role === 'assistant').at(-1);
+      const lastMessage = messages.filter(x => x.role === 'assistant').at(-1);
       let currentMessages = messages;
 
       if (lastMessage && lastMessage.usage) {
@@ -419,10 +419,10 @@ function App({
               newMessages.pop();
             }
             const assistantMessage: Message = {
-                role: 'assistant',
-                content: response.content,
-                timestamp: new Date(),
-                ...(response.usage && { usage: response.usage }),
+              role: 'assistant',
+              content: response.content,
+              timestamp: new Date(),
+              ...(response.usage && { usage: response.usage }),
             };
             return [...newMessages, assistantMessage];
           });

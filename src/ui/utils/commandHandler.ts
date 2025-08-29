@@ -178,6 +178,28 @@ export async function handleCommand(
   const timestamp = new Date();
 
   switch (command) {
+    case '/help':
+    case '/commands':
+      return {
+        type: 'message',
+        message: {
+          role: 'assistant',
+          content:
+            `🤖 *Available Commands:*\n\n` +
+            `• /verbose - Toggle verbose output mode\n` +
+            `• /themes - Switch between dark/light theme\n` +
+            `• /clear, /new, /nw, /cl - Clear conversation history\n` +
+            `• /mode, /thinking - Toggle between code and thinking mode\n` +
+            `• /compress - Compress conversation history to save space\n` +
+            `• /mcp - MCP server management (list, enable, disable)\n` +
+            `• /help, /commands - Show this help message\n\n` +
+            `💡 Type @ followed by a filename to attach files to your message\n` +
+            `💡 Press Tab to toggle between code and thinking mode\n` +
+            `💡 Just type your message normally to chat!`,
+          timestamp,
+        },
+      };
+
     case '/verbose':
       return {
         type: 'message',

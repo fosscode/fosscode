@@ -2,6 +2,7 @@ import { listAvailableTools, getTool } from '../tools/init.js';
 import { ToolResult } from '../types/index.js';
 import { ChatLogger } from '../config/ChatLogger.js';
 import { PermissionManager, ToolNames } from './PermissionManager.js';
+import { fileTrackerManager } from './FileTrackerManager.js';
 
 /**
  * Tool execution result interface
@@ -9,6 +10,51 @@ import { PermissionManager, ToolNames } from './PermissionManager.js';
 export interface ToolExecutionResult {
   content: string;
   hasToolCalls: boolean;
+}
+
+/**
+ * Track file access for tools that work with files
+ */
+function trackFileAccess(toolName: string, args: any): void {
+  try {
+    const fileTracker = fileTrackerManager.getFileTracker();
+
+    switch (toolName) {
+      case 'read':
+        if (args.filePath) {
+          fileTracker.trackFileAccess(args.filePath, 'read', 'read');
+        }
+        break;
+      case 'write':
+        if (args.filePath) {
+          fileTracker.trackFileAccess(args.filePath, 'write', 'write');
+        }
+        break;
+      case 'edit':
+        if (args.filePath) {
+          fileTracker.trackFileAccess(args.filePath, 'write', 'edit');
+        }
+        break;
+      case 'grep':
+        if (args.path) {
+          fileTracker.trackFileAccess(args.path, 'search', 'grep');
+        }
+        break;
+      case 'list':
+        if (args.path) {
+          fileTracker.trackFileAccess(args.path, 'search', 'list');
+        }
+        break;
+      case 'glob':
+        if (args.path) {
+          fileTracker.trackFileAccess(args.path, 'search', 'glob');
+        }
+        break;
+    }
+  } catch (error) {
+    // Silently ignore file tracking errors to avoid disrupting tool execution
+    console.debug('File tracking error:', error);
+  }
 }
 
 /**
@@ -281,7 +327,10 @@ export async function executeToolCalls(
           }
         }
 
-        if (permissionManager && !permissionManager.canExecute(toolCall.function.name as ToolNames)) {
+        if (
+          permissionManager &&
+          !permissionManager.canExecute(toolCall.function.name as ToolNames)
+        ) {
           content += `❌ ${toolCall.function.name}: Tool not allowed in current mode (plan mode)\n`;
           continue;
         }
@@ -294,6 +343,9 @@ export async function executeToolCalls(
 
           const result = await tool.execute(args);
           content += formatToolResult(toolCall.function.name, result) + '\n';
+
+          // Track file access for relevant tools
+          trackFileAccess(toolCall.function.name, args);
 
           // Log tool call result
           if (chatLogger) {

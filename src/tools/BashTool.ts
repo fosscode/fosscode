@@ -1,6 +1,7 @@
 import * as child_process from 'child_process';
 /// <reference types="node" />
 import * as path from 'path';
+import * as fs from 'fs';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { securityManager } from './SecurityManager.js';
 import { cancellationManager } from '../utils/CancellationManager.js';
@@ -15,6 +16,88 @@ export class BashTool implements Tool {
 
   // Track installed tools to prevent infinite loops
   private installedTools = new Set<string>();
+
+  // Shell history management
+  private historyFile: string;
+  private maxHistorySize: number = 1000;
+
+  constructor() {
+    // Initialize history file path - use absolute path for consistency
+    this.historyFile = path.resolve(process.cwd(), '.fosscode_shell_history');
+    this.ensureHistoryDirectory();
+  }
+
+  private ensureHistoryDirectory(): void {
+    const historyDir = path.dirname(this.historyFile);
+    try {
+      if (!fs.existsSync(historyDir)) {
+        fs.mkdirSync(historyDir, { recursive: true });
+      }
+    } catch (error) {
+      console.warn('Failed to create shell history directory:', error);
+      // Fallback: try to create history file in current directory
+      this.historyFile = path.join(process.cwd(), 'fosscode_shell_history.txt');
+    }
+  }
+
+  private loadHistory(): string[] {
+    try {
+      if (fs.existsSync(this.historyFile)) {
+        const historyData = fs.readFileSync(this.historyFile, 'utf-8');
+        const history = historyData.split('\n').filter(line => line.trim());
+        return history.slice(-this.maxHistorySize); // Keep only the most recent entries
+      }
+    } catch (error) {
+      // Silently fail for history loading
+    }
+    return [];
+  }
+
+  private saveHistory(history: string[]): void {
+    try {
+      const limitedHistory = history.slice(-this.maxHistorySize);
+      fs.writeFileSync(this.historyFile, limitedHistory.join('\n') + '\n');
+    } catch (error) {
+      // Silently fail for history saving
+    }
+  }
+
+  private addToHistory(command: string): void {
+    if (!command.trim()) return;
+
+    const history = this.loadHistory();
+
+    // Don't add duplicate consecutive commands
+    if (history[history.length - 1] === command.trim()) {
+      return;
+    }
+
+    history.push(command.trim());
+    this.saveHistory(history);
+  }
+
+  private getHistory(): ToolResult {
+    const history = this.loadHistory();
+    return {
+      success: true,
+      data: {
+        history: history.map((cmd, index) => `${index + 1}  ${cmd}`),
+        count: history.length,
+      },
+      metadata: {
+        executedAt: new Date().toISOString(),
+        historyFile: this.historyFile,
+      },
+    };
+  }
+
+  private clearHistory(): void {
+    try {
+      fs.writeFileSync(this.historyFile, '');
+    } catch (error) {
+      console.warn('Failed to clear shell history:', error);
+    }
+  }
 
   parameters: ToolParameter[] = [
     {
@@ -44,11 +127,47 @@ export class BashTool implements Tool {
       required: false,
       defaultValue: 'bash',
     },
+    {
+      name: 'clearHistory',
+      type: 'boolean',
+      description: 'Clear shell history before executing command',
+      required: false,
+      defaultValue: false,
+    },
   ];
 
   async execute(params: Record<string, any>): Promise<ToolResult> {
     try {
-      const { command, cwd = process.cwd(), timeout = 10000, shell = 'bash' } = params;
+      const {
+        command,
+        cwd = process.cwd(),
+        timeout = 10000,
+        shell = 'bash',
+        clearHistory = false,
+      } = params;
+
+      // Handle special history commands
+      if (command === 'history') {
+        return this.getHistory();
+      }
+
+      if (command === 'clear-history' || command === 'history -c') {
+        this.clearHistory();
+        return {
+          success: true,
+          data: {
+            message: 'Shell history cleared successfully',
+          },
+          metadata: {
+            executedAt: new Date().toISOString(),
+          },
+        };
+      }
+
+      // Clear history if requested
+      if (clearHistory) {
+        this.clearHistory();
+      }
 
       // Validate inputs
       if (!command || typeof command !== 'string') {
@@ -291,10 +410,16 @@ export class BashTool implements Tool {
 
       const startTime = Date.now();
 
+      // Set up environment
+      const env = {
+        ...process.env,
+        PWD: cwd,
+      };
+
       const child = child_process.spawn(shell, ['-c', command], {
         cwd,
         stdio: ['ignore', 'pipe', 'pipe'],
-        env: { ...process.env, PWD: cwd },
+        env,
       });
 
       // Register the child process for cancellation tracking
@@ -373,6 +498,15 @@ export class BashTool implements Tool {
 
         console.log(`⏱️  Execution time: ${executionTime}ms`);
         console.log(`${exitColor}📊 Exit code: ${exitCode}${resetColor}`);
+
+        // Add successful command to history
+        if (exitCode === 0 && !timedOut) {
+          try {
+            this.addToHistory(command);
+          } catch (error) {
+            console.warn('Failed to add command to history:', error);
+          }
+        }
 
         resolve({
           exitCode,

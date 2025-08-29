@@ -2,12 +2,13 @@ import { SonicFreeProvider } from '../providers/SonicFreeProvider';
 import { Message, LLMConfig } from '../types';
 
 // Mock OpenAI before importing SonicFreeProvider
+const mockCreate = jest.fn();
 jest.mock('openai', () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     chat: {
       completions: {
-        create: jest.fn(),
+        create: mockCreate,
       },
     },
   })),
@@ -58,12 +59,10 @@ describe('SonicFreeProvider', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      // Get the mocked OpenAI instance
-      const MockOpenAI = require('openai').default;
-      const mockInstance = new MockOpenAI();
-
       // Mock the create method to throw an error
-      mockInstance.chat.completions.create.mockRejectedValue(new Error('API Error'));
+      const { default: MockOpenAI } = require('openai');
+      MockOpenAI.mockClear();
+      mockCreate.mockRejectedValue(new Error('API Error'));
 
       await expect(provider.sendMessage(messages, config)).rejects.toThrow(
         'SonicFree API error: API Error'

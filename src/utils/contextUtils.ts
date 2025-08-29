@@ -4,7 +4,6 @@ import {
   calculateContextPercentage,
   formatContextUsage,
 } from './contextLimits.js';
-import { encode } from 'gpt-tokenizer';
 import type { ProviderManager } from '../providers/ProviderManager.js';
 
 export interface ContextInfo {
@@ -17,10 +16,6 @@ export interface ContextInfo {
 
 export interface EnhancedProviderResponse extends ProviderResponse {
   context?: ContextInfo;
-}
-
-export function countTokens(text: string): number {
-  return encode(text).length;
 }
 
 export async function summarize(
