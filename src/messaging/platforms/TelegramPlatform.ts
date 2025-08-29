@@ -2,7 +2,6 @@ import {
   MessagingPlatform,
   MessagingPlatformType,
   MessagingPlatformConfig,
-  MessagingPlatformMessage,
   MessagingPlatformResponse,
 } from '../../types/index.js';
 
@@ -12,7 +11,6 @@ import { Bot } from 'grammy';
 export class TelegramPlatform implements MessagingPlatform {
   private bot: Bot | null = null;
   private isListening = false;
-  private startupTime: Date | null = null;
 
   getPlatformType(): MessagingPlatformType {
     return 'telegram';

@@ -23,6 +23,9 @@ export class ChatCommand {
   private firstMessageSent: Map<string, boolean> = new Map();
 
   constructor(verbose: boolean = false) {
+    if (verbose) {
+      console.log('Initializing ChatCommand...');
+    }
     this.configManager = new ConfigManager();
     this.providerManager = new ProviderManager(this.configManager);
     this.chatLogger = new ChatLogger();
