@@ -10,7 +10,6 @@ A lightweight, fast command-line application with a text user interface (TUI) fo
 
 ## Features
 
-- 🚀 **Lightweight & Fast**: Optimized for minimal resource usage
 - 🖥️ **Text User Interface**: Beautiful terminal-based chat interface
 - 🔄 **Multiple Providers**: Support for OpenAI, Grok, LMStudio, OpenRouter, and MCP
 - 🔧 **MCP Integration**: Full Model Context Protocol support for external tools
