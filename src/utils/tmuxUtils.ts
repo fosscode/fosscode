@@ -12,6 +12,11 @@ export interface TmuxInfo {
   paneId: string | null;
 }
 
+// Cache tmux info to avoid repeated execSync calls
+let tmuxInfoCache: TmuxInfo | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5000; // 5 seconds
+
 /**
  * Detect if running inside tmux and get pane information
  */
@@ -29,44 +34,38 @@ export function getTmuxInfo(): TmuxInfo {
     };
   }
 
+  // Return cached info if still valid
+  const now = Date.now();
+  if (tmuxInfoCache && now - cacheTimestamp < CACHE_DURATION) {
+    return tmuxInfoCache;
+  }
+
   try {
-    // Get tmux pane dimensions using tmux display-message
-    const paneWidth = execSync('tmux display-message -p "#{pane_width}"', {
-      encoding: 'utf8',
-      timeout: 1000,
-    }).trim();
+    // Get all tmux info in a single command to reduce execSync calls
+    const tmuxOutput = execSync(
+      'tmux display-message -p "#{pane_width},#{pane_height},#{session_name},#{window_name},#{pane_id}"',
+      {
+        encoding: 'utf8',
+        timeout: 1000,
+      }
+    ).trim();
 
-    const paneHeight = execSync('tmux display-message -p "#{pane_height}"', {
-      encoding: 'utf8',
-      timeout: 1000,
-    }).trim();
+    const [paneWidth, paneHeight, sessionName, windowName, paneId] = tmuxOutput.split(',');
 
-    const sessionName = execSync('tmux display-message -p "#{session_name}"', {
-      encoding: 'utf8',
-      timeout: 1000,
-    }).trim();
-
-    const windowName = execSync('tmux display-message -p "#{window_name}"', {
-      encoding: 'utf8',
-      timeout: 1000,
-    }).trim();
-
-    const paneId = execSync('tmux display-message -p "#{pane_id}"', {
-      encoding: 'utf8',
-      timeout: 1000,
-    }).trim();
-
-    return {
+    tmuxInfoCache = {
       isInTmux: true,
       paneWidth: parseInt(paneWidth, 10) || null,
       paneHeight: parseInt(paneHeight, 10) || null,
-      sessionName,
-      windowName,
-      paneId,
+      sessionName: sessionName || null,
+      windowName: windowName || null,
+      paneId: paneId || null,
     };
+
+    cacheTimestamp = now;
+    return tmuxInfoCache;
   } catch (error) {
     // Fallback if tmux commands fail
-    return {
+    tmuxInfoCache = {
       isInTmux: true,
       paneWidth: null,
       paneHeight: null,
@@ -74,6 +73,8 @@ export function getTmuxInfo(): TmuxInfo {
       windowName: null,
       paneId: null,
     };
+    cacheTimestamp = now;
+    return tmuxInfoCache;
   }
 }
 

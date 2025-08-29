@@ -98,6 +98,15 @@ function App({
     }
   }, [messages.length]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Clear any pending timers or intervals
+      setIsLoading(false);
+      setError(null);
+    };
+  }, []);
+
   // Handle input and navigation
   useInput((inputChar, key) => {
     if (isLoading) return;
