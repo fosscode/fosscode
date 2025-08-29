@@ -8,6 +8,7 @@ export { EditTool } from './EditTool.js';
 export { WebFetchTool } from './WebFetchTool.js';
 export { ListTool } from './ListTool.js';
 export { BashTool } from './BashTool.js';
+export { TodoWriteTool, TodoReadTool } from './TodoTool.js';
 
 // Export types
 export type {
