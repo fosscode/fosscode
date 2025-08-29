@@ -22,7 +22,7 @@ export class ChatCommand {
   private conversationHistory: Map<string, Message[]> = new Map();
   private firstMessageSent: Map<string, boolean> = new Map();
 
-  constructor() {
+  constructor(verbose: boolean = false) {
     this.configManager = new ConfigManager();
     this.providerManager = new ProviderManager(this.configManager);
     this.chatLogger = new ChatLogger();
