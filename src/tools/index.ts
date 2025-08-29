@@ -11,6 +11,7 @@ export { BashTool } from './BashTool.js';
 export { GlobTool } from './GlobTool.js';
 export { MultieditTool } from './MultieditTool.js';
 export { PatchTool } from './PatchTool.js';
+export { LSPDiagnosticsTool } from './LSPDiagnosticsTool.js';
 export { TodoWriteTool, TodoReadTool } from './TodoTool.js';
 
 // Export types

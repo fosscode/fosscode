@@ -79,6 +79,18 @@ export class SonicFreeProvider implements LLMProvider {
           );
           break;
         }
+
+        // Context compression: If conversation is getting long, summarize older messages
+        if (iteration > 2 && openaiMessages.length > 10) {
+          // Simple compression: Keep recent messages, summarize older ones
+          const recentMessages = openaiMessages.slice(-6); // Keep last 6 messages
+          const summaryMessage = {
+            role: 'system' as const,
+            content: `Previous conversation summary: ${openaiMessages.length - 6} messages exchanged, focusing on the current task.`,
+          };
+          openaiMessages = [summaryMessage, ...recentMessages];
+          console.log(`📦 Compressed context to ${openaiMessages.length} messages`);
+        }
         finalIteration = iteration;
         // Max 15 iterations with early stopping for convergence
         const response = await this.client.chat.completions.create({
