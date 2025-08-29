@@ -90,15 +90,32 @@ export class ToolUtilities {
    */
   static sanitizePath(inputPath: string): string {
     // Remove any path traversal attempts
-    const sanitized = path.normalize(inputPath).replace(/^(\.\.[/\\])+/, '');
+    const normalized = path.normalize(inputPath).replace(/^(\.\.[/\\])+/, '');
 
-    // Ensure path doesn't start with dangerous patterns
-    if (
-      sanitized.startsWith('/etc') ||
-      sanitized.startsWith('/bin') ||
-      sanitized.startsWith('/usr')
-    ) {
-      throw new Error('Access to system directories is not allowed');
+    // Normalize path separators to forward slashes for consistent behavior
+    const sanitized = normalized.replace(/\\/g, '/');
+
+    // Define system directories for both Unix and Windows
+    const systemDirs = [
+      '/etc',
+      '/bin',
+      '/usr',
+      '/sys',
+      '/proc',
+      '/dev',
+      'C:/Windows',
+      'C:/Program Files',
+      'C:/Program Files (x86)',
+      '/System',
+      '/Library',
+      '/usr/local',
+    ];
+
+    // Check if path starts with any system directory
+    for (const dir of systemDirs) {
+      if (sanitized.startsWith(dir)) {
+        throw new Error('Access to system directories is not allowed');
+      }
     }
 
     return sanitized;
