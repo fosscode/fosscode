@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { MessagingPlatformManager } from '../../messaging/MessagingPlatformManager.js';
 import { ProviderManager } from '../../providers/ProviderManager.js';
 import { ConfigManager } from '../../config/ConfigManager.js';
@@ -56,24 +55,21 @@ export class MessagingModeHandler {
     await this.chatLogger.initialize();
     await this.chatLogger.startSession(options.provider as ProviderType, options.model);
 
-    console.log(
-      chalk.blue(
-        `🤖 fosscode - ${options.provider} (${options.model}) via ${options.messagingPlatform}`
-      )
+    await this.chatLogger.logMessagingHeader(
+      options.provider,
+      options.model,
+      options.messagingPlatform
     );
-    console.log(chalk.yellow(`📱 Listening for messages on ${options.messagingPlatform}...`));
-    console.log(chalk.gray('Press Ctrl+C to stop'));
+    await this.chatLogger.logListeningStatus(options.messagingPlatform);
+    console.log('Press Ctrl+C to stop');
 
     // Initialize the messaging platform with error handling
     try {
       await this.messagingManager.initializePlatform(options.messagingPlatform, platformConfig);
-      console.log(chalk.green(`✅ ${options.messagingPlatform} platform initialized successfully`));
+      await this.chatLogger.logPlatformInit(options.messagingPlatform, true);
     } catch (error) {
-      console.log(
-        chalk.red(
-          `❌ Failed to initialize ${options.messagingPlatform} platform: ${error instanceof Error ? error.message : 'Unknown error'}`
-        )
-      );
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      await this.chatLogger.logPlatformInit(options.messagingPlatform, false, errorMessage);
       await this.chatLogger.endSession('error');
       process.exit(1);
     }
@@ -87,14 +83,14 @@ export class MessagingModeHandler {
   }
 
   private showPlatformConfigurationHelp(platform: MessagingPlatformType): void {
-    console.log(chalk.red(`❌ Messaging platform ${platform} is not enabled`));
-    console.log(chalk.yellow(`\n📝 To enable it, update your config.json:`));
-    console.log(chalk.cyan(`  "messagingPlatforms": {`));
-    console.log(chalk.cyan(`    "${platform}": {`));
-    console.log(chalk.cyan(`      "enabled": true,`));
-    console.log(chalk.cyan(`      "botToken": "your-bot-token"`));
-    console.log(chalk.cyan(`    }`));
-    console.log(chalk.cyan(`  }`));
+    console.log(`❌ Messaging platform ${platform} is not enabled`);
+    console.log(`\n📝 To enable it, update your config.json:`);
+    console.log(`  "messagingPlatforms": {`);
+    console.log(`    "${platform}": {`);
+    console.log(`      "enabled": true,`);
+    console.log(`      "botToken": "your-bot-token"`);
+    console.log(`    }`);
+    console.log(`  }`);
   }
 
   private async handleIncomingMessage(
@@ -106,11 +102,12 @@ export class MessagingModeHandler {
       verbose?: boolean;
     }
   ): Promise<void> {
-    console.log(chalk.cyan(`👤 ${message.userName}: ${message.content}`));
-    console.log(
-      chalk.gray(
-        `   Message ID: ${message.id}, Chat ID: ${message.chatId}, Platform: ${message.platform}`
-      )
+    await this.chatLogger.logIncomingMessage(
+      message.userName,
+      message.content,
+      message.id,
+      message.chatId,
+      message.platform
     );
 
     // Handle commands
@@ -143,6 +140,9 @@ export class MessagingModeHandler {
         message.content.toLowerCase().includes('test') ||
         message.content.toLowerCase().includes('jest')
       ) {
+        await this.chatLogger.logProcessingMessage(
+          'Running tests... This may take a minute or two. Please wait...'
+        );
         await this.messagingManager.sendMessage(
           options.messagingPlatform,
           message.chatId,
@@ -198,18 +198,14 @@ export class MessagingModeHandler {
         responseMessage
       );
 
-      if (platformResponse.success) {
-        console.log(chalk.green(`🤖 Response sent to ${message.userName}`));
-      } else {
-        console.log(chalk.red(`❌ Failed to send response: ${platformResponse.error}`));
-      }
+      await this.chatLogger.logResponseSent(
+        message.userName,
+        platformResponse.success,
+        platformResponse.error
+      );
 
       if (response.usage) {
-        console.log(
-          chalk.gray(
-            `📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
-          )
-        );
+        await this.chatLogger.logUsageStats(response.usage);
       }
     } catch (error) {
       await this.handleMessageError(error, message, options);
@@ -237,17 +233,15 @@ export class MessagingModeHandler {
       message.chatId,
       errorMessage
     );
-    console.log(
-      chalk.red(
-        `❌ Error processing message: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
-    );
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.log(`❌ Error processing message: ${errorMsg}`);
+    await this.chatLogger.logBackendMessage('ERROR', `Error processing message: ${errorMsg}`);
   }
 
   private setupShutdownHandlers(): void {
     // Handle graceful shutdown
     process.on('SIGINT', async () => {
-      console.log(chalk.yellow('\n🛑 Shutting down...'));
+      await this.chatLogger.logShutdown('Shutting down...');
       try {
         await this.chatLogger.endSession('completed');
         await this.messagingManager.stopAllListeners();
@@ -258,7 +252,7 @@ export class MessagingModeHandler {
     });
 
     process.on('SIGTERM', async () => {
-      console.log(chalk.yellow('\n🛑 Shutting down...'));
+      await this.chatLogger.logShutdown('Shutting down...');
       try {
         await this.chatLogger.endSession('completed');
         await this.messagingManager.stopAllListeners();

@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { ProviderManager } from '../../providers/ProviderManager.js';
 import { ChatLogger } from '../../config/ChatLogger.js';
 import { Message, ProviderType } from '../../types/index.js';
@@ -35,20 +34,21 @@ export class SingleMessageHandler {
     await this.chatLogger.initialize();
     await this.chatLogger.startSession(options.provider as ProviderType, options.model);
 
-    console.log(chalk.blue(`🤖 fosscode - ${options.provider} (${options.model})`));
-    console.log(chalk.cyan(`👤 ${message}`));
+    await this.chatLogger.logSessionHeader(options.provider, options.model);
+    await this.chatLogger.logUserMessageDisplay(message);
 
     if (options.verbose) {
       const streamingProviders = ['openai', 'anthropic'];
       if (streamingProviders.includes(options.provider)) {
-        console.log(chalk.gray('🤔 Model is thinking... (streaming enabled)'));
+        await this.chatLogger.logThinkingStatus('Model is thinking...', true);
       } else {
-        console.log(
-          chalk.gray('🤔 Model is thinking... (verbose mode - no streaming for this provider)')
+        await this.chatLogger.logThinkingStatus(
+          'Model is thinking... (verbose mode - no streaming for this provider)',
+          false
         );
       }
     } else {
-      console.log(chalk.gray('Thinking...'));
+      await this.chatLogger.logThinkingStatus('Thinking...', false);
     }
 
     const chatMessage: Message = {
@@ -85,20 +85,12 @@ export class SingleMessageHandler {
       // For verbose mode, the response is already streamed to stdout
       // For non-verbose mode, show the response
       if (!options.verbose) {
-        if (response.content.includes('Executing tools')) {
-          // Show tool execution details
-          console.log(chalk.green('🤖'), response.content);
-        } else {
-          console.log(chalk.green('🤖'), response.content);
-        }
+        const hasToolExecution = response.content.includes('Executing tools');
+        await this.chatLogger.logResponseDisplay(response.content, hasToolExecution);
       }
 
       if (response.usage) {
-        console.log(
-          chalk.gray(
-            `\n📊 Usage: ${response.usage.totalTokens} tokens (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
-          )
-        );
+        await this.chatLogger.logUsageStats(response.usage);
       }
 
       // Display context information if enabled
@@ -113,7 +105,7 @@ export class SingleMessageHandler {
         const contextDisplay = formatContextDisplay(enhancedResponse.context, contextFormat);
 
         if (contextDisplay) {
-          console.log(chalk.cyan(`\n💭 Context: ${contextDisplay}`));
+          await this.chatLogger.logContextInfo(contextDisplay);
         }
 
         // Show context warning if enabled and threshold exceeded
@@ -121,7 +113,7 @@ export class SingleMessageHandler {
         if (showWarnings) {
           const warningMessage = getContextWarningMessage(enhancedResponse.context);
           if (warningMessage) {
-            console.log(chalk.yellow(`\n⚠️  ${warningMessage}`));
+            await this.chatLogger.logContextWarning(warningMessage);
           }
         }
       }

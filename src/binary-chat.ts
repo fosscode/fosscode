@@ -6,6 +6,7 @@ import { ConfigDefaults } from './config/ConfigDefaults.js';
 import { MessageQueue } from './utils/MessageQueue.js';
 import { cancellationManager } from './utils/CancellationManager.js';
 import { PromptHistoryManager } from './utils/PromptHistoryManager.js';
+import { ChatLogger } from './config/ChatLogger.js';
 import {
   enhanceWithContext,
   formatContextDisplay,
@@ -17,6 +18,7 @@ export class BinaryChatCommand {
   private providerManager: ProviderManager;
   private messageQueue: MessageQueue;
   private promptHistoryManager: PromptHistoryManager;
+  private chatLogger: ChatLogger;
   private currentProvider?: string;
   private currentModel?: string;
 
@@ -25,6 +27,7 @@ export class BinaryChatCommand {
     this.providerManager = new ProviderManager(this.configManager);
     this.messageQueue = new MessageQueue();
     this.promptHistoryManager = new PromptHistoryManager();
+    this.chatLogger = new ChatLogger();
     this.setupQueueListeners();
     this.initializePromptHistory();
   }
@@ -120,9 +123,14 @@ export class BinaryChatCommand {
     }
   ): Promise<void> {
     try {
+      // Initialize chat logger and start session
+      await this.chatLogger.initialize();
+      await this.chatLogger.startSession(options.provider as ProviderType, options.model!);
+
       // Check if cancellation was requested at the start
       if (cancellationManager.shouldCancel()) {
         console.log(chalk.yellow('🛑 Command cancelled by user'));
+        await this.chatLogger.endSession('cancelled');
         return;
       }
 
@@ -166,6 +174,7 @@ export class BinaryChatCommand {
               )
             );
           }
+          await this.chatLogger.endSession('queued');
           return;
         }
       } else {
@@ -177,9 +186,11 @@ export class BinaryChatCommand {
           showContext: options.showContext ?? true,
           contextFormat: options.contextFormat ?? 'both',
         });
+        await this.chatLogger.endSession('completed');
       }
     } catch (error) {
       console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      await this.chatLogger.endSession('error');
       process.exit(1);
     }
   }
@@ -240,6 +251,9 @@ export class BinaryChatCommand {
       console.log(chalk.gray('Thinking...'));
     }
 
+    // Log the user message
+    await this.chatLogger.logUserMessageDisplay(message);
+
     try {
       const response = await this.providerManager.sendMessage(
         options.provider as ProviderType,
@@ -264,6 +278,9 @@ export class BinaryChatCommand {
         output += response.content;
       }
 
+      // Log the response
+      await this.chatLogger.logResponseDisplay(response.content, false);
+
       // Display token usage
       if (response.usage) {
         const usageInfo = chalk.gray(
@@ -271,6 +288,9 @@ export class BinaryChatCommand {
         );
         console.log(usageInfo);
         output += '\n' + usageInfo;
+
+        // Log usage stats
+        await this.chatLogger.logUsageStats(response.usage);
       }
 
       // Display context information if enabled
@@ -285,6 +305,9 @@ export class BinaryChatCommand {
           const contextInfo = chalk.cyan(`\n💭 Context: ${contextDisplay}`);
           console.log(contextInfo);
           output += '\n' + contextInfo;
+
+          // Log context info
+          await this.chatLogger.logContextInfo(contextDisplay);
         }
 
         // Show context warning if enabled and threshold exceeded
@@ -295,6 +318,9 @@ export class BinaryChatCommand {
             const warning = chalk.yellow(`\n⚠️  ${warningMessage}`);
             console.log(warning);
             output += '\n' + warning;
+
+            // Log context warning
+            await this.chatLogger.logContextWarning(warningMessage);
           }
         }
       }

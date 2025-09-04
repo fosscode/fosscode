@@ -1,6 +1,6 @@
 {
   "name": "fosscode",
-  "version": "0.0.48",
+  "version": "0.0.50",
   "description": "Lightweight CLI application for code agent interactions with LLMs",
   "type": "module",
   "main": "dist/index.js",
@@ -8,7 +8,7 @@
     "fosscode": "dist/index.js"
   },
   "files": [
-    "dist/**/*.js",
+    "dist/index.js",
     "dist/yoga.wasm",
     "README.md",
     "LICENSE"
