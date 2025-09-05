@@ -1,6 +1,6 @@
 {
   "name": "fosscode",
-  "version": "0.0.101",
+  "version": "0.0.102",
   "description": "Lightweight CLI application for code agent interactions with LLMs",
   "type": "module",
   "main": "dist/index.js",
