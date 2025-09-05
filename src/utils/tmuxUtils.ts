@@ -652,7 +652,13 @@ export function loadChatHistoryFromSession(): any[] | null {
     }
 
     const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+
+    // Convert timestamp strings back to Date objects
+    return parsed.map((message: any) => ({
+      ...message,
+      timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
+    }));
   } catch (error) {
     console.warn('Failed to load chat history from session:', error);
     return null;

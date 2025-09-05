@@ -118,6 +118,7 @@ describe('tmuxUtils', () => {
       const messages = tmuxUtils.loadChatHistoryFromSession();
       expect(messages).toHaveLength(1);
       expect(messages![0].content).toBe('test');
+      expect(messages![0].timestamp).toBeInstanceOf(Date);
     });
   });
 
