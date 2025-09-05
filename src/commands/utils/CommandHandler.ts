@@ -65,6 +65,10 @@ export class CommandHandler {
         await this.handleQuitCommand(message, platformType);
         break;
 
+      case '/theme':
+        await this.handleThemeCommand(message, platformType);
+        break;
+
       default:
         await this.messagingManager.sendMessage(
           platformType,
@@ -100,6 +104,7 @@ export class CommandHandler {
       `• /help - Show this help message\n` +
       `• /quit - Exit the bot and terminate all processes\n` +
       `• /status - Check bot health and status\n` +
+      `• /theme - Manage themes (dark/light) or list available themes\n` +
       `• /thinking - Control thinking blocks display (on/off/toggle/status)\n` +
       `• /timeouts - Show timeout settings\n\n` +
       `Just type your message normally to chat with me!`;
@@ -284,6 +289,67 @@ Summary:`;
       );
       // Force exit if graceful shutdown fails
       process.exit(1);
+    }
+  }
+
+  private async handleThemeCommand(
+    message: MessagingPlatformMessage,
+    platformType: MessagingPlatformType
+  ): Promise<void> {
+    try {
+      const args = message.content.trim().split(/\s+/).slice(1); // Get arguments after /theme
+      const theme = args[0];
+
+      if (!theme) {
+        // List current theme and available themes
+        await this.configManager.loadConfig();
+        const config = this.configManager.getConfig();
+        const currentTheme = config.theme || 'light';
+
+        const themeMessage =
+          `🎨 *Available Themes:*\n\n` +
+          `• Current theme: **${currentTheme}**\n\n` +
+          `Available themes:\n` +
+          `• \`light\` - Light theme\n` +
+          `• \`dark\` - Dark theme\n\n` +
+          `Usage: \`/theme <theme>\` (e.g., \`/theme dark\`)`;
+
+        await this.messagingManager.sendMessage(platformType, message.chatId, themeMessage);
+        return;
+      }
+
+      // Validate theme
+      if (!['dark', 'light'].includes(theme)) {
+        await this.messagingManager.sendMessage(
+          platformType,
+          message.chatId,
+          `❌ Unknown theme: ${theme}\n\nAvailable themes: \`dark\`, \`light\``
+        );
+        return;
+      }
+
+      // Load config and set the theme
+      await this.configManager.loadConfig();
+      await this.configManager.setConfig('theme', theme);
+
+      await this.messagingManager.sendMessage(
+        platformType,
+        message.chatId,
+        `✅ Theme set to: **${theme}**\n\nThe theme change will take effect on your next interaction.`
+      );
+
+      console.log(chalk.yellow(`🎨 Theme changed to ${theme} for chat ${message.chatId}`));
+    } catch (error) {
+      await this.messagingManager.sendMessage(
+        platformType,
+        message.chatId,
+        `❌ Error setting theme: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      console.error(
+        chalk.red(
+          `❌ Error setting theme for chat ${message.chatId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      );
     }
   }
 }

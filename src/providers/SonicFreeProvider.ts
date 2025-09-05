@@ -89,7 +89,7 @@ export class SonicFreeProvider implements LLMProvider {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       let iterationsWithProgress = 0;
 
-      for (let iteration = 0; iteration < 15; iteration++) {
+      for (let iteration = 0; iteration < 30; iteration++) {
         // Check token budget before making API call
         if (totalTokensUsed >= adaptiveTokenLimit) {
           console.log(
@@ -98,19 +98,30 @@ export class SonicFreeProvider implements LLMProvider {
           break;
         }
 
-        // Advanced context compression with semantic analysis
-        if (iteration > 2 && openaiMessages.length > 10) {
+        // Enhanced context compression - trigger earlier and more frequently
+        if (
+          (iteration > 1 && openaiMessages.length > 8) ||
+          (iteration > 5 && openaiMessages.length > 6)
+        ) {
           const compressedMessages = await this.smartContextCompression(openaiMessages, iteration);
           openaiMessages = compressedMessages;
-          console.log(`🧠 Smart compressed context to ${openaiMessages.length} messages`);
+          console.log(
+            `🧠 Smart compressed context to ${openaiMessages.length} messages at iteration ${iteration + 1}`
+          );
+
+          // Reset iteration counter after compression to give more attempts
+          if (iteration > 10) {
+            iteration = Math.max(5, iteration - 3); // Reset to give more attempts but keep some progress
+            console.log(`🔄 Reset iteration counter to ${iteration + 1} after context compression`);
+          }
         }
         finalIteration = iteration;
-        // Max 15 iterations with early stopping for convergence
+        // Max 30 iterations with early stopping for convergence and context compression
         const response = await this.client.chat.completions.create({
           model: config.model ?? 'sonic',
           messages: openaiMessages,
           temperature: 0.7,
-          max_tokens: 16000, // Increased to use more of the 128K context window efficiently
+          max_tokens: 32000, // Increased to use more of the 256K context window efficiently
           stream: false,
           ...(openaiTools && { tools: openaiTools }),
         });
@@ -201,6 +212,19 @@ export class SonicFreeProvider implements LLMProvider {
                 if (argSummary) {
                   intermediateContent += ` (${argSummary})`;
                 }
+
+                // Enhanced console logging for specific tools
+                if (toolCall.function.name === 'bash' && args.command) {
+                  console.log(`🔧 Executing bash command: ${args.command}`);
+                } else if (toolCall.function.name === 'grep' && args.pattern) {
+                  console.log(
+                    `🔍 Searching with grep pattern: "${args.pattern}"${args.path ? ` in ${args.path}` : ''}`
+                  );
+                } else if (toolCall.function.name === 'read' && args.filePath) {
+                  console.log(`📖 Reading file: ${args.filePath}`);
+                } else if (toolCall.function.name === 'edit' && args.filePath) {
+                  console.log(`✏️  Editing file: ${args.filePath}`);
+                }
               } catch (_e) {
                 // Ignore JSON parse errors for display
               }
@@ -210,9 +234,11 @@ export class SonicFreeProvider implements LLMProvider {
           intermediateContent += '\n';
 
           // Log tool execution start
-          console.log(
-            `🔧 Starting tool execution: ${assistantMessage.tool_calls.length} tools in ${mode} mode`
-          );
+          if (config.verbose) {
+            console.log(
+              `🔧 Starting tool execution: ${assistantMessage.tool_calls.length} tools in ${mode} mode`
+            );
+          }
 
           const toolStartTime = Date.now();
           let toolResult;
@@ -237,15 +263,23 @@ export class SonicFreeProvider implements LLMProvider {
           const toolDuration = Date.now() - toolStartTime;
 
           // Log individual tool executions
-          console.log(`📊 Tool execution completed in ${toolDuration}ms`);
+          if (config.verbose) {
+            console.log(`📊 Tool execution completed in ${toolDuration}ms`);
 
-          // Tool execution completed
-          console.log(
-            `✅ Tool execution completed with ${toolResult.hasToolCalls ? 'results' : 'no results'}`
-          );
+            // Tool execution completed
+            console.log(
+              `✅ Tool execution completed with ${toolResult.hasToolCalls ? 'results' : 'no results'}`
+            );
+          }
 
           // Include tool execution results in the response content
           intermediateContent += `📊 **Iteration ${iteration + 1} - Tool Results:**\n${toolResult.content}\n`;
+
+          // Enhanced console logging for tool results
+          if (config.verbose) {
+            console.log(`📊 Tool execution completed in ${toolDuration}ms`);
+            console.log(`✅ Tool results: ${toolResult.content.length} characters`);
+          }
 
           // Add tool results as tool messages
           for (const toolCall of assistantMessage.tool_calls) {
@@ -291,11 +325,11 @@ export class SonicFreeProvider implements LLMProvider {
       // Provide fallback content if the agent loop stopped early
       if (!finalContent.trim()) {
         if (totalTokensUsed >= adaptiveTokenLimit) {
-          finalContent = `⚠️ **Response stopped early due to token limit**\n\nThe AI agent reached the maximum token budget (${adaptiveTokenLimit} tokens) before completing the response. This usually happens with complex requests that require multiple iterations.\n\nTry:\n• Simplifying your request\n• Breaking it into smaller parts\n• Using a different model with higher token limits\n\n*Used ${totalTokensUsed} tokens in ${finalIteration + 1} iterations*`;
+          finalContent = `⚠️ **Response stopped early due to token limit**\n\nThe AI agent reached the maximum token budget (${adaptiveTokenLimit} tokens) before completing the response. This usually happens with complex requests that require multiple iterations.\n\nTry:\n• Simplifying your request\n• Breaking it into smaller parts\n• Using a different model with higher token limits\n\n*Used ${totalTokensUsed} tokens in ${finalIteration + 1} iterations*\n\nNote: SonicFree now supports up to 250,000 tokens for complex tasks.`;
         } else if (finalIteration === 0) {
           finalContent = `⚠️ **No response generated**\n\nThe AI agent couldn't generate a response. This might be due to:\n• Content filtering by the AI service\n• Network issues\n• Service limitations\n\nPlease try again or rephrase your request.`;
         } else {
-          finalContent = `⚠️ **Incomplete response**\n\nThe AI agent stopped after ${finalIteration + 1} iterations without completing the response. This might indicate:\n• The request was too complex\n• Content filtering occurred\n• Service limitations\n\n*Partial content may be available in the thinking trace above*`;
+          finalContent = `⚠️ **Incomplete response**\n\nThe AI agent stopped after ${finalIteration + 1} iterations without completing the response. This might indicate:\n• The request was too complex\n• Content filtering occurred\n• Service limitations\n\nThe system now supports up to 30 iterations with automatic context compression to handle complex tasks. Try:\n• Simplifying your request\n• Breaking it into smaller parts\n• Using more specific instructions\n\n*Partial content may be available in the thinking trace above*`;
         }
       }
 
@@ -349,33 +383,33 @@ export class SonicFreeProvider implements LLMProvider {
     const lastMessage = messages[messages.length - 1];
     const content = lastMessage?.content || '';
 
-    // Use full context window for Sonic model (128,000 tokens)
-    let baseLimit = 120000; // Leave some buffer for system messages and overhead
+    // Use full context window for Sonic model (256,000 tokens)
+    let baseLimit = 240000; // Increased base limit for more complex tasks
 
     // Increase for complex tasks
     if (content.includes('refactor') || content.includes('architecture')) {
-      baseLimit += 5000; // Complex architectural work
+      baseLimit += 10000; // Complex architectural work
     }
 
     if (content.includes('debug') || content.includes('fix') || content.includes('error')) {
-      baseLimit += 3000; // Debugging often requires more context
+      baseLimit += 5000; // Debugging often requires more context
     }
 
     if (content.includes('test') || content.includes('testing')) {
-      baseLimit += 2000; // Testing requires understanding the full system
+      baseLimit += 5000; // Testing requires understanding the full system
     }
 
     if (mode === 'code') {
-      baseLimit += 2000; // Code mode often needs more tokens
+      baseLimit += 5000; // Code mode often needs more tokens
     }
 
     // Increase for multi-step tasks
     if (content.includes('step') || content.includes('multiple') || content.includes('several')) {
-      baseLimit += 3000;
+      baseLimit += 10000;
     }
 
     // Cap at the model's maximum context window
-    return Math.min(baseLimit, 125000); // Sonic model limit is 128,000
+    return Math.min(baseLimit, 250000); // Sonic model limit is 256,000
   }
 
   /**
@@ -474,6 +508,8 @@ export class SonicFreeProvider implements LLMProvider {
       'done',
       'completed successfully',
       'implementation complete',
+      'all done',
+      'complete',
 
       // Code completion indicators
       'here is the',
@@ -481,23 +517,36 @@ export class SonicFreeProvider implements LLMProvider {
       "i've created",
       "i've implemented",
       'the solution is',
+      'code provided',
+      'function implemented',
 
       // Summary indicators
       'summary',
       'to summarize',
       'in conclusion',
+      'final answer',
 
       // Action completion
       'changes applied',
       'files updated',
       'modifications complete',
       'refactoring complete',
+      'saved successfully',
+      'committed changes',
 
       // Quality indicators
       'the code is now',
       'this should',
       'you can now',
       'ready to use',
+      'working correctly',
+
+      // Tool execution completion
+      'tool executed',
+      'command completed',
+      'search completed',
+      'file read',
+      'edit applied',
     ];
 
     const lowerContent = content.toLowerCase();
@@ -505,7 +554,12 @@ export class SonicFreeProvider implements LLMProvider {
     // Check for multiple completion indicators
     const matches = completionIndicators.filter(indicator => lowerContent.includes(indicator));
 
-    // Require at least 2 completion indicators for confidence
-    return matches.length >= 2;
+    // Also check for code blocks as completion indicators
+    const hasCodeBlock = content.includes('```');
+    const hasFunctionDefinition =
+      /\bfunction\s+\w+\s*\(/.test(content) || /\bclass\s+\w+/.test(content);
+
+    // Require at least 2 completion indicators OR a code block/function for confidence
+    return matches.length >= 2 || (matches.length >= 1 && (hasCodeBlock || hasFunctionDefinition));
   }
 }

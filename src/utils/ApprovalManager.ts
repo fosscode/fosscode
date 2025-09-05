@@ -47,7 +47,11 @@ export class ApprovalManager {
     }
 
     // Check session approvals
-    if (this.sessionApprovals[key] === 'session' || this.sessionApprovals[key] === 'always') {
+    if (
+      this.sessionApprovals[key] === 'session' ||
+      this.sessionApprovals[key] === 'always' ||
+      this.sessionApprovals[key] === 'once'
+    ) {
       return false;
     }
 
