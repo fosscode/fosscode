@@ -3,6 +3,7 @@ import { ToolResult } from '../types/index.js';
 import { ChatLogger } from '../config/ChatLogger.js';
 import { PermissionManager, ToolNames } from './PermissionManager.js';
 import { fileTrackerManager } from './FileTrackerManager.js';
+import { ApprovalManager, ApprovalRequest } from './ApprovalManager.js';
 
 /**
  * Tool execution result interface
@@ -307,7 +308,8 @@ export async function executeToolCalls(
   toolCalls: any[],
   mode?: 'code' | 'thinking',
   chatLogger?: ChatLogger,
-  permissionManager?: PermissionManager
+  permissionManager?: PermissionManager,
+  approvalManager?: ApprovalManager
 ): Promise<ToolExecutionResult> {
   let content = 'Executing tools to help with your request...\n\n';
   content += '[Tool Calls Executed]:\n';
@@ -333,6 +335,32 @@ export async function executeToolCalls(
         ) {
           content += `❌ ${toolCall.function.name}: Tool not allowed in current mode (plan mode)\n`;
           continue;
+        }
+
+        // Check approval requirements
+        if (approvalManager) {
+          let approvalRequest: ApprovalRequest;
+          if (toolCall.function.name === 'bash') {
+            approvalRequest = {
+              type: 'command',
+              command: args.command,
+            };
+          } else if (toolCall.function.name === 'edit') {
+            approvalRequest = {
+              type: 'edit',
+              filePath: args.filePath,
+              oldString: args.oldString,
+              newString: args.newString,
+            };
+          } else {
+            // For other tools, no approval needed for now
+            approvalRequest = { type: 'command', command: '' };
+          }
+
+          if (approvalManager.needsApproval(approvalRequest)) {
+            content += `❌ ${toolCall.function.name}: Approval required but not implemented in UI yet\n`;
+            continue;
+          }
         }
 
         if (tool) {

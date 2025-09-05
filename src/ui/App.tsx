@@ -54,6 +54,11 @@ function App({
   const [error, setError] = useState<string | null>(null);
   const [isVerbose, setIsVerbose] = useState(verbose);
   const [currentMode, setCurrentMode] = useState<'code' | 'thinking'>('code');
+  const [totalTokenUsage, setTotalTokenUsage] = useState({
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  });
 
   // Custom hooks
   const fileSearch = useFileSearch();
@@ -152,6 +157,12 @@ function App({
           break;
         case 'clear-messages':
           setMessages([]);
+          // Reset token usage when clearing messages
+          setTotalTokenUsage({
+            promptTokens: 0,
+            completionTokens: 0,
+            totalTokens: 0,
+          });
           break;
         case 'show-help':
           setMessages(prev => [
@@ -194,6 +205,13 @@ function App({
   useInput((inputChar, key) => {
     try {
       if (isLoading) return;
+
+      // Debug logging for input issues (only in verbose mode)
+      if (process.env.DEBUG_INPUT && inputChar) {
+        console.log(
+          `Input received: "${inputChar}" (length: ${inputChar.length}, charCode: ${inputChar.charCodeAt(0)})`
+        );
+      }
 
       // Allow Ctrl+C to exit
       if (key.ctrl && inputChar === 'c') {
@@ -249,6 +267,10 @@ function App({
         if (inputChar && !key.ctrl && !key.meta && inputChar.length === 1) {
           fileSearch.setFileSearchQuery(prev => prev + inputChar);
           return;
+        } else if (inputChar === ' ' && !key.ctrl && !key.meta) {
+          // Explicit handling for space character in file search mode
+          fileSearch.setFileSearchQuery(prev => prev + ' ');
+          return;
         }
 
         return;
@@ -292,6 +314,14 @@ function App({
           fileSearch.setIsFileSearchMode(true);
           fileSearch.setFileSearchQuery('');
         }
+      } else if (inputChar === ' ' && !key.ctrl && !key.meta) {
+        // Explicit handling for space character to ensure it's captured
+        if (promptHistory.historyIndex >= 0) {
+          promptHistory.exitHistoryMode();
+        }
+
+        const newInput = input + ' ';
+        setInput(newInput);
       }
     } catch (error) {
       // Handle raw mode errors gracefully
@@ -338,16 +368,23 @@ function App({
         }
 
         // Handle state changes for specific commands
-        if (trimmedInput === '/verbose') {
+        const normalizedInput = trimmedInput.toLowerCase();
+        if (normalizedInput === '/verbose') {
           setIsVerbose(!isVerbose);
-        } else if (trimmedInput === '/themes') {
+        } else if (normalizedInput === '/themes') {
           toggleTheme();
-        } else if (trimmedInput === '/mode' || trimmedInput === '/thinking') {
+        } else if (normalizedInput === '/mode' || normalizedInput === '/thinking') {
           setCurrentMode(toggleMode(currentMode));
         }
       } else if (commandResult.type === 'clear') {
         if (commandResult.shouldClearMessages) {
           setMessages(commandResult.message ? [commandResult.message] : []);
+          // Reset token usage when clearing messages
+          setTotalTokenUsage({
+            promptTokens: 0,
+            completionTokens: 0,
+            totalTokens: 0,
+          });
         }
       }
 
@@ -377,6 +414,13 @@ function App({
             );
             currentMessages = [summaryMessage];
             setMessages(currentMessages);
+
+            // Reset token usage when summarizing (new conversation context)
+            setTotalTokenUsage({
+              promptTokens: 0,
+              completionTokens: 0,
+              totalTokens: 0,
+            });
           } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error occurred');
           } finally {
@@ -438,6 +482,16 @@ function App({
               timestamp: new Date(),
               ...(response.usage && { usage: response.usage }),
             };
+
+            // Accumulate token usage
+            if (response.usage) {
+              setTotalTokenUsage(prev => ({
+                promptTokens: prev.promptTokens + response.usage!.promptTokens,
+                completionTokens: prev.completionTokens + response.usage!.completionTokens,
+                totalTokens: prev.totalTokens + response.usage!.totalTokens,
+              }));
+            }
+
             return [...newMessages, assistantMessage];
           });
         } else {
@@ -448,6 +502,15 @@ function App({
             ...(response.usage && { usage: response.usage }),
           };
           setMessages(prev => [...prev, assistantMessage]);
+
+          // Accumulate token usage
+          if (response.usage) {
+            setTotalTokenUsage(prev => ({
+              promptTokens: prev.promptTokens + response.usage!.promptTokens,
+              completionTokens: prev.completionTokens + response.usage!.completionTokens,
+              totalTokens: prev.totalTokens + response.usage!.totalTokens,
+            }));
+          }
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -517,6 +580,7 @@ function App({
         messagesLength={messages.length}
         isVerySmallScreen={isVerySmallScreen}
         isSmallScreen={isSmallScreen}
+        totalTokenUsage={totalTokenUsage}
       />
     </Box>
   );

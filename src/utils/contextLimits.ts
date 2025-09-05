@@ -23,7 +23,7 @@ export const CONTEXT_LIMITS: ContextLimits = {
     'grok-beta': 128000,
   },
   sonicfree: {
-    sonic: 128000,
+    sonic: 256000,
   },
 };
 

@@ -55,7 +55,8 @@ describe('UI Command Handler', () => {
 
         expect(result.type).toBe('clear');
         expect(result.shouldClearMessages).toBe(true);
-        expect(result.message).toBeUndefined();
+        expect(result.message?.role).toBe('assistant');
+        expect(result.message?.content).toBe('🧹 Conversation history cleared! Starting fresh.');
       });
     });
   });
@@ -349,16 +350,18 @@ describe('UI Command Handler', () => {
       expect(result.type).toBe('none');
     });
 
-    it('should handle command with extra whitespace as unknown', async () => {
+    it('should handle command with extra whitespace correctly', async () => {
       const result: CommandResult = await handleCommand('  /clear  ', mockCurrentState);
 
-      expect(result.type).toBe('none');
+      expect(result.type).toBe('clear');
+      expect(result.shouldClearMessages).toBe(true);
     });
 
-    it('should handle case variations as unknown commands', async () => {
+    it('should handle case variations correctly', async () => {
       const result: CommandResult = await handleCommand('/CLEAR', mockCurrentState);
 
-      expect(result.type).toBe('none');
+      expect(result.type).toBe('clear');
+      expect(result.shouldClearMessages).toBe(true);
     });
   });
 

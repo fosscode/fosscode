@@ -14,7 +14,10 @@ async function handleMCPCommand(command: string, timestamp: Date): Promise<Comma
   const mcpManager = new MCPManager();
   await mcpManager.initialize();
 
-  const parts = command.split(' ').filter(part => part.length > 0);
+  const parts = command
+    .toLowerCase()
+    .split(' ')
+    .filter(part => part.length > 0);
   const subcommand = parts[1]; // /mcp is parts[0]
 
   try {
@@ -176,8 +179,9 @@ export async function handleCommand(
   }
 ): Promise<CommandResult> {
   const timestamp = new Date();
+  const normalizedCommand = command.toLowerCase().trim();
 
-  switch (command) {
+  switch (normalizedCommand) {
     case '/help':
     case '/commands':
       return {
@@ -191,6 +195,8 @@ export async function handleCommand(
             `• /clear, /new, /nw, /cl - Clear conversation history\n` +
             `• /mode, /thinking - Toggle between code and thinking mode\n` +
             `• /compress - Compress conversation history to save space\n` +
+            `• /god - Toggle GOD mode (bypass all approvals)\n` +
+            `• /approval - Toggle approval mode for commands and edits\n` +
             `• /mcp - MCP server management (list, enable, disable)\n` +
             `• /help, /commands - Show this help message\n\n` +
             `💡 Type @ followed by a filename to attach files to your message\n` +
@@ -223,6 +229,36 @@ export async function handleCommand(
         },
       };
 
+    case '/god':
+      const godConfigManager = new ConfigManager();
+      const currentConfig = godConfigManager.getConfig();
+      const currentGodMode = currentConfig.approvalMode?.godMode ?? false;
+      const newGodMode = !currentGodMode;
+      godConfigManager.setConfig('approvalMode.godMode', newGodMode);
+      return {
+        type: 'message',
+        message: {
+          role: 'assistant',
+          content: `GOD mode ${newGodMode ? 'enabled' : 'disabled'}. ${newGodMode ? 'All commands and edits will be allowed without approval.' : 'Approval mode is now active.'}`,
+          timestamp,
+        },
+      };
+
+    case '/approval':
+      const approvalConfigManager = new ConfigManager();
+      const approvalCurrentConfig = approvalConfigManager.getConfig();
+      const currentApprovalMode = approvalCurrentConfig.approvalMode?.enabled ?? false;
+      const newApprovalMode = !currentApprovalMode;
+      approvalConfigManager.setConfig('approvalMode.enabled', newApprovalMode);
+      return {
+        type: 'message',
+        message: {
+          role: 'assistant',
+          content: `Approval mode ${newApprovalMode ? 'enabled' : 'disabled'}. ${newApprovalMode ? 'Commands and edits will require approval.' : 'All actions will be allowed without approval.'}`,
+          timestamp,
+        },
+      };
+
     case '/clear':
     case '/new':
     case '/nw':
@@ -230,6 +266,11 @@ export async function handleCommand(
       return {
         type: 'clear',
         shouldClearMessages: true,
+        message: {
+          role: 'assistant',
+          content: '🧹 Conversation history cleared! Starting fresh.',
+          timestamp,
+        },
       };
 
     case '/mode':
@@ -304,7 +345,7 @@ Summary:`;
 
     default:
       // Handle MCP commands
-      if (command.startsWith('/mcp')) {
+      if (normalizedCommand.startsWith('/mcp')) {
         return await handleMCPCommand(command, timestamp);
       }
 

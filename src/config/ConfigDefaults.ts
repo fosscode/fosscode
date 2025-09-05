@@ -40,6 +40,15 @@ export class ConfigDefaults {
         enabled: true,
         showThinkingBlocks: true,
       },
+      approvalMode: {
+        enabled: false,
+        godMode: false,
+        allowlist: ['rm', 'sudo', 'chmod', 'chown', 'dd', 'mkfs', 'fdisk'],
+      },
+      approvals: {
+        session: {},
+        persistent: {},
+      },
     };
   }
 

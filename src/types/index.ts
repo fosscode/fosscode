@@ -116,6 +116,15 @@ export interface AppConfig {
     enabled: boolean;
     showThinkingBlocks: boolean;
   };
+  approvalMode?: {
+    enabled: boolean;
+    godMode: boolean;
+    allowlist: string[];
+  };
+  approvals?: {
+    session: Record<string, 'once' | 'session' | 'always'>;
+    persistent: Record<string, 'always'>;
+  };
 }
 
 export interface PerformanceMetrics {
