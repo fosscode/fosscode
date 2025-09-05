@@ -20,12 +20,20 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
   const lastUpdateRef = useRef<number>(0);
   const childrenRef = useRef<string>(children);
 
+  // Disable animations for very large content to prevent performance issues
+  const isLargeContent = children.length > 10000;
+  const effectiveType = isLargeContent ? 'static' : type;
+
   const colorPalette = useMemo(() => {
     return (
       colors ||
-      (type === 'neon' ? neonColors : type === 'gradient' ? gradientColors : rainbowColors)
+      (effectiveType === 'neon'
+        ? neonColors
+        : effectiveType === 'gradient'
+          ? gradientColors
+          : rainbowColors)
     );
-  }, [colors, type]);
+  }, [colors, effectiveType]);
 
   const updateAnimation = useCallback(() => {
     const now = Date.now();
@@ -35,7 +43,7 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
     }
     lastUpdateRef.current = now;
 
-    switch (type) {
+    switch (effectiveType) {
       case 'rainbow':
       case 'pulse':
       case 'neon':
@@ -54,7 +62,7 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
         // No animation for static type
         break;
     }
-  }, [type, colorPalette.length]);
+  }, [effectiveType, colorPalette.length]);
 
   // Update children ref when children change
   useEffect(() => {
@@ -68,8 +76,8 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
       intervalRef.current = null;
     }
 
-    // Only create interval for non-static types
-    if (type !== 'static') {
+    // Only create interval for non-static types and non-large content
+    if (effectiveType !== 'static' && !isLargeContent) {
       intervalRef.current = setInterval(updateAnimation, speed);
     }
 
@@ -79,7 +87,7 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
         intervalRef.current = null;
       }
     };
-  }, [type, speed, updateAnimation]);
+  }, [effectiveType, speed, updateAnimation, isLargeContent]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -93,7 +101,7 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
 
   const getColor = useCallback(
     (charIndex?: number): string => {
-      switch (type) {
+      switch (effectiveType) {
         case 'wave':
           if (charIndex !== undefined) {
             return colorPalette[(charIndex + waveOffset) % colorPalette.length];
@@ -105,10 +113,10 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
           return colorPalette[colorIndex];
       }
     },
-    [type, colorIndex, waveOffset, flashState, colorPalette]
+    [effectiveType, colorIndex, waveOffset, flashState, colorPalette]
   );
 
-  if (type === 'wave') {
+  if (effectiveType === 'wave' && !isLargeContent) {
     return (
       <>
         {children.split('').map((char, index) => (

@@ -1,8 +1,50 @@
 import { encode } from 'gpt-tokenizer';
 import { Message } from '../types/index.js';
 
+// Simple LRU cache for token counts to improve performance
+const tokenCache = new Map<string, number>();
+const MAX_CACHE_SIZE = 100;
+
 export function countTokens(text: string): number {
-  return encode(text).length;
+  // For very large texts, use sampling to estimate token count
+  if (text.length > 50000) {
+    const sampleSize = 10000;
+    const sample = text.substring(0, sampleSize);
+    const sampleTokens = encode(sample).length;
+    const estimatedTokens = Math.round((text.length / sampleSize) * sampleTokens);
+
+    // Cache the result for large texts
+    const cacheKey = `large_${text.length}_${sampleTokens}`;
+    if (!tokenCache.has(cacheKey)) {
+      if (tokenCache.size >= MAX_CACHE_SIZE) {
+        const firstKey = tokenCache.keys().next().value;
+        if (firstKey) {
+          tokenCache.delete(firstKey);
+        }
+      }
+      tokenCache.set(cacheKey, estimatedTokens);
+    }
+
+    return estimatedTokens;
+  }
+
+  // For smaller texts, use exact counting with caching
+  const sampleText: string = text.substring(0, 100);
+  const cacheKey = `exact_${text.length}_${sampleText}`;
+  if (tokenCache.has(cacheKey)) {
+    return tokenCache.get(cacheKey)!;
+  }
+
+  const tokenCount = encode(text).length;
+  if (tokenCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = tokenCache.keys().next().value;
+    if (firstKey) {
+      tokenCache.delete(firstKey);
+    }
+  }
+  tokenCache.set(cacheKey, tokenCount);
+
+  return tokenCount;
 }
 
 export function estimateSystemPromptTokens(
