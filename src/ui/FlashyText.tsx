@@ -24,6 +24,9 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
   const isLargeContent = children.length > 10000;
   const effectiveType = isLargeContent ? 'static' : type;
 
+  // Clear interval immediately for large content or static type
+  const shouldRunAnimation = effectiveType !== 'static' && !isLargeContent;
+
   const colorPalette = useMemo(() => {
     return (
       colors ||
@@ -77,7 +80,7 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
     }
 
     // Only create interval for non-static types and non-large content
-    if (effectiveType !== 'static' && !isLargeContent) {
+    if (shouldRunAnimation) {
       intervalRef.current = setInterval(updateAnimation, speed);
     }
 
@@ -87,7 +90,7 @@ export function FlashyText({ children, type = 'rainbow', speed = 200, colors }: 
         intervalRef.current = null;
       }
     };
-  }, [effectiveType, speed, updateAnimation, isLargeContent]);
+  }, [shouldRunAnimation, speed, updateAnimation]);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { Box, Text } from 'ink';
+import { memo, useMemo } from 'react';
 import { FlashyText } from '../FlashyText.js';
 import { Message } from '../../types/index.js';
 import { InteractiveLoading } from '../InteractiveLoading.js';
@@ -14,7 +15,7 @@ interface MessageListProps {
   onToggleCollapse?: (index: number) => void;
 }
 
-export function MessageList({
+const MessageList = memo(function MessageList({
   messages,
   isLoading,
   error,
@@ -25,62 +26,74 @@ export function MessageList({
 }: MessageListProps) {
   // Use showThinkingBlocks for future thinking block display logic
 
-  const renderedMessages = messages.map((message, index) => {
-    // TODO: Implement thinking block display logic based on showThinkingBlocks
-    // When thinking blocks are available in message, conditionally display them
-    const displayContent = message.content || '';
-    const tokenCount = countTokens(displayContent);
-    const isLargeMessage = tokenCount > 50000; // 50k tokens threshold
-    const isCollapsed = collapsedMessages.has(index);
+  // Memoize token counts to avoid recalculating on every render
+  const messageTokenCounts = useMemo(() => {
+    return messages.map(message => countTokens(message.content || ''));
+  }, [messages]);
 
-    // Handle message content based on size and collapse state
-    let contentToShow = displayContent;
-    let showExpandOption = false;
+  const renderedMessages = useMemo(
+    () =>
+      messages.map((message, index) => {
+        // TODO: Implement thinking block display logic based on showThinkingBlocks
+        // When thinking blocks are available in message, conditionally display them
+        const displayContent = message.content || '';
+        const tokenCount = messageTokenCounts[index];
+        const isLargeMessage = tokenCount > 50000; // 50k tokens threshold
+        const isCollapsed = collapsedMessages.has(index);
 
-    if (isLargeMessage) {
-      if (isCollapsed) {
-        contentToShow =
-          displayContent.substring(0, 200) +
-          '\n\n[Message collapsed - ' +
-          tokenCount.toLocaleString() +
-          ' tokens total]';
-        showExpandOption = true;
-      } else {
-        contentToShow = displayContent;
-      }
-    }
+        // Handle message content based on size and collapse state
+        let contentToShow = displayContent;
+        let showExpandOption = false;
 
-    // Disable animations for large content to prevent flickering
-    const shouldAnimate = !isLargeMessage;
-
-    return (
-      <Box key={index} marginBottom={isVerySmallScreen ? 0 : 1}>
-        <FlashyText
-          type={shouldAnimate ? 'static' : 'static'}
-          speed={message.role === 'user' ? 400 : 200}
-          colors={
-            message.role === 'user'
-              ? ['green', 'lime', 'cyan']
-              : ['blue', 'cyan', 'magenta', 'yellow']
+        if (isLargeMessage) {
+          if (isCollapsed) {
+            contentToShow =
+              displayContent.substring(0, 200) +
+              '\n\n[Message collapsed - ' +
+              tokenCount.toLocaleString() +
+              ' tokens total]';
+            showExpandOption = true;
+          } else {
+            contentToShow = displayContent;
           }
-        >
-          {isVerySmallScreen
-            ? message.role === 'user'
-              ? '👤 '
-              : '🤖 '
-            : message.role === 'user'
-              ? '👤 '
-              : '🤖 '}
-        </FlashyText>
-        <Text>{contentToShow}</Text>
-        {showExpandOption && onToggleCollapse && (
-          <Text color="cyan" dimColor>
-            {'\n[Press Ctrl+E to expand this message]'}
-          </Text>
-        )}
-      </Box>
-    );
-  });
+        }
+
+        // Disable animations for large content to prevent flickering
+        const shouldAnimate = !isLargeMessage;
+
+        return (
+          <Box
+            key={`${message.timestamp?.getTime() || index}-${tokenCount}`}
+            marginBottom={isVerySmallScreen ? 0 : 1}
+          >
+            <FlashyText
+              type={shouldAnimate ? 'static' : 'static'}
+              speed={message.role === 'user' ? 400 : 200}
+              colors={
+                message.role === 'user'
+                  ? ['green', 'lime', 'cyan']
+                  : ['blue', 'cyan', 'magenta', 'yellow']
+              }
+            >
+              {isVerySmallScreen
+                ? message.role === 'user'
+                  ? '👤 '
+                  : '🤖 '
+                : message.role === 'user'
+                  ? '👤 '
+                  : '🤖 '}
+            </FlashyText>
+            <Text>{contentToShow}</Text>
+            {showExpandOption && onToggleCollapse && (
+              <Text color="cyan" dimColor>
+                {'\n[Press Ctrl+E to expand this message]'}
+              </Text>
+            )}
+          </Box>
+        );
+      }),
+    [messages, messageTokenCounts, collapsedMessages, isVerySmallScreen, onToggleCollapse]
+  );
 
   return (
     <Box flexDirection="column" flexGrow={1} marginBottom={isVerySmallScreen ? 0 : 1}>
@@ -97,4 +110,6 @@ export function MessageList({
       )}
     </Box>
   );
-}
+});
+
+export { MessageList };

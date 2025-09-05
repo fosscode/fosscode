@@ -89,7 +89,11 @@ function App({
   const maxMessages = 100; // Keep last 100 messages
   useEffect(() => {
     if (messages.length > maxMessages) {
-      setMessages(prev => prev.slice(-maxMessages));
+      // Use functional update to avoid dependency on messages
+      setMessages(prev => {
+        const excess = prev.length - maxMessages;
+        return excess > 0 ? prev.slice(excess) : prev;
+      });
     }
   }, [messages.length]);
 
