@@ -98,10 +98,12 @@ export class SonicFreeProvider implements LLMProvider {
           break;
         }
 
-        // Enhanced context compression - trigger earlier and more frequently
+        // Enhanced context compression - trigger based on token usage or message count
+        const tokenThreshold = adaptiveTokenLimit * 0.8; // Trigger at 80% of token limit
         if (
           (iteration > 1 && openaiMessages.length > 8) ||
-          (iteration > 5 && openaiMessages.length > 6)
+          (iteration > 5 && openaiMessages.length > 6) ||
+          totalTokensUsed > tokenThreshold
         ) {
           const compressedMessages = await this.smartContextCompression(openaiMessages, iteration);
           openaiMessages = compressedMessages;

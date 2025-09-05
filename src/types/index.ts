@@ -103,6 +103,7 @@ export interface AppConfig {
   defaultModel: string;
   maxConversations: number;
   theme: 'dark' | 'light';
+  verbose?: boolean;
   providers: Record<ProviderType, LLMConfig>;
   cachedModels: Record<ProviderType, CachedModels>;
   messagingPlatforms?: Record<MessagingPlatformType, { enabled: boolean; botToken?: string }>;
