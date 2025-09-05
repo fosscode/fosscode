@@ -1,0 +1,87 @@
+{
+  "name": "vscode-fosscode-diff",
+  "displayName": "Fosscode Diff Viewer",
+  "description": "Shows diffs for file edits made by fosscode in the terminal",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "fosscode-diff.enable",
+        "title": "Enable Fosscode Diff Viewer"
+      },
+      {
+        "command": "fosscode-diff.disable",
+        "title": "Disable Fosscode Diff Viewer"
+      },
+      {
+        "command": "fosscode-diff.showSettings",
+        "title": "Open Fosscode Diff Settings"
+      },
+      {
+        "command": "fosscode-diff.clearHistory",
+        "title": "Clear Diff History"
+      }
+    ],
+    "configuration": {
+      "title": "Fosscode Diff Viewer",
+      "properties": {
+        "fosscode-diff.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable the fosscode diff viewer"
+        },
+        "fosscode-diff.tempDir": {
+          "type": "string",
+          "default": "",
+          "description": "Directory to store temporary diff files (leave empty for system temp)"
+        },
+        "fosscode-diff.autoShowDiffs": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically show diffs when fosscode makes changes"
+        },
+        "fosscode-diff.maxHistorySize": {
+          "type": "number",
+          "default": 50,
+          "minimum": 10,
+          "maximum": 200,
+          "description": "Maximum number of diff files to keep in history"
+        },
+        "fosscode-diff.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notifications when diffs are detected"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "publisher": "your-publisher-name",
+  "devDependencies": {
+    "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "@vscode/vsce": "^3.6.0",
+    "eslint": "^8.0.0",
+    "typescript": "^4.4.3"
+  }
+}

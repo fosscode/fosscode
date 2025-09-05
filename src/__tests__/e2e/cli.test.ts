@@ -72,4 +72,33 @@ describe('CLI E2E Tests', () => {
       expect(stdout).toContain('mock');
     });
   });
+
+  describe('VSCode Command', () => {
+    it('should show help when no action specified', async () => {
+      const { stdout, exitCode } = await E2ETestHelper.runCliCommand(['code']);
+
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('VSCode fosscode Diff Extension');
+      expect(stdout).toContain('Usage:');
+      expect(stdout).toContain('fosscode code install');
+    });
+
+    it('should show status information', async () => {
+      const { stdout, exitCode } = await E2ETestHelper.runCliCommand(['code', 'status']);
+
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('VSCode Extension Status');
+      expect(stdout).toContain('Extension file:');
+      expect(stdout).toContain('Extension path:');
+    });
+
+    it('should show setup instructions', async () => {
+      const { stdout, exitCode } = await E2ETestHelper.runCliCommand(['code', 'setup']);
+
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Manual Installation Instructions');
+      expect(stdout).toContain('Install VSCode from:');
+      expect(stdout).toContain('code --install-extension');
+    });
+  });
 });

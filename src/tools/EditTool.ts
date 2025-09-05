@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 /// <reference types="node" />
 import * as path from 'path';
+import * as os from 'os';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { securityManager } from './SecurityManager.js';
 
@@ -74,13 +75,13 @@ export class EditTool implements Tool {
       // Validate file path and permissions
       const validatedPath = await securityManager.validateFileOperation(filePath, 'write');
 
-      // Read current content
-      const content = await fs.promises.readFile(validatedPath, {
+      // Read current content (this is the original content before editing)
+      const originalContent = await fs.promises.readFile(validatedPath, {
         encoding: encoding as BufferEncoding,
       });
 
       // Check if oldString exists in content
-      const occurrences = this.countOccurrences(content, oldString);
+      const occurrences = this.countOccurrences(originalContent, oldString);
       if (occurrences === 0) {
         throw new Error(`String "${oldString}" not found in file`);
       }
@@ -100,10 +101,10 @@ export class EditTool implements Tool {
       let replacementsMade: number;
 
       if (replaceAll) {
-        newContent = content.replaceAll(oldString, newString);
+        newContent = originalContent.replaceAll(oldString, newString);
         replacementsMade = occurrences;
       } else {
-        newContent = content.replace(oldString, newString);
+        newContent = originalContent.replace(oldString, newString);
         replacementsMade = 1;
       }
 
@@ -121,6 +122,9 @@ export class EditTool implements Tool {
         }
         throw error;
       }
+
+      // Generate and save diff information for VSCode extension
+      await this.generateDiffInfo(validatedPath, originalContent, newContent);
 
       // Get file stats
       const stats = await fs.promises.stat(validatedPath);
@@ -170,5 +174,46 @@ export class EditTool implements Tool {
     }
 
     return count;
+  }
+
+  /**
+   * Generate and save diff information for VSCode extension
+   * @param filePath The file that was edited
+   * @param originalContent The original file content
+   * @param newContent The new file content
+   */
+  private async generateDiffInfo(
+    filePath: string,
+    originalContent: string,
+    newContent: string
+  ): Promise<void> {
+    try {
+      const tempDir = path.join(os.tmpdir(), 'vscode-fosscode-diff');
+
+      // Ensure temp directory exists
+      await fs.promises.mkdir(tempDir, { recursive: true });
+
+      // Generate diff data
+      const diffData = {
+        type: 'file_change',
+        filePath: path.resolve(filePath),
+        originalContent,
+        newContent,
+        timestamp: new Date().toISOString(),
+        tool: 'edit',
+      };
+
+      // Write diff file
+      const timestamp = Date.now();
+      const diffFileName = `fosscode-${timestamp}.json`;
+      const diffFilePath = path.join(tempDir, diffFileName);
+
+      await fs.promises.writeFile(diffFilePath, JSON.stringify(diffData, null, 2), 'utf8');
+
+      console.log(`Diff information saved to: ${diffFilePath}`);
+    } catch (error) {
+      // Don't fail the edit operation if diff generation fails
+      console.warn('Failed to generate diff information:', error);
+    }
   }
 }

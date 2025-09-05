@@ -12,6 +12,7 @@ import { AuthCommand } from './commands/AuthCommand.js';
 import { ThemesCommand } from './commands/ThemesCommand.js';
 import { MCPCommand } from './commands/MCPCommand.js';
 import { ThinkingCommand } from './commands/ThinkingCommand.js';
+import { VSCodeCommand } from './commands/VSCodeCommand.js';
 import { ConfigManager } from './config/ConfigManager.js';
 import { ProviderManager } from './providers/ProviderManager.js';
 import { initializeTools } from './tools/init.js';
@@ -129,6 +130,14 @@ program
     const args = action ? [action] : [];
     const result = await thinkingCommand.execute(args);
     console.log(result);
+  });
+
+program
+  .command('code [action]')
+  .description('Manage VSCode fosscode diff extension (install, setup, status)')
+  .action(async (action?: string) => {
+    const vscodeCommand = new VSCodeCommand();
+    await vscodeCommand.execute(action);
   });
 
 // Handle unhandled promise rejections
