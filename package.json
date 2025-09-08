@@ -102,7 +102,7 @@
     "@playwright/mcp": "^0.0.35",
     "chalk": "4.1.2",
     "cheerio": "^1.1.2",
-    "commander": "^11.0.0",
+    "commander": "^14.0.0",
     "gpt-tokenizer": "^3.0.1",
     "grammy": "^1.30.0",
     "ink": "^4.0.0",
