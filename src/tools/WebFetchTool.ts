@@ -2,7 +2,6 @@ import * as https from 'https';
 import * as http from 'http';
 import * as url from 'url';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
-import * as cheerio from 'cheerio';
 
 /**
  * Web search and content retrieval tool
@@ -221,17 +220,27 @@ export class WebFetchTool implements Tool {
    * Convert HTML content to text or markdown format
    */
   private convertHtmlToText(html: string, format: string): { content: string; links: string[] } {
-    // Use Cheerio to safely remove <script>, <style> and extract text and links
-    const $ = cheerio.load(html);
-    $('script, style').remove();
-    const text = $.text().replace(/\s+/g, ' ').trim();
+    // Simple HTML parsing to remove <script>, <style> and extract text and links
+    // This replaces cheerio to eliminate the boolbase dependency
 
-    // Extract links from <a href="...">
+    // Remove script and style tags and their content
+    let cleanedHtml = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+    // Extract links from <a href="..."> tags
     const links: string[] = [];
-    $('a[href]').each((_, el) => {
-      const href = $(el).attr('href');
-      if (href) links.push(href);
-    });
+    const linkRegex = /<a[^>]+href=["']([^"']+)["'][^>]*>/gi;
+    let linkMatch;
+    while ((linkMatch = linkRegex.exec(cleanedHtml)) !== null) {
+      links.push(linkMatch[1]);
+    }
+
+    // Extract text content by removing HTML tags
+    const text = cleanedHtml
+      .replace(/<[^>]+>/g, ' ') // Remove HTML tags
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
 
     let content: string;
     if (format === 'markdown') {

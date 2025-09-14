@@ -200,10 +200,11 @@ export class SonicFreeProvider implements LLMProvider {
           // Show tool calls being made
           intermediateContent += `🔧 **Iteration ${iteration + 1} - Tool Calls:**\n`;
           for (const toolCall of assistantMessage.tool_calls) {
-            intermediateContent += `   • ${toolCall.function?.name || 'unknown'}`;
-            if (toolCall.function?.arguments) {
+            const toolFunction = (toolCall as any).function;
+            intermediateContent += `   • ${toolFunction?.name || 'unknown'}`;
+            if (toolFunction?.arguments) {
               try {
-                const args = JSON.parse(toolCall.function.arguments);
+                const args = JSON.parse(toolFunction.arguments);
                 const argSummary = Object.keys(args)
                   .slice(0, 3)
                   .map(
@@ -216,15 +217,15 @@ export class SonicFreeProvider implements LLMProvider {
                 }
 
                 // Enhanced console logging for specific tools
-                if (toolCall.function.name === 'bash' && args.command) {
+                if (toolFunction.name === 'bash' && args.command) {
                   console.log(`🔧 Executing bash command: ${args.command}`);
-                } else if (toolCall.function.name === 'grep' && args.pattern) {
+                } else if (toolFunction.name === 'grep' && args.pattern) {
                   console.log(
                     `🔍 Searching with grep pattern: "${args.pattern}"${args.path ? ` in ${args.path}` : ''}`
                   );
-                } else if (toolCall.function.name === 'read' && args.filePath) {
+                } else if (toolFunction.name === 'read' && args.filePath) {
                   console.log(`📖 Reading file: ${args.filePath}`);
-                } else if (toolCall.function.name === 'edit' && args.filePath) {
+                } else if (toolFunction.name === 'edit' && args.filePath) {
                   console.log(`✏️  Editing file: ${args.filePath}`);
                 }
               } catch (_e) {

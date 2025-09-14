@@ -1,6 +1,6 @@
 {
   "name": "fosscode",
-  "version": "0.0.103",
+  "version": "0.0.104",
   "description": "Lightweight CLI application for code agent interactions with LLMs",
   "type": "module",
   "main": "dist/index.js",
@@ -90,7 +90,6 @@
     ],
     "moduleNameMapper": {
       "^(.{1,2}/.*).js$": "$1",
-      "^cheerio$": "<rootDir>/src/__mocks__/cheerio.js",
       "^ink$": "<rootDir>/src/__mocks__/ink.js",
       "^ink-spinner$": "<rootDir>/src/__mocks__/ink-spinner.js",
       "^ink-testing-library$": "<rootDir>/src/__mocks__/ink-testing-library.js"
@@ -101,7 +100,6 @@
     "@modelcontextprotocol/sdk": "1.18.0",
     "@playwright/mcp": "0.0.37",
     "picocolors": "1.1.1",
-    "cheerio": "^1.1.2",
     "commander": "14.0.1",
     "gpt-tokenizer": "^3.0.1",
     "grammy": "1.38.2",
