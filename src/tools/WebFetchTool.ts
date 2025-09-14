@@ -224,7 +224,7 @@ export class WebFetchTool implements Tool {
     // This replaces cheerio to eliminate the boolbase dependency
 
     // Remove script and style tags and their content
-    let cleanedHtml = html
+    const cleanedHtml = html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
