@@ -1,6 +1,6 @@
 import { render } from 'ink';
 import React from 'react';
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ProviderManager } from '../providers/ProviderManager.js';
 import { ProviderType, Message, MessagingPlatformType } from '../types/index.js';
@@ -113,8 +113,8 @@ export class ChatCommand {
     // Non-interactive mode: send single message and exit
     if (options.nonInteractive ?? !!message) {
       if (!message) {
-        console.error(chalk.red('Error: Message is required in non-interactive mode'));
-        console.log(chalk.yellow('Usage: fosscode chat "your message" --non-interactive'));
+        console.error(pc.red('Error: Message is required in non-interactive mode'));
+        console.log(pc.yellow('Usage: fosscode chat "your message" --non-interactive'));
         process.exit(1);
       }
 
@@ -176,30 +176,28 @@ export class ChatCommand {
         error instanceof Error &&
         (error.message.includes('Raw mode is not supported') || error.message.includes('raw mode'))
       ) {
-        console.log(chalk.cyan(`🤖 fosscode - ${options.provider} (${options.model})`));
+        console.log(pc.cyan(`🤖 fosscode - ${options.provider} (${options.model})`));
         console.log(
-          chalk.yellow(
-            '> Type your message... (Interactive mode not available in this environment)'
-          )
+          pc.yellow('> Type your message... (Interactive mode not available in this environment)')
         );
         console.log(
-          chalk.gray(
+          pc.gray(
             'Commands: /verbose (toggle), /clear|/new|/nw|/cl (clear), /compress (summarize), /themes (switch)'
           )
         );
         console.log(
-          chalk.gray(
+          pc.gray(
             'Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.'
           )
         );
         console.log(
-          chalk.gray(
+          pc.gray(
             'Read about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
           )
         );
-        console.log(chalk.cyan('\n💡 Try using non-interactive mode instead:'));
+        console.log(pc.cyan('\n💡 Try using non-interactive mode instead:'));
         console.log(
-          chalk.white(
+          pc.white(
             `   fosscode chat "your message" --provider ${options.provider} --non-interactive`
           )
         );

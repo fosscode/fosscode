@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
 import * as child_process from 'child_process';
-import chalk from 'chalk';
+import pc from 'picocolors';
 
 export type CancellationLevel = 'command' | 'full';
 
@@ -92,7 +92,7 @@ export class CancellationManager extends EventEmitter {
           : 'Full cancellation requested by user (ESC ESC)',
     };
 
-    console.log(chalk.yellow(`\n${this.cancellationToken.reason}`));
+    console.log(pc.yellow(`\n${this.cancellationToken.reason}`));
 
     if (level === 'full') {
       this.killAllProcesses();
@@ -113,7 +113,7 @@ export class CancellationManager extends EventEmitter {
       }
     }
     this.activeProcesses.clear();
-    console.log(chalk.red('🛑 Killed all background processes'));
+    console.log(pc.red('🛑 Killed all background processes'));
   }
 
   /**

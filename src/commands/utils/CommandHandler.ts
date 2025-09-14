@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { MessagingPlatformManager } from '../../messaging/MessagingPlatformManager.js';
 import { ProviderManager } from '../../providers/ProviderManager.js';
 import { ConfigManager } from '../../config/ConfigManager.js';
@@ -90,7 +90,7 @@ export class CommandHandler {
       message.chatId,
       '🧹 Conversation history cleared! Starting fresh.'
     );
-    console.log(chalk.yellow(`🧹 Conversation cleared for chat ${message.chatId}`));
+    console.log(pc.yellow(`🧹 Conversation cleared for chat ${message.chatId}`));
   }
 
   private async handleHelpCommand(
@@ -220,7 +220,7 @@ Summary:`;
         `✅ Conversation compressed successfully! The chat history has been summarized to save space.`
       );
 
-      console.log(chalk.yellow(`🗜️ Conversation compressed for chat ${message.chatId}`));
+      console.log(pc.yellow(`🗜️ Conversation compressed for chat ${message.chatId}`));
     } catch (error) {
       await this.messagingManager.sendMessage(
         platformType,
@@ -228,7 +228,7 @@ Summary:`;
         `❌ Failed to compress conversation: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
       console.log(
-        chalk.red(
+        pc.red(
           `❌ Error compressing conversation for chat ${message.chatId}: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       );
@@ -267,7 +267,7 @@ Summary:`;
       );
 
       console.log(
-        chalk.yellow(`👋 Quit command received from chat ${message.chatId}. Shutting down...`)
+        pc.yellow(`👋 Quit command received from chat ${message.chatId}. Shutting down...`)
       );
 
       // Stop all messaging platform listeners
@@ -278,12 +278,12 @@ Summary:`;
 
       // Exit the process after a short delay to allow cleanup
       setTimeout(() => {
-        console.log(chalk.green('✅ Bot shutdown complete'));
+        console.log(pc.green('✅ Bot shutdown complete'));
         process.exit(0);
       }, 1000);
     } catch (error) {
       console.error(
-        chalk.red(
+        pc.red(
           `❌ Error during shutdown: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       );
@@ -338,7 +338,7 @@ Summary:`;
         `✅ Theme set to: **${theme}**\n\nThe theme change will take effect on your next interaction.`
       );
 
-      console.log(chalk.yellow(`🎨 Theme changed to ${theme} for chat ${message.chatId}`));
+      console.log(pc.yellow(`🎨 Theme changed to ${theme} for chat ${message.chatId}`));
     } catch (error) {
       await this.messagingManager.sendMessage(
         platformType,
@@ -346,7 +346,7 @@ Summary:`;
         `❌ Error setting theme: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
       console.error(
-        chalk.red(
+        pc.red(
           `❌ Error setting theme for chat ${message.chatId}: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       );

@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { ProviderManager } from '../providers/ProviderManager.js';
 
 export class ProvidersCommand {
@@ -17,7 +17,7 @@ export class ProvidersCommand {
       mock: 'Mock provider for testing',
     };
 
-    console.log(chalk.blue('Available providers:'));
+    console.log(pc.blue('Available providers:'));
     providers.forEach(provider => {
       const description = descriptions[provider as keyof typeof descriptions] || 'Unknown provider';
       console.log(`  • ${provider} - ${description}`);

@@ -1,4 +1,4 @@
-import 'openai/shims/node';
+// import 'openai/shims/node'; // Commented out for OpenAI v5 compatibility
 import { OpenAIProvider } from '../providers/OpenAIProvider';
 import { LLMConfig } from '../types';
 

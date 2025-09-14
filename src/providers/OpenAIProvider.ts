@@ -1,4 +1,4 @@
-import 'openai/shims/node';
+// import 'openai/shims/node'; // Commented out for OpenAI v5 compatibility
 import OpenAI from 'openai';
 import { Message, ProviderResponse, LLMConfig, LLMProvider } from '../types/index.js';
 import { generate as generateSystemPrompt } from '../prompts/SystemPrompt.js';

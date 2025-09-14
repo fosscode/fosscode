@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { ConfigManager } from './config/ConfigManager.js';
 import { ProviderManager } from './providers/ProviderManager.js';
 import { ProviderType, Message, QueuedMessage } from './types/index.js';
@@ -48,7 +48,7 @@ export class BinaryChatCommand {
     this.messageQueue.on('messageProcessing', (message: QueuedMessage) => {
       if (message.options.verbose) {
         console.log(
-          chalk.yellow(
+          pc.yellow(
             `\n🔄 Processing queued message (${this.messageQueue.getStats().totalQueued} remaining):`
           ),
           message.message
@@ -58,7 +58,7 @@ export class BinaryChatCommand {
 
     this.messageQueue.on('messageCompleted', (message: QueuedMessage) => {
       if (message.options.verbose) {
-        console.log(chalk.green('✅ Queued message completed'));
+        console.log(pc.green('✅ Queued message completed'));
         if (message.response) {
           console.log(message.response);
         }
@@ -67,12 +67,12 @@ export class BinaryChatCommand {
       }
 
       if (this.messageQueue.getStats().totalQueued === 0) {
-        console.log(chalk.gray('\n📭 All queued messages processed.'));
+        console.log(pc.gray('\n📭 All queued messages processed.'));
       }
     });
 
     this.messageQueue.on('messageFailed', (message: QueuedMessage) => {
-      console.error(chalk.red('❌ Queued message failed:'), message.error);
+      console.error(pc.red('❌ Queued message failed:'), message.error);
     });
 
     this.messageQueue.on(
@@ -129,7 +129,7 @@ export class BinaryChatCommand {
 
       // Check if cancellation was requested at the start
       if (cancellationManager.shouldCancel()) {
-        console.log(chalk.yellow('🛑 Command cancelled by user'));
+        console.log(pc.yellow('🛑 Command cancelled by user'));
         await this.chatLogger.endSession('cancelled');
         return;
       }
@@ -161,7 +161,7 @@ export class BinaryChatCommand {
         });
 
         if (options.verbose) {
-          console.log(chalk.cyan(`📝 Message queued with ID: ${messageId}`));
+          console.log(pc.cyan(`📝 Message queued with ID: ${messageId}`));
         }
 
         // Don't exit immediately if there are queued messages
@@ -169,7 +169,7 @@ export class BinaryChatCommand {
         if (stats.totalQueued > 0) {
           if (options.verbose) {
             console.log(
-              chalk.gray(
+              pc.gray(
                 `⏳ Queue status: ${stats.totalQueued} message(s) queued, processing: ${stats.isProcessing}`
               )
             );
@@ -189,7 +189,7 @@ export class BinaryChatCommand {
         await this.chatLogger.endSession('completed');
       }
     } catch (error) {
-      console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      console.error(pc.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
       await this.chatLogger.endSession('error');
       process.exit(1);
     }
@@ -205,7 +205,7 @@ export class BinaryChatCommand {
     }
 
     // List available providers
-    console.log(chalk.yellow('No default provider set. Available providers:'));
+    console.log(pc.yellow('No default provider set. Available providers:'));
     console.log('• openai');
     console.log('• grok');
     console.log('• lmstudio');
@@ -213,7 +213,7 @@ export class BinaryChatCommand {
     console.log('• sonicfree');
     console.log('• mcp');
     console.log();
-    console.log(chalk.red('Please specify a provider with --provider'));
+    console.log(pc.red('Please specify a provider with --provider'));
     process.exit(1);
   }
 
@@ -246,9 +246,9 @@ export class BinaryChatCommand {
     };
 
     if (options.verbose) {
-      console.log(chalk.gray(`🤖 fosscode - ${options.provider} (${options.model})`));
-      console.log(chalk.blue('👤'), message);
-      console.log(chalk.gray('Thinking...'));
+      console.log(pc.gray(`🤖 fosscode - ${options.provider} (${options.model})`));
+      console.log(pc.blue('👤'), message);
+      console.log(pc.gray('Thinking...'));
     }
 
     // Log the user message
@@ -271,7 +271,7 @@ export class BinaryChatCommand {
 
       let output = '';
       if (options.verbose) {
-        console.log(chalk.green('🤖'), response.content);
+        console.log(pc.green('🤖'), response.content);
         output += response.content;
       } else {
         console.log(response.content);
@@ -283,7 +283,7 @@ export class BinaryChatCommand {
 
       // Display token usage
       if (response.usage) {
-        const usageInfo = chalk.gray(
+        const usageInfo = pc.gray(
           `\n📊 Tokens: ${response.usage.totalTokens} (${response.usage.promptTokens} prompt, ${response.usage.completionTokens} completion)`
         );
         console.log(usageInfo);
@@ -302,7 +302,7 @@ export class BinaryChatCommand {
         const contextDisplay = formatContextDisplay(enhancedResponse.context, contextFormat);
 
         if (contextDisplay) {
-          const contextInfo = chalk.cyan(`\n💭 Context: ${contextDisplay}`);
+          const contextInfo = pc.cyan(`\n💭 Context: ${contextDisplay}`);
           console.log(contextInfo);
           output += '\n' + contextInfo;
 
@@ -315,7 +315,7 @@ export class BinaryChatCommand {
         if (showWarnings) {
           const warningMessage = getContextWarningMessage(enhancedResponse.context);
           if (warningMessage) {
-            const warning = chalk.yellow(`\n⚠️  ${warningMessage}`);
+            const warning = pc.yellow(`\n⚠️  ${warningMessage}`);
             console.log(warning);
             output += '\n' + warning;
 
@@ -327,7 +327,7 @@ export class BinaryChatCommand {
 
       return output;
     } catch (error) {
-      console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
+      console.error(pc.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
       throw error;
     }
   }

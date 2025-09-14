@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { QueuedMessage, MessageQueueState } from '../types/index.js';
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { cancellationManager } from './CancellationManager.js';
 
 export class MessageQueue extends EventEmitter {
@@ -18,7 +18,7 @@ export class MessageQueue extends EventEmitter {
     cancellationManager.on('cancelled', token => {
       if (token.level === 'full') {
         this.clearQueue();
-        console.log(chalk.red('🗑️  Message queue cleared due to full cancellation'));
+        console.log(pc.red('🗑️  Message queue cleared due to full cancellation'));
       }
     });
   }
@@ -47,7 +47,7 @@ export class MessageQueue extends EventEmitter {
 
     if (options.verbose) {
       console.log(
-        chalk.cyan(`📝 Message queued (${this.state.queue.length} in queue):`),
+        pc.cyan(`📝 Message queued (${this.state.queue.length} in queue):`),
         message.substring(0, 50) + (message.length > 50 ? '...' : '')
       );
     }
@@ -112,7 +112,7 @@ export class MessageQueue extends EventEmitter {
     while (this.state.queue.length > 0) {
       // Check if cancellation was requested
       if (cancellationManager.shouldCancel()) {
-        console.log(chalk.yellow('\n🛑 Message queue processing cancelled'));
+        console.log(pc.yellow('\n🛑 Message queue processing cancelled'));
         break;
       }
 

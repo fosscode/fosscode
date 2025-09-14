@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { ConfigManager } from '../../config/ConfigManager.js';
 import { ProviderManager } from '../../providers/ProviderManager.js';
 import { ProviderType } from '../../types/index.js';
@@ -29,7 +29,7 @@ export class ProviderSelector {
 
     const configuredProviders: string[] = [];
 
-    console.log(chalk.blue('🔍 Checking configured providers...'));
+    console.log(pc.blue('🔍 Checking configured providers...'));
 
     // Check which providers are properly configured
     for (const provider of availableProviders) {
@@ -37,9 +37,9 @@ export class ProviderSelector {
         await this.configManager.validateProvider(provider as ProviderType);
         await this.providerManager.initializeProvider(provider as ProviderType);
         configuredProviders.push(provider);
-        console.log(chalk.green(`  ✅ ${provider}`));
+        console.log(pc.green(`  ✅ ${provider}`));
       } catch (_error) {
-        console.log(chalk.gray(`  ❌ ${provider} (not configured)`));
+        console.log(pc.gray(`  ❌ ${provider} (not configured)`));
       }
     }
 
@@ -50,21 +50,21 @@ export class ProviderSelector {
 
     if (configuredProviders.length === 1) {
       const provider = configuredProviders[0];
-      console.log(chalk.green(`\n🎯 Using ${provider} (only configured provider)`));
+      console.log(pc.green(`\n🎯 Using ${provider} (only configured provider)`));
       return provider;
     }
 
     // Multiple providers configured - let user choose
-    console.log(chalk.blue(`\n📋 Multiple providers configured. Please choose:`));
+    console.log(pc.blue(`\n📋 Multiple providers configured. Please choose:`));
     configuredProviders.forEach((provider, index) => {
-      console.log(chalk.cyan(`  ${index + 1}. ${provider}`));
+      console.log(pc.cyan(`  ${index + 1}. ${provider}`));
     });
 
     // For non-interactive mode, use the first configured provider
     if (isNonInteractive) {
       const provider = configuredProviders[0];
       console.log(
-        chalk.yellow(`📝 Using ${provider} (first configured provider for non-interactive mode)`)
+        pc.yellow(`📝 Using ${provider} (first configured provider for non-interactive mode)`)
       );
       return provider;
     }
@@ -74,13 +74,13 @@ export class ProviderSelector {
   }
 
   private showConfigurationHelp(): void {
-    console.log(chalk.red('\n❌ No providers are configured!'));
-    console.log(chalk.yellow('\n📝 To get started, configure a provider:'));
-    console.log(chalk.cyan('  • SonicFree (free):'), 'bun run start auth login sonicfree');
-    console.log(chalk.cyan('  • Grok (free):'), 'bun run start auth login grok');
-    console.log(chalk.cyan('  • OpenAI (paid):'), 'bun run start auth login openai');
-    console.log(chalk.cyan('  • LMStudio (local):'), 'bun run start auth login lmstudio');
-    console.log(chalk.cyan('  • OpenRouter (paid):'), 'bun run start auth login openrouter');
+    console.log(pc.red('\n❌ No providers are configured!'));
+    console.log(pc.yellow('\n📝 To get started, configure a provider:'));
+    console.log(pc.cyan('  • SonicFree (free):'), 'bun run start auth login sonicfree');
+    console.log(pc.cyan('  • Grok (free):'), 'bun run start auth login grok');
+    console.log(pc.cyan('  • OpenAI (paid):'), 'bun run start auth login openai');
+    console.log(pc.cyan('  • LMStudio (local):'), 'bun run start auth login lmstudio');
+    console.log(pc.cyan('  • OpenRouter (paid):'), 'bun run start auth login openrouter');
   }
 
   private async interactiveProviderSelection(configuredProviders: string[]): Promise<string> {
@@ -91,7 +91,7 @@ export class ProviderSelector {
     });
 
     return new Promise(resolve => {
-      rl.question(chalk.yellow('\nEnter provider number (or name): '), (answer: string) => {
+      rl.question(pc.yellow('\nEnter provider number (or name): '), (answer: string) => {
         rl.close();
 
         const trimmed = answer.trim();
@@ -110,7 +110,7 @@ export class ProviderSelector {
         }
 
         // Default to first provider
-        console.log(chalk.yellow(`⚠️  Invalid choice, using ${configuredProviders[0]}`));
+        console.log(pc.yellow(`⚠️  Invalid choice, using ${configuredProviders[0]}`));
         resolve(configuredProviders[0]);
       });
     });

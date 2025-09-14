@@ -1,5 +1,5 @@
 import * as readline from 'readline';
-import chalk from 'chalk';
+import pc from 'picocolors';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { ProviderType } from '../types/index.js';
 
@@ -29,7 +29,7 @@ export class LoginHandler {
         case 'sonicfree':
           return await this.loginSonicFree();
         default:
-          console.error(chalk.red(`Login not supported for provider: ${provider}`));
+          console.error(pc.red(`Login not supported for provider: ${provider}`));
           return false;
       }
     } finally {
@@ -38,19 +38,19 @@ export class LoginHandler {
   }
 
   private async loginGrok(): Promise<boolean> {
-    console.log(chalk.cyan('\n🔑 xAI/Grok Authentication'));
-    console.log(chalk.gray('Get your API key from: https://console.x.ai/'));
+    console.log(pc.cyan('\n🔑 xAI/Grok Authentication'));
+    console.log(pc.gray('Get your API key from: https://console.x.ai/'));
 
     const apiKey = await this.prompt('Enter your xAI API key: ');
 
     if (!apiKey || apiKey.trim() === '') {
-      console.error(chalk.red('❌ API key cannot be empty'));
+      console.error(pc.red('❌ API key cannot be empty'));
       return false;
     }
 
     // Validate API key format (basic check)
     if (!apiKey.startsWith('xai-')) {
-      console.log(chalk.yellow('⚠️  Warning: xAI API keys typically start with "xai-"'));
+      console.log(pc.yellow('⚠️  Warning: xAI API keys typically start with "xai-"'));
       const confirm = await this.confirm('Continue anyway?');
       if (!confirm) {
         return false;
@@ -62,19 +62,19 @@ export class LoginHandler {
   }
 
   private async loginOpenAI(): Promise<boolean> {
-    console.log(chalk.cyan('\n🔑 OpenAI Authentication'));
-    console.log(chalk.gray('Get your API key from: https://platform.openai.com/api-keys'));
+    console.log(pc.cyan('\n🔑 OpenAI Authentication'));
+    console.log(pc.gray('Get your API key from: https://platform.openai.com/api-keys'));
 
     const apiKey = await this.prompt('Enter your OpenAI API key: ');
 
     if (!apiKey || apiKey.trim() === '') {
-      console.error(chalk.red('❌ API key cannot be empty'));
+      console.error(pc.red('❌ API key cannot be empty'));
       return false;
     }
 
     // Validate API key format
     if (!apiKey.startsWith('sk-')) {
-      console.log(chalk.yellow('⚠️  Warning: OpenAI API keys typically start with "sk-"'));
+      console.log(pc.yellow('⚠️  Warning: OpenAI API keys typically start with "sk-"'));
       const confirm = await this.confirm('Continue anyway?');
       if (!confirm) {
         return false;
@@ -86,8 +86,8 @@ export class LoginHandler {
   }
 
   private async loginLMStudio(): Promise<boolean> {
-    console.log(chalk.cyan('\n🔑 LMStudio Authentication'));
-    console.log(chalk.gray('LMStudio runs locally. Configure the server URL.'));
+    console.log(pc.cyan('\n🔑 LMStudio Authentication'));
+    console.log(pc.gray('LMStudio runs locally. Configure the server URL.'));
 
     const baseURL = await this.prompt(
       'Enter LMStudio server URL (default: http://localhost:1234): '
@@ -99,30 +99,30 @@ export class LoginHandler {
     try {
       new URL(finalURL);
     } catch {
-      console.error(chalk.red('❌ Invalid URL format'));
+      console.error(pc.red('❌ Invalid URL format'));
       return false;
     }
 
     await this.configManager.setProviderConfig('lmstudio', { baseURL: finalURL });
-    console.log(chalk.green('✅ LMStudio configured successfully!'));
-    console.log(chalk.gray('Make sure LMStudio is running on the specified URL.'));
+    console.log(pc.green('✅ LMStudio configured successfully!'));
+    console.log(pc.gray('Make sure LMStudio is running on the specified URL.'));
     return true;
   }
 
   private async loginOpenRouter(): Promise<boolean> {
-    console.log(chalk.cyan('\n🔑 OpenRouter Authentication'));
-    console.log(chalk.gray('Get your API key from: https://openrouter.ai/keys'));
+    console.log(pc.cyan('\n🔑 OpenRouter Authentication'));
+    console.log(pc.gray('Get your API key from: https://openrouter.ai/keys'));
 
     const apiKey = await this.prompt('Enter your OpenRouter API key: ');
 
     if (!apiKey || apiKey.trim() === '') {
-      console.error(chalk.red('❌ API key cannot be empty'));
+      console.error(pc.red('❌ API key cannot be empty'));
       return false;
     }
 
     // OpenRouter keys typically start with 'sk-or-v1-'
     if (!apiKey.startsWith('sk-or-')) {
-      console.log(chalk.yellow('⚠️  Warning: OpenRouter API keys typically start with "sk-or-"'));
+      console.log(pc.yellow('⚠️  Warning: OpenRouter API keys typically start with "sk-or-"'));
       const confirm = await this.confirm('Continue anyway?');
       if (!confirm) {
         return false;
@@ -134,8 +134,8 @@ export class LoginHandler {
   }
 
   private async loginSonicFree(): Promise<boolean> {
-    console.log(chalk.cyan('\n🔑 SonicFree Authentication'));
-    console.log(chalk.gray('SonicFree provides free AI models. No API key required!'));
+    console.log(pc.cyan('\n🔑 SonicFree Authentication'));
+    console.log(pc.gray('SonicFree provides free AI models. No API key required!'));
 
     const baseURL = await this.prompt(
       'Enter SonicFree server URL (default: https://gateway.opencode.ai/v1): '
@@ -147,13 +147,13 @@ export class LoginHandler {
     try {
       new URL(finalURL);
     } catch {
-      console.error(chalk.red('❌ Invalid URL format'));
+      console.error(pc.red('❌ Invalid URL format'));
       return false;
     }
 
     await this.configManager.setProviderConfig('sonicfree', { baseURL: finalURL });
-    console.log(chalk.green('✅ SonicFree configured successfully!'));
-    console.log(chalk.gray('You can now use free AI models without an API key.'));
+    console.log(pc.green('✅ SonicFree configured successfully!'));
+    console.log(pc.gray('You can now use free AI models without an API key.'));
     return true;
   }
 
