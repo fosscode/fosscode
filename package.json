@@ -26,7 +26,6 @@
     "test:all": "jest",
     "clean": "rm -rf dist",
     "start": "bun run src/index.ts",
-    "postinstall": "node scripts/replace-safer-buffer.cjs",
     "release:patch": "./scripts/release.sh patch",
     "release:minor": "./scripts/release.sh minor",
     "release:major": "./scripts/release.sh major",
