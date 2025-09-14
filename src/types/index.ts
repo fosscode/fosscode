@@ -101,6 +101,8 @@ export interface CachedModels {
 export interface AppConfig {
   defaultProvider: ProviderType;
   defaultModel: string;
+  lastSelectedProvider?: ProviderType;
+  lastSelectedModel?: string;
   maxConversations: number;
   theme: 'dark' | 'light';
   verbose?: boolean;

@@ -1,6 +1,6 @@
 {
   "name": "fosscode",
-  "version": "0.0.106",
+  "version": "0.0.109",
   "description": "Lightweight CLI application for code agent interactions with LLMs",
   "type": "module",
   "main": "dist/index.js",
@@ -26,6 +26,7 @@
     "test:all": "jest",
     "clean": "rm -rf dist",
     "start": "bun run src/index.ts",
+    "postinstall": "node scripts/replace-safer-buffer.cjs",
     "release:patch": "./scripts/release.sh patch",
     "release:minor": "./scripts/release.sh minor",
     "release:major": "./scripts/release.sh major",
@@ -80,7 +81,7 @@
       "**/?(*.)+(spec|test).tsx"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(cheerio|@modelcontextprotocol|ink|ink-testing-library|react|yoga-wasm-web|execa)/)"
+      "node_modules/(?!(ink|ink-testing-library|react|yoga-wasm-web|execa)/)"
     ],
     "collectCoverageFrom": [
       "src/**/*.ts",
@@ -97,7 +98,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.62.0",
-    "@modelcontextprotocol/sdk": "1.18.0",
     "@playwright/mcp": "0.0.37",
     "picocolors": "1.1.1",
     "commander": "14.0.1",

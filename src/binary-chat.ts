@@ -136,13 +136,35 @@ export class BinaryChatCommand {
 
       // Handle provider selection if not specified
       if (!options.provider) {
-        options.provider = await this.selectProvider();
+        const config = this.configManager.getConfig();
+        if (config.lastSelectedProvider) {
+          options.provider = config.lastSelectedProvider;
+        } else {
+          // Default to sonicfree for first-time users, but check if configured
+          try {
+            await this.configManager.validateProvider('sonicfree');
+            await this.providerManager.initializeProvider('sonicfree');
+            options.provider = 'sonicfree';
+          } catch {
+            // If sonicfree not configured, fall back to default provider
+            options.provider = await this.selectProvider();
+          }
+        }
       }
 
-      // Set provider-specific default model if not specified
+      // Set model if not specified
       if (!options.model) {
-        options.model = ConfigDefaults.getDefaultModelForProvider(options.provider);
+        const config = this.configManager.getConfig();
+        if (config.lastSelectedModel && options.provider === config.lastSelectedProvider) {
+          options.model = config.lastSelectedModel;
+        } else {
+          options.model = ConfigDefaults.getDefaultModelForProvider(options.provider);
+        }
       }
+
+      // Save the selected provider and model
+      this.configManager.setConfig('lastSelectedProvider', options.provider as ProviderType);
+      this.configManager.setConfig('lastSelectedModel', options.model);
 
       // Store current provider/model for queued messages
       this.currentProvider = options.provider;
