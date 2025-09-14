@@ -14,11 +14,11 @@ export class ProviderSelector {
 
   async selectProvider(isNonInteractive: boolean): Promise<string> {
     const availableProviders = [
+      'sonicfree',
       'openai',
       'grok',
       'lmstudio',
       'openrouter',
-      'sonicfree',
       'anthropic',
     ];
 
