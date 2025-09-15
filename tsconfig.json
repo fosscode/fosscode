@@ -26,7 +26,11 @@
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": false,
     "jsx": "react-jsx",
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022", "DOM"],
+    "paths": {
+      "indent-string": ["./src/utils/indent-string"],
+      "shell-quote": ["./src/utils/shell-quote"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
