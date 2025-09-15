@@ -154,21 +154,24 @@ function initializeTmuxFeatures() {
 
   tmuxFeaturesInitialized = true;
 
-  try {
-    // Test if status line feature is available
-    execSync('tmux set-status-left ""', { timeout: 500, stdio: 'ignore' });
-    statusLineFeatureAvailable = true;
-  } catch (error) {
-    statusLineFeatureAvailable = false;
-  }
+  // Defer feature detection to avoid blocking during React rendering
+  setImmediate(() => {
+    try {
+      // Test if status line feature is available
+      execSync('tmux set-status-left ""', { timeout: 500, stdio: 'ignore' });
+      statusLineFeatureAvailable = true;
+    } catch (error) {
+      statusLineFeatureAvailable = false;
+    }
 
-  try {
-    // Test if key binding feature is available
-    execSync('tmux list-keys >/dev/null 2>&1', { timeout: 500 });
-    keyBindingFeatureAvailable = true;
-  } catch (error) {
-    keyBindingFeatureAvailable = false;
-  }
+    try {
+      // Test if key binding feature is available
+      execSync('tmux list-keys >/dev/null 2>&1', { timeout: 500 });
+      keyBindingFeatureAvailable = true;
+    } catch (error) {
+      keyBindingFeatureAvailable = false;
+    }
+  });
 }
 
 /**
@@ -271,6 +274,7 @@ export function getTmuxInfo(): TmuxInfo {
 
   try {
     // Get all tmux info in a single command to reduce execSync calls
+    // Use synchronous exec for compatibility, but this should be called outside render cycle
     const tmuxOutput = execSync(
       'tmux display-message -p "#{pane_width},#{pane_height},#{session_name},#{window_name},#{pane_id}"',
       {
@@ -379,19 +383,22 @@ function startResizeMonitoring() {
 
   isMonitoringResize = true;
 
-  // Set up tmux hook for pane resize events
-  try {
-    execSync(
-      'tmux set-hook -g pane-resized "run-shell \\"echo pane-resized >> /tmp/tmux-resize-events\\""',
-      {
-        timeout: 1000,
-        stdio: 'ignore',
-      }
-    );
-  } catch (error) {
-    // Fallback to polling if hooks fail
-    console.warn('Failed to set tmux resize hook, falling back to polling');
-  }
+  // Defer tmux operations to avoid blocking React rendering
+  setImmediate(() => {
+    // Set up tmux hook for pane resize events
+    try {
+      execSync(
+        'tmux set-hook -g pane-resized "run-shell \\"echo pane-resized >> /tmp/tmux-resize-events\\""',
+        {
+          timeout: 1000,
+          stdio: 'ignore',
+        }
+      );
+    } catch (error) {
+      // Fallback to polling if hooks fail
+      console.warn('Failed to set tmux resize hook, falling back to polling');
+    }
+  });
 
   // Monitor for resize events
   resizeMonitorInterval = setInterval(() => {

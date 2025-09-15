@@ -81,12 +81,15 @@ export function useTmux(): UseTmuxReturn {
     if (!isInTmux()) return;
 
     const updateSessionInfo = () => {
-      const info = getTmuxInfo();
-      setSessionInfo({
-        sessionName: info.sessionName,
-        windowName: info.windowName,
-        paneId: info.paneId,
-      });
+      // Defer tmux info update to avoid blocking during potential render cycles
+      setTimeout(() => {
+        const info = getTmuxInfo();
+        setSessionInfo({
+          sessionName: info.sessionName,
+          windowName: info.windowName,
+          paneId: info.paneId,
+        });
+      }, 0);
     };
 
     // Update session info every 30 seconds
