@@ -19,7 +19,7 @@ export function quote(args: string[]): string[] {
     }
 
     // If the argument contains no special characters, return as-is
-    if (/^[a-zA-Z0-9._\/-]+$/i.test(arg)) {
+    if (/^[a-zA-Z0-9._/-]+$/i.test(arg)) {
       return arg;
     }
 
