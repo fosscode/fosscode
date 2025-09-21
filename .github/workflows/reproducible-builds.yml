@@ -137,7 +137,7 @@ jobs:
           echo "ZERO_AR_DATE=1" >> $GITHUB_ENV
           echo "AR_FLAGS=D" >> $GITHUB_ENV
 
-      - name: Set up reproducible build environment (Windows)
+       - name: Set up reproducible build environment (Windows)
          if: runner.os == 'Windows'
          run: |
            $timestamp = git log -1 --format=%ct
