@@ -223,10 +223,8 @@ export class WebFetchTool implements Tool {
     // Simple HTML parsing to remove <script>, <style> and extract text and links
     // This replaces cheerio to eliminate the boolbase dependency
 
-    // Remove script and style tags and their content
-    const cleanedHtml = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    // Use a more robust HTML sanitization approach to handle multi-character sanitization
+    const cleanedHtml = this.sanitizeHtml(html);
 
     // Extract links from <a href="..."> tags
     const links: string[] = [];
@@ -244,12 +242,75 @@ export class WebFetchTool implements Tool {
 
     let content: string;
     if (format === 'markdown') {
-      // Basic markdown conversion (this could be expanded if needed)
-      content = text;
+      // Basic markdown conversion - convert common HTML elements to markdown
+      content = this.convertToMarkdown(text);
     } else {
       content = text;
     }
 
     return { content, links };
+  }
+
+  /**
+   * Sanitize HTML content to remove dangerous tags and handle multi-character sanitization
+   */
+  private sanitizeHtml(html: string): string {
+    let result = html;
+
+    // Remove script tags and their content using iterative approach
+    while (result.includes('<script')) {
+      const scriptStart = result.indexOf('<script');
+      const scriptEnd = result.indexOf('</script>', scriptStart);
+
+      if (scriptEnd === -1) {
+        // Malformed script tag, remove from start to end
+        result = result.substring(0, scriptStart);
+        break;
+      } else {
+        // Remove script tag and its content
+        result = result.substring(0, scriptStart) + result.substring(scriptEnd + 9);
+      }
+    }
+
+    // Remove style tags and their content using iterative approach
+    while (result.includes('<style')) {
+      const styleStart = result.indexOf('<style');
+      const styleEnd = result.indexOf('</style>', styleStart);
+
+      if (styleEnd === -1) {
+        // Malformed style tag, remove from start to end
+        result = result.substring(0, styleStart);
+        break;
+      } else {
+        // Remove style tag and its content
+        result = result.substring(0, styleStart) + result.substring(styleEnd + 8);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Convert plain text to basic markdown format
+   */
+  private convertToMarkdown(text: string): string {
+    // Basic markdown conversion - this is a simple implementation
+    // that adds basic markdown formatting for common patterns
+
+    let markdown = text;
+
+    // Convert headings (lines that look like titles)
+    markdown = markdown.replace(/^([A-Z][^.!?]*)$\n/gm, '# $1\n');
+
+    // Convert bold text (text surrounded by **)
+    markdown = markdown.replace(/\*\*([^*]+)\*\*/g, '**$1**');
+
+    // Convert italic text (text surrounded by *)
+    markdown = markdown.replace(/\*([^*]+)\*/g, '*$1*');
+
+    // Convert links if they exist in the text
+    markdown = markdown.replace(/https?:\/\/[^\s]+/g, '[$&]($&)');
+
+    return markdown;
   }
 }
