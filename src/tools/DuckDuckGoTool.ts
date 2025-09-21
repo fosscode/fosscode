@@ -208,7 +208,7 @@ export class DuckDuckGoTool implements Tool {
         firstUrl: topic.FirstURL,
         icon: topic.Icon?.URL,
         result: topic.Result,
-      })).filter((topic: any) => topic.text || topic.result);
+      })).filter((topic: any) => topic.text ?? topic.result);
     }
 
     // Process main results
@@ -281,7 +281,7 @@ export class DuckDuckGoTool implements Tool {
     if (result.relatedTopics.length > 0) {
       markdown += '## Related Topics\n';
       result.relatedTopics.slice(0, 10).forEach((topic: any, index: number) => {
-        markdown += `${index + 1}. ${topic.text || topic.result}\n`;
+        markdown += `${index + 1}. ${topic.text ?? topic.result}\n`;
         if (topic.firstUrl) {
           markdown += `   [Link](${topic.firstUrl})\n`;
         }
@@ -337,7 +337,7 @@ export class DuckDuckGoTool implements Tool {
     if (result.relatedTopics.length > 0) {
       text += 'Related Topics:\n';
       result.relatedTopics.slice(0, 5).forEach((topic: any, index: number) => {
-        text += `${index + 1}. ${topic.text || topic.result}\n`;
+        text += `${index + 1}. ${topic.text ?? topic.result}\n`;
         if (topic.firstUrl) {
           text += `   ${topic.firstUrl}\n`;
         }

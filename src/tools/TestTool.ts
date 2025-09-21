@@ -191,13 +191,13 @@ export class TestTool implements Tool {
         if (fs.existsSync(packageJsonPath)) {
           try {
             const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-            const scripts = packageJson.scripts || {};
+            const scripts = packageJson.scripts ?? {};
             for (const script of Object.values(scripts) as string[]) {
               if (script.includes(framework)) {
                 return framework;
               }
             }
-          } catch (error) {
+          } catch {
             // Ignore package.json parsing errors
           }
         }

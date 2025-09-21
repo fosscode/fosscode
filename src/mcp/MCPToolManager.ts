@@ -35,7 +35,7 @@ export class MCPToolManager {
     };
 
     const toolsResult = await protocolHandler.sendRequest(toolsRequest);
-    const tools: MCPTool[] = toolsResult.tools || [];
+    const tools: MCPTool[] = toolsResult.tools ?? [];
 
     // Cache the tools for this server
     this.serverTools.set(serverName, tools);
@@ -95,7 +95,7 @@ export class MCPToolManager {
             return {
               success: !result.isError,
               data: result.content,
-              error: result.isError ? result.content?.[0]?.text || 'Unknown error' : undefined,
+              error: result.isError ? (result.content?.[0]?.text ?? 'Unknown error') : undefined,
             };
           } catch (error) {
             return {
@@ -219,7 +219,7 @@ export class MCPToolManager {
       output += `🔧 Tool: ${result.tool}\n`;
       if (result.success) {
         output += `✅ Success:\n`;
-        for (const content of result.content || []) {
+        for (const content of result.content ?? []) {
           if (content.type === 'text') {
             output += `   ${content.text}\n`;
           }
@@ -256,7 +256,7 @@ export class MCPToolManager {
         parameters.push({
           name: paramName,
           type: paramType,
-          description: (paramSchema as any)?.description || `Parameter ${paramName}`,
+          description: (paramSchema as any)?.description ?? `Parameter ${paramName}`,
           required: isRequired,
         });
       }

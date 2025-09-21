@@ -41,7 +41,7 @@ export class ConfigManager {
       // Merge with default config to ensure all properties exist
       this.config = { ...ConfigDefaults.getDefaultConfig(), ...loadedConfig };
       this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);
-    } catch (error) {
+    } catch {
       // If config doesn't exist or is invalid, use defaults
       this.config = ConfigDefaults.getDefaultConfig();
       this.modelCacheManager = new ModelCacheManager(this.config.cachedModels);

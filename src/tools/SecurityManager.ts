@@ -131,7 +131,7 @@ export class SecurityManager {
   async validateFileAccess(filePath: string): Promise<void> {
     try {
       await fs.promises.access(filePath, fs.constants.R_OK);
-    } catch (error) {
+    } catch {
       throw new Error(`Cannot access file '${filePath}': file does not exist or is not readable`);
     }
   }
@@ -167,7 +167,7 @@ export class SecurityManager {
     const directory = path.dirname(filePath);
     try {
       await fs.promises.access(directory, fs.constants.W_OK);
-    } catch (error) {
+    } catch {
       throw new Error(
         `Write permission denied for '${filePath}': cannot write to directory '${directory}'`
       );

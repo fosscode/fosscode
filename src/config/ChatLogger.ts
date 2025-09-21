@@ -72,7 +72,7 @@ export class ChatLogger {
     const timestamp = new Date().toISOString();
     const sessionInfo = this._sessionId ? ` [${this._sessionProvider}/${this._sessionModel}]` : '';
     const timeInfo = responseTime ? ` (${responseTime}ms)` : '';
-    const content = response.content || response.text || JSON.stringify(response);
+    const content = response.content ?? response.text ?? JSON.stringify(response);
     const logEntry = `[${timestamp}]${sessionInfo} RECEIVED${timeInfo}: ${content}\n`;
 
     console.log(

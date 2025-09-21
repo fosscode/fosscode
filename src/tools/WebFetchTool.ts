@@ -70,7 +70,7 @@ export class WebFetchTool implements Tool {
       let parsedUrl: URL;
       try {
         parsedUrl = new URL(targetUrl);
-      } catch (error) {
+      } catch {
         throw new Error('Invalid URL format');
       }
 

@@ -108,7 +108,7 @@ export class CancellationManager extends EventEmitter {
     for (const process of this.activeProcesses) {
       try {
         process.kill('SIGTERM');
-      } catch (error) {
+      } catch {
         // Process might already be dead
       }
     }

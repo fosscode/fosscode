@@ -79,7 +79,7 @@ export class ApprovalManager {
 
     if (type === 'always') {
       if (this.config.approvals === undefined) {
-        this.config.approvals = { session: {}, persistent: {} };
+        this.config.approvals = this.config.approvals ?? { session: {}, persistent: {} };
       }
       this.config.approvals.persistent[key] = 'always';
     } else {

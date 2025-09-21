@@ -86,8 +86,8 @@ function processBatchedCommands() {
           timeout: 1000,
         }).trim();
         cmd.resolve(result);
-      } catch (error) {
-        cmd.reject(error instanceof Error ? error : new Error(String(error)));
+      } catch {
+        cmd.reject(new Error('Command execution failed'));
       }
     } else {
       // For multiple commands, try to batch them
@@ -106,7 +106,7 @@ function processBatchedCommands() {
         commandsToProcess.forEach((cmd, index) => {
           cmd.resolve(results[index] || '');
         });
-      } catch (error) {
+      } catch {
         // If batching fails, fall back to individual execution
         commandsToProcess.forEach(async cmd => {
           try {
@@ -121,10 +121,10 @@ function processBatchedCommands() {
         });
       }
     }
-  } catch (error) {
+  } catch {
     // Reject all commands if batch processing fails
     commandsToProcess.forEach(cmd => {
-      cmd.reject(error instanceof Error ? error : new Error(String(error)));
+      cmd.reject(new Error('Command batching failed'));
     });
   }
 }
@@ -160,7 +160,7 @@ function initializeTmuxFeatures() {
       // Test if status line feature is available
       execSync('tmux set-status-left ""', { timeout: 500, stdio: 'ignore' });
       statusLineFeatureAvailable = true;
-    } catch (error) {
+    } catch {
       statusLineFeatureAvailable = false;
     }
 
@@ -168,7 +168,7 @@ function initializeTmuxFeatures() {
       // Test if key binding feature is available
       execSync('tmux list-keys >/dev/null 2>&1', { timeout: 500 });
       keyBindingFeatureAvailable = true;
-    } catch (error) {
+    } catch {
       keyBindingFeatureAvailable = false;
     }
   });
@@ -234,7 +234,7 @@ export async function getTmuxInfoAsync(): Promise<TmuxInfo> {
 
     cacheTimestamp = now;
     return tmuxInfoCache;
-  } catch (error) {
+  } catch {
     // Fallback if tmux commands fail
     tmuxInfoCache = {
       isInTmux: true,
@@ -296,7 +296,7 @@ export function getTmuxInfo(): TmuxInfo {
 
     cacheTimestamp = now;
     return tmuxInfoCache;
-  } catch (error) {
+  } catch {
     // Fallback if tmux commands fail
     tmuxInfoCache = {
       isInTmux: true,
@@ -394,7 +394,7 @@ function startResizeMonitoring() {
           stdio: 'ignore',
         }
       );
-    } catch (error) {
+    } catch {
       // Fallback to polling if hooks fail
       console.warn('Failed to set tmux resize hook, falling back to polling');
     }
@@ -425,7 +425,7 @@ function stopResizeMonitoring() {
       timeout: 1000,
       stdio: 'ignore',
     });
-  } catch (error) {
+  } catch {
     // Ignore cleanup errors
   }
 }
@@ -463,8 +463,8 @@ function notifyResizeListeners(newSize: { width: number; height: number }) {
   resizeListeners.forEach(callback => {
     try {
       callback(newSize);
-    } catch (error) {
-      console.error('Error in resize callback:', error);
+    } catch {
+      console.error('Error in resize callback:', 'Unknown error');
     }
   });
 }
@@ -541,7 +541,7 @@ function checkForKeyBindingEvents() {
         }
       });
     }
-  } catch (error) {
+  } catch {
     // Ignore errors in key binding monitoring
   }
 }
@@ -553,8 +553,8 @@ function notifyKeyBindingListeners(key: string, action: string) {
   keyBindingListeners.forEach(callback => {
     try {
       callback(key, action);
-    } catch (error) {
-      console.error('Error in key binding callback:', error);
+    } catch {
+      console.error('Error in key binding callback:', 'Unknown error');
     }
   });
 }
@@ -574,8 +574,8 @@ export function setupTmuxKeyBindings(bindings: Record<string, string>) {
       const tmuxCommand = `tmux bind-key ${key} run-shell "echo '${key}:${action}' | tmux load-buffer - && tmux paste-buffer"`;
       execSync(tmuxCommand, { timeout: 1000, stdio: 'ignore' });
     });
-  } catch (error) {
-    console.warn('Failed to set up tmux key bindings:', error);
+  } catch {
+    console.warn('Failed to set up tmux key bindings:', 'Unknown error');
   }
 }
 
@@ -590,8 +590,8 @@ export function updateTmuxStatusLine(mode: string, provider: string, additionalI
     const tmuxCommand = `tmux set-status-left "${statusText}"`;
 
     execSync(tmuxCommand, { timeout: 1000, stdio: 'ignore' });
-  } catch (error) {
-    console.warn('Failed to update tmux status line:', error);
+  } catch {
+    console.warn('Failed to update tmux status line:', 'Unknown error');
   }
 }
 
@@ -603,8 +603,8 @@ export function clearTmuxStatusLine() {
 
   try {
     execSync('tmux set-status-left ""', { timeout: 1000, stdio: 'ignore' });
-  } catch (error) {
-    console.warn('Failed to clear tmux status line:', error);
+  } catch {
+    console.warn('Failed to clear tmux status line:', 'Unknown error');
   }
 }
 
@@ -637,8 +637,8 @@ export function saveChatHistoryToSession(history: any[]): boolean {
     fs.writeFileSync(filePath, JSON.stringify(history, null, 2));
 
     return true;
-  } catch (error) {
-    console.warn('Failed to save chat history to session:', error);
+  } catch {
+    console.warn('Failed to save chat history to session:', 'Unknown error');
     return false;
   }
 }
@@ -666,8 +666,8 @@ export function loadChatHistoryFromSession(): any[] | null {
       ...message,
       timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
     }));
-  } catch (error) {
-    console.warn('Failed to load chat history from session:', error);
+  } catch {
+    console.warn('Failed to load chat history from session:', 'Unknown error');
     return null;
   }
 }
@@ -692,7 +692,7 @@ export function cleanupOldSessionFiles() {
         fs.unlinkSync(filePath);
       }
     });
-  } catch (error) {
-    console.warn('Failed to cleanup old session files:', error);
+  } catch {
+    console.warn('Failed to cleanup old session files:', 'Unknown error');
   }
 }

@@ -119,7 +119,7 @@ export class OpenRouterProvider implements LLMProvider {
       }
 
       return {
-        content: choice.message.content || '',
+        content: choice.message.content ?? '',
         usage: data.usage
           ? {
               promptTokens: data.usage.prompt_tokens,

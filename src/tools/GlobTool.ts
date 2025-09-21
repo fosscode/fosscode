@@ -169,12 +169,12 @@ export class GlobTool implements Tool {
             if (stats.isDirectory()) {
               await walkDir(fullPath);
             }
-          } catch (error) {
+          } catch {
             // Skip items we can't access
             continue;
           }
         }
-      } catch (error) {
+      } catch {
         // Skip directories we can't read
       }
     };

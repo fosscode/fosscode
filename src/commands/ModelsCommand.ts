@@ -61,7 +61,7 @@ export class ModelsCommand {
                 console.log(`  • ${model}`);
               });
             }
-          } catch (error) {
+          } catch {
             console.log(pc.gray(`  Unable to list models (API key may not be configured)`));
           }
 

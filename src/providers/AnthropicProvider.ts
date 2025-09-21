@@ -57,10 +57,12 @@ export class AnthropicProvider implements LLMProvider {
     }
 
     if (!this.client) {
-      this.client = new Anthropic({
-        apiKey: config.apiKey,
-        timeout: config.timeout ?? 30000,
-      });
+      this.client =
+        this.client ??
+        new Anthropic({
+          apiKey: config.apiKey,
+          timeout: config.timeout ?? 30000,
+        });
     }
 
     try {
@@ -161,10 +163,12 @@ export class AnthropicProvider implements LLMProvider {
 
     // Initialize client if not already done
     if (!this.client) {
-      this.client = new Anthropic({
-        apiKey: config.apiKey,
-        timeout: config.timeout ?? 30000,
-      });
+      this.client =
+        this.client ??
+        new Anthropic({
+          apiKey: config.apiKey,
+          timeout: config.timeout ?? 30000,
+        });
     }
 
     try {

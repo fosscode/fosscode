@@ -79,7 +79,7 @@ export class VSCodeCommand {
       console.log("1. Restart VSCode if it's running");
       console.log('2. The extension will automatically detect fosscode file changes');
       console.log('3. Use fosscode edit commands to see diffs in VSCode');
-    } catch (error) {
+    } catch {
       console.log(pc.red('❌ Failed to install extension automatically.'));
       console.log('');
       this.showManualInstallInstructions();

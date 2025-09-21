@@ -113,14 +113,14 @@ export class EditTool implements Tool {
       try {
         await fs.promises.writeFile(tempPath, newContent, { encoding: encoding as BufferEncoding });
         await fs.promises.rename(tempPath, validatedPath);
-      } catch (error) {
+      } catch (_error) {
         // Clean up temp file if write failed
         try {
           await fs.promises.unlink(tempPath);
-        } catch (cleanupError) {
+        } catch {
           // Ignore cleanup errors
         }
-        throw error;
+        throw _error;
       }
 
       // Generate and save diff information for VSCode extension

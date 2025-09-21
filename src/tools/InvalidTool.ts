@@ -222,12 +222,12 @@ export class InvalidTool implements Tool {
     }
 
     // Add operation-specific troubleshooting steps
-    if (operation && operation.includes('file')) {
+    if (operation?.includes('file')) {
       steps.push('5. Verify file system integrity');
       steps.push('6. Check disk space and quotas');
     }
 
-    if (operation && operation.includes('network')) {
+    if (operation?.includes('network')) {
       steps.push('5. Test network connectivity with ping/traceroute');
       steps.push('6. Check DNS resolution and proxy settings');
     }

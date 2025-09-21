@@ -46,7 +46,7 @@ export class PromptHistoryManager {
       } else {
         this.history = [];
       }
-    } catch (error) {
+    } catch {
       // If history doesn't exist or is corrupted, start with empty history
       this.history = [];
       await this.saveHistory();

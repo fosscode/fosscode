@@ -155,7 +155,7 @@ function formatListResult(data: any): string {
   const { path, items } = data;
 
   let output = `✅ list: ${path}\n`;
-  output += `   📁 Contents (${items?.length || 0} items):\n`;
+  output += `   📁 Contents (${items?.length ?? 0} items):\n`;
 
   if (items && items.length > 0) {
     const formattedItems = items
@@ -182,13 +182,13 @@ function formatGrepResult(data: any): string {
   if (path) output += ` in ${path}`;
   output += `\n`;
 
-  output += `   🔍 Found ${matches?.length || 0} matches:\n`;
+  output += `   🔍 Found ${matches?.length ?? 0} matches:\n`;
 
   if (matches && matches.length > 0) {
     const formattedMatches = matches
       .slice(0, 10)
       .map((match: any) => {
-        return `   📍 ${match.file}:${match.line}: ${match.content?.trim() || ''}`;
+        return `   📍 ${match.file}:${match.line}: ${match.content?.trim() ?? ''}`;
       })
       .join('\n');
     output += formattedMatches;

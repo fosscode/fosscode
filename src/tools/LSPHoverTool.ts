@@ -107,7 +107,7 @@ export class LSPHoverTool implements Tool {
       }
 
       // Detect language if not provided
-      const detectedLanguage = language || this.detectLanguage(filePath);
+      const detectedLanguage = language ?? this.detectLanguage(filePath);
 
       // Analyze the symbol at the given position
       const hoverInfo = await this.analyzeSymbol(

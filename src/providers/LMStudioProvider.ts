@@ -126,9 +126,9 @@ export class LMStudioProvider implements LLMProvider {
 
         // Accumulate usage
         if (data.usage) {
-          totalUsage.prompt_tokens += data.usage.prompt_tokens || 0;
-          totalUsage.completion_tokens += data.usage.completion_tokens || 0;
-          totalUsage.total_tokens += data.usage.total_tokens || 0;
+          totalUsage.prompt_tokens += data.usage.prompt_tokens ?? 0;
+          totalUsage.completion_tokens += data.usage.completion_tokens ?? 0;
+          totalUsage.total_tokens += data.usage.total_tokens ?? 0;
         }
 
         const assistantMessage = choice.message;

@@ -61,7 +61,7 @@ export class MockProvider implements LLMProvider {
     if (process.env.MOCK_RESPONSES) {
       try {
         MockProvider.cannedResponses = JSON.parse(process.env.MOCK_RESPONSES);
-      } catch (error) {
+      } catch {
         // If parsing fails, use empty array
         MockProvider.cannedResponses = [];
       }

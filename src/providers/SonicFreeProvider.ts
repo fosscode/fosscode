@@ -35,12 +35,14 @@ export class SonicFreeProvider implements LLMProvider {
     permissionManager?: PermissionManager
   ): Promise<ProviderResponse> {
     if (!this.client) {
-      this.client = new OpenAI({
-        apiKey: 'sonic-free', // Dummy key since it's free
-        baseURL: config.baseURL ?? 'https://gateway.opencode.ai/v1',
-        timeout: config.timeout ?? 30000,
-        maxRetries: config.maxRetries ?? 3,
-      });
+      this.client =
+        this.client ??
+        new OpenAI({
+          apiKey: 'sonic-free', // Dummy key since it's free
+          baseURL: config.baseURL ?? 'https://gateway.opencode.ai/v1',
+          timeout: config.timeout ?? 30000,
+          maxRetries: config.maxRetries ?? 3,
+        });
     }
 
     try {
@@ -201,7 +203,7 @@ export class SonicFreeProvider implements LLMProvider {
           intermediateContent += `🔧 **Iteration ${iteration + 1} - Tool Calls:**\n`;
           for (const toolCall of assistantMessage.tool_calls) {
             const toolFunction = (toolCall as any).function;
-            intermediateContent += `   • ${toolFunction?.name || 'unknown'}`;
+            intermediateContent += `   • ${toolFunction?.name ?? 'unknown'}`;
             if (toolFunction?.arguments) {
               try {
                 const args = JSON.parse(toolFunction.arguments);
@@ -228,7 +230,7 @@ export class SonicFreeProvider implements LLMProvider {
                 } else if (toolFunction.name === 'edit' && args.filePath) {
                   console.log(`✏️  Editing file: ${args.filePath}`);
                 }
-              } catch (_e) {
+              } catch {
                 // Ignore JSON parse errors for display
               }
             }
@@ -249,7 +251,7 @@ export class SonicFreeProvider implements LLMProvider {
             toolResult = await executeToolCalls(
               assistantMessage.tool_calls,
               mode,
-              chatLogger || this.chatLogger,
+              chatLogger ?? this.chatLogger,
               permissionManager
             );
           } catch (toolError) {
@@ -358,12 +360,14 @@ export class SonicFreeProvider implements LLMProvider {
 
   async listModels(config: LLMConfig): Promise<string[]> {
     if (!this.client) {
-      this.client = new OpenAI({
-        apiKey: 'sonic-free',
-        baseURL: config.baseURL ?? 'https://gateway.opencode.ai/v1',
-        timeout: config.timeout ?? 30000,
-        maxRetries: config.maxRetries ?? 3,
-      });
+      this.client =
+        this.client ??
+        new OpenAI({
+          apiKey: 'sonic-free',
+          baseURL: config.baseURL ?? 'https://gateway.opencode.ai/v1',
+          timeout: config.timeout ?? 30000,
+          maxRetries: config.maxRetries ?? 3,
+        });
     }
 
     try {

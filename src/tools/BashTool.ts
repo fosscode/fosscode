@@ -47,7 +47,7 @@ export class BashTool implements Tool {
         const history = historyData.split('\n').filter(line => line.trim());
         return history.slice(-this.maxHistorySize); // Keep only the most recent entries
       }
-    } catch (error) {
+    } catch {
       // Silently fail for history loading
     }
     return [];
@@ -57,7 +57,7 @@ export class BashTool implements Tool {
     try {
       const limitedHistory = history.slice(-this.maxHistorySize);
       fs.writeFileSync(this.historyFile, limitedHistory.join('\n') + '\n');
-    } catch (error) {
+    } catch {
       // Silently fail for history saving
     }
   }

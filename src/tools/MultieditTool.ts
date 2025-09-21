@@ -133,7 +133,7 @@ export class MultieditTool implements Tool {
         return globResult;
       }
 
-      const matchedFiles = globResult.data?.matches || [];
+      const matchedFiles = globResult.data?.matches ?? [];
       if (matchedFiles.length === 0) {
         return {
           success: true,
@@ -172,7 +172,7 @@ export class MultieditTool implements Tool {
                 shouldInclude = true;
                 break;
               }
-            } catch (error) {
+            } catch {
               // Skip this pattern if it fails
               continue;
             }

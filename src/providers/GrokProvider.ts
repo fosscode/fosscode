@@ -121,7 +121,7 @@ export class GrokProvider implements LLMProvider {
             throw new Error('No response from xAI API');
           }
 
-          let content = choice.message?.content || '';
+          let content = choice.message?.content ?? '';
 
           // Handle tool calls if present (xAI may support this)
           if (choice.message?.tool_calls) {
@@ -146,12 +146,12 @@ export class GrokProvider implements LLMProvider {
             content,
             usage: data.usage
               ? {
-                  promptTokens: data.usage.prompt_tokens || 0,
-                  completionTokens: data.usage.completion_tokens || 0,
-                  totalTokens: data.usage.total_tokens || 0,
+                  promptTokens: data.usage.prompt_tokens ?? 0,
+                  completionTokens: data.usage.completion_tokens ?? 0,
+                  totalTokens: data.usage.total_tokens ?? 0,
                 }
               : undefined,
-            finishReason: choice.finish_reason || 'stop',
+            finishReason: choice.finish_reason ?? 'stop',
           };
         } else if (response.status === 404) {
           // Model not found, try next one
@@ -161,7 +161,7 @@ export class GrokProvider implements LLMProvider {
           // Other error, return immediately
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `xAI API error: ${response.status} ${response.statusText} - ${errorData.error?.message || 'Unknown error'}`
+            `xAI API error: ${response.status} ${response.statusText} - ${errorData.error?.message ?? 'Unknown error'}`
           );
         }
       } catch (error) {

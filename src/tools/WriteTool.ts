@@ -75,7 +75,7 @@ export class WriteTool implements Tool {
           await fs.promises.copyFile(validatedPath, backupPath);
           backupCreated = true;
         }
-      } catch (error) {
+      } catch {
         // File doesn't exist, no backup needed
       }
 
@@ -90,14 +90,14 @@ export class WriteTool implements Tool {
       try {
         await fs.promises.writeFile(tempPath, content, { encoding: encoding as BufferEncoding });
         await fs.promises.rename(tempPath, validatedPath);
-      } catch (error) {
+      } catch (_error) {
         // Clean up temp file if write failed
         try {
           await fs.promises.unlink(tempPath);
-        } catch (cleanupError) {
+        } catch {
           // Ignore cleanup errors
         }
-        throw error;
+        throw _error;
       }
 
       // Get file stats

@@ -18,7 +18,7 @@ class FileTrackerManager {
    */
   getFileTracker(): FileTracker {
     if (!this.fileTracker) {
-      this.fileTracker = new FileTracker();
+      this.fileTracker = this.fileTracker ?? new FileTracker();
     }
     return this.fileTracker;
   }

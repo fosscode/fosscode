@@ -68,13 +68,15 @@ export class OpenAIProvider implements LLMProvider {
     }
 
     if (!this.client) {
-      this.client = new OpenAI({
-        apiKey: config.apiKey,
-        baseURL: config.baseURL,
-        organization: config.organization,
-        timeout: config.timeout ?? 30000,
-        maxRetries: config.maxRetries ?? 3,
-      });
+      this.client =
+        this.client ??
+        new OpenAI({
+          apiKey: config.apiKey,
+          baseURL: config.baseURL,
+          organization: config.organization,
+          timeout: config.timeout ?? 30000,
+          maxRetries: config.maxRetries ?? 3,
+        });
     }
 
     try {
@@ -254,13 +256,15 @@ export class OpenAIProvider implements LLMProvider {
 
     // Initialize client if not already done
     if (!this.client) {
-      this.client = new OpenAI({
-        apiKey: config.apiKey,
-        baseURL: config.baseURL,
-        organization: config.organization,
-        timeout: config.timeout ?? 30000,
-        maxRetries: config.maxRetries ?? 3,
-      });
+      this.client =
+        this.client ??
+        new OpenAI({
+          apiKey: config.apiKey,
+          baseURL: config.baseURL,
+          organization: config.organization,
+          timeout: config.timeout ?? 30000,
+          maxRetries: config.maxRetries ?? 3,
+        });
     }
 
     try {

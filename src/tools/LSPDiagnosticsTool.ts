@@ -90,7 +90,7 @@ export class LSPDiagnosticsTool implements Tool {
         fileContents.set(filePath, content);
 
         // Determine language if not provided
-        const detectedLanguage = language || this.detectLanguage(filePath);
+        const detectedLanguage = language ?? this.detectLanguage(filePath);
         fileLanguages.set(filePath, detectedLanguage);
       }
 
@@ -131,7 +131,7 @@ export class LSPDiagnosticsTool implements Tool {
           summary: this.createSummary(limitedDiagnostics),
         },
         metadata: {
-          language: language || 'auto-detected',
+          language: language ?? 'auto-detected',
           severityFilter: severity,
           includeSource,
           maxResults,
