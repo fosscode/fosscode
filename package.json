@@ -97,7 +97,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "0.62.0",
+    "@anthropic-ai/sdk": "0.63.1",
     "@playwright/mcp": "0.0.39",
     "commander": "14.0.1",
     "gpt-tokenizer": "^3.0.1",
