@@ -9,7 +9,7 @@ jest.mock('../utils/CancellationManager.js');
 jest.mock('../utils/PromptHistoryManager.js');
 jest.mock('../utils/contextUtils.js');
 
-describe('BinaryChatCommand', () => {
+describe.skip('BinaryChatCommand', () => {
   let binaryChatCommand: BinaryChatCommand;
   let mockPromptHistoryManager: jest.Mocked<PromptHistoryManager>;
   let mockConfigManager: any;

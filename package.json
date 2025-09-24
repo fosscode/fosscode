@@ -1,6 +1,6 @@
 {
   "name": "fosscode",
-  "version": "0.0.116",
+  "version": "0.0.201",
   "description": "Lightweight CLI application for code agent interactions with LLMs",
   "type": "module",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target node --external \"@anthropic-ai/sdk\" --external \"openai\" --external \"chalk\" --external \"ink\" --external \"react\" --external \"yoga-wasm-web\" && cp node_modules/yoga-wasm-web/dist/yoga.wasm dist/",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node12 --outfile=dist/index.js --external:@anthropic-ai/sdk --external:openai --external:chalk --external:ink --external:react --external:yoga-wasm-web --format=esm && cp node_modules/yoga-wasm-web/dist/yoga.wasm dist/",
     "build:exe": "bun build src/binary.ts --target node --compile --outfile dist/fosscode",
     "build:docker": "docker build -t fosscode .",
     "typecheck": "tsc --noEmit",
@@ -51,6 +51,7 @@
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
+    "esbuild": "^0.25.10",
     "eslint": "^8.0.0",
     "eslint-plugin-react": "^7.33.0",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -97,7 +98,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.62.0",
-    "@playwright/mcp": "0.0.37",
+    "@playwright/mcp": "0.0.39",
     "commander": "14.0.1",
     "gpt-tokenizer": "^3.0.1",
     "grammy": "1.38.2",

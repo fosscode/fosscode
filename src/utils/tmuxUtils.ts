@@ -29,6 +29,14 @@ let tmuxInfoCache: TmuxInfo | null = null;
 let cacheTimestamp = 0;
 const CACHE_DURATION = 2000; // Reduced to 2 seconds for better responsiveness
 
+/**
+ * Clear tmux info cache (for testing)
+ */
+export function clearTmuxCache(): void {
+  tmuxInfoCache = null;
+  cacheTimestamp = 0;
+}
+
 // Batch command execution to reduce tmux calls
 interface BatchedCommand {
   id: string;
