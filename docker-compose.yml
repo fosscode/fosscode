@@ -11,5 +11,5 @@ services:
       - ~/.config/fosscode:/home/nodejs/.config/fosscode
     environment:
       - NODE_ENV=production
-    command: ["bun", "run", "src/index.ts"]
+    command: ['bun', 'run', 'src/index.ts']
     restart: unless-stopped

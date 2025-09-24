@@ -49,11 +49,11 @@ jobs:
           echo "LANG=C" >> $GITHUB_ENV
           echo "LC_ALL=C" >> $GITHUB_ENV
           echo "TZ=UTC" >> $GITHUB_ENV
-          echo "TMPDIR=$TMPDIR" >> $GITHUB_ENV
-          echo "TEMP=$TMPDIR" >> $GITHUB_ENV
-          echo "TMP=$TMPDIR" >> $GITHUB_ENV
-          echo "ZERO_AR_DATE=1" >> $GITHUB_ENV
-          echo "AR_FLAGS=D" >> $GITHUB_ENV
+           echo "TMPDIR=$TMPDIR" >> $GITHUB_ENV
+           echo "TEMP=$TMPDIR" >> $GITHUB_ENV
+           echo "TMP=$TMPDIR" >> $GITHUB_ENV
+           echo "ZERO_AR_DATE=1" >> $GITHUB_ENV
+           echo "AR_FLAGS=D" >> $GITHUB_ENV
           echo "Build environment configured for reproducibility"
           echo "SOURCE_DATE_EPOCH: $SOURCE_DATE_EPOCH ($(date -u -d @$SOURCE_DATE_EPOCH))"
           echo "TMPDIR: $TMPDIR"
@@ -98,7 +98,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
       fail-fast: false
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -127,6 +126,7 @@ jobs:
           export AR_FLAGS="D"
           mkdir -p "$TMPDIR"
           umask 022
+
           echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> $GITHUB_ENV
           echo "LANG=C" >> $GITHUB_ENV
           echo "LC_ALL=C" >> $GITHUB_ENV
@@ -137,21 +137,21 @@ jobs:
           echo "ZERO_AR_DATE=1" >> $GITHUB_ENV
           echo "AR_FLAGS=D" >> $GITHUB_ENV
 
-       - name: Set up reproducible build environment (Windows)
-         if: runner.os == 'Windows'
-         run: |
-           $timestamp = git log -1 --format=%ct
-           $tmpdir = "C:\tmp\reproducible-build-$timestamp"
-           New-Item -ItemType Directory -Force -Path $tmpdir | Out-Null
-           echo "SOURCE_DATE_EPOCH=$timestamp" >> $env:GITHUB_ENV
-           echo "LANG=C" >> $env:GITHUB_ENV
-           echo "LC_ALL=C" >> $env:GITHUB_ENV
-           echo "TZ=UTC" >> $env:GITHUB_ENV
-           echo "TMPDIR=$tmpdir" >> $env:GITHUB_ENV
-           echo "TEMP=$tmpdir" >> $env:GITHUB_ENV
-           echo "TMP=$tmpdir" >> $env:GITHUB_ENV
-           echo "ZERO_AR_DATE=1" >> $env:GITHUB_ENV
-           echo "AR_FLAGS=D" >> $env:GITHUB_ENV
+      - name: Set up reproducible build environment (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $timestamp = git log -1 --format=%ct
+          $tmpdir = "C:\tmp\reproducible-build-$timestamp"
+          New-Item -ItemType Directory -Force -Path $tmpdir | Out-Null
+          echo "SOURCE_DATE_EPOCH=$timestamp" >> $env:GITHUB_ENV
+          echo "LANG=C" >> $env:GITHUB_ENV
+          echo "LC_ALL=C" >> $env:GITHUB_ENV
+          echo "TZ=UTC" >> $env:GITHUB_ENV
+          echo "TMPDIR=$tmpdir" >> $env:GITHUB_ENV
+          echo "TEMP=$tmpdir" >> $env:GITHUB_ENV
+          echo "TMP=$tmpdir" >> $env:GITHUB_ENV
+          echo "ZERO_AR_DATE=1" >> $env:GITHUB_ENV
+          echo "AR_FLAGS=D" >> $env:GITHUB_ENV
 
       - name: Test platform-specific reproducibility
         shell: bash
@@ -164,7 +164,7 @@ jobs:
 
           sleep 2
 
-          echo "Building second binary..."  
+          echo "Building second binary..."
           bun build src/binary.ts --target node --compile --outfile test-binary-2
 
           # Compare hashes
@@ -183,7 +183,7 @@ jobs:
           if [ "$HASH1" = "$HASH2" ]; then
             echo "✅ Platform reproducibility: PASSED"
           else
-            echo "❌ Platform reproducibility: FAILED" 
+            echo "❌ Platform reproducibility: FAILED"
             echo "::warning::Reproducible builds failed on ${{ matrix.os }}"
           fi
 

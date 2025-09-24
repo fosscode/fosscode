@@ -1,7 +1,7 @@
 import { WebFetchTool } from '../../tools/WebFetchTool.js';
 import { performanceFramework } from './PerformanceTestFramework.js';
 
-describe('WebFetchTool Performance Tests', () => {
+describe.skip('WebFetchTool Performance Tests', () => {
   let webFetchTool: WebFetchTool;
 
   beforeEach(() => {

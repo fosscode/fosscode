@@ -14,11 +14,9 @@ export function MessageInput({
   isVerySmallScreen,
   isSmallScreen,
 }: MessageInputProps) {
-  const hasInput = input.length > 0;
-
   return (
     <Box alignItems="flex-start">
-      <FlashyText type={hasInput ? 'static' : 'rainbow'} speed={500}>
+      <FlashyText type="rainbow" speed={500}>
         {isVerySmallScreen ? '$ ' : '> '}
       </FlashyText>
       <Text>

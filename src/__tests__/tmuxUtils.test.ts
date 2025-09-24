@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { execSync } from 'child_process';
 import * as tmuxUtils from '../utils/tmuxUtils.js';
 
@@ -26,6 +29,11 @@ describe('tmuxUtils', () => {
     // Reset environment
     delete process.env.TMUX;
     delete process.env.TMUX_PANE;
+    // Mock setImmediate to call immediately for tests
+    jest.spyOn(global, 'setImmediate' as any).mockImplementation((fn: any) => {
+      fn();
+      return {} as any;
+    });
   });
 
   afterEach(() => {
