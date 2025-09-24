@@ -54,8 +54,8 @@ describe('GrepTool Performance Tests', () => {
 
       expect(result.success).toBe(true);
       expect(metrics.executionTime).toBeLessThan(2000);
-      expect(result.data.matches).toBeDefined();
-      expect(result.data.matches.length).toBeGreaterThan(0);
+      expect(result.data.results).toBeDefined();
+      expect(result.data.results.length).toBeGreaterThan(0);
     });
 
     it('should handle regex patterns efficiently', async () => {
@@ -76,7 +76,7 @@ describe('GrepTool Performance Tests', () => {
 
       expect(result.success).toBe(true);
       expect(metrics.executionTime).toBeLessThan(3000);
-      expect(result.data.matches).toBeDefined();
+      expect(result.data.results).toBeDefined();
     });
 
     it('should search with file type filtering', async () => {
@@ -98,7 +98,7 @@ describe('GrepTool Performance Tests', () => {
 
       expect(result.success).toBe(true);
       expect(metrics.executionTime).toBeLessThan(1500);
-      expect(result.data.matches).toBeDefined();
+      expect(result.data.results).toBeDefined();
     });
   });
 
@@ -116,7 +116,8 @@ describe('GrepTool Performance Tests', () => {
         async () => {
           return await grepTool.execute({
             pattern: 'performance',
-            path: largeFilePath,
+            path: testDir,
+            include: 'large-file.txt',
           });
         },
         {
@@ -127,8 +128,8 @@ describe('GrepTool Performance Tests', () => {
 
       expect(result.success).toBe(true);
       expect(metrics.executionTime).toBeLessThan(1000);
-      expect(result.data.matches).toBeDefined();
-      expect(result.data.matches.length).toBeGreaterThan(0);
+      expect(result.data.results).toBeDefined();
+      expect(result.data.results.length).toBeGreaterThan(0);
     });
   });
 
@@ -151,7 +152,7 @@ describe('GrepTool Performance Tests', () => {
 
       expect(result.success).toBe(true);
       expect(metrics.executionTime).toBeLessThan(5000);
-      expect(result.data.matches).toBeDefined();
+      expect(result.data.results).toBeDefined();
     });
 
     it('should handle case-insensitive search efficiently', async () => {
@@ -173,8 +174,8 @@ describe('GrepTool Performance Tests', () => {
 
       expect(result.success).toBe(true);
       expect(metrics.executionTime).toBeLessThan(2000);
-      expect(result.data.matches).toBeDefined();
-      expect(result.data.matches.length).toBeGreaterThan(0);
+      expect(result.data.results).toBeDefined();
+      expect(result.data.results.length).toBeGreaterThan(0);
     });
   });
 

@@ -2,6 +2,7 @@ import { PromptHistoryManager } from '../utils/PromptHistoryManager.js';
 import { fileTrackerManager } from '../utils/FileTrackerManager.js';
 import { generate as generateSystemPrompt } from '../prompts/SystemPrompt.js';
 import { initializeTools, getTool } from '../tools/init.js';
+import { toolRegistry } from '../tools/ToolRegistry.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -82,6 +83,7 @@ describe('System Integration Tests', () => {
 
   describe('Tool Execution Integration', () => {
     beforeEach(() => {
+      toolRegistry.clear();
       initializeTools();
     });
 
@@ -114,8 +116,8 @@ describe('System Integration Tests', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.data.matches).toBeDefined();
-      expect(result.data.matches.length).toBeGreaterThan(0);
+      expect(result.data.results).toBeDefined();
+      expect(result.data.results.length).toBeGreaterThan(0);
 
       // Verify files were tracked
       const fileTracker = fileTrackerManager.getFileTracker();

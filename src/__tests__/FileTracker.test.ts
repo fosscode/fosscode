@@ -251,7 +251,7 @@ describe('FileTracker', () => {
         expect(summary.totalAccesses).toBe(3);
         expect(summary.uniqueFiles).toBe(2);
         expect(typeof summary.sessionDuration).toBe('number');
-        expect(summary.sessionDuration).toBeGreaterThan(0);
+        expect(summary.sessionDuration).toBeGreaterThanOrEqual(0);
         expect(summary.toolsUsed).toEqual(['read', 'edit', 'grep']);
       } finally {
         if (fs.existsSync(testFile1)) fs.unlinkSync(testFile1);

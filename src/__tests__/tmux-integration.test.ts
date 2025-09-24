@@ -17,6 +17,8 @@ describe('Tmux Integration Tests', () => {
       process.env = originalEnv;
       // Restore execSync
       mockExecSync.mockRestore();
+      // Clear tmux cache
+      tmuxUtils.clearTmuxCache();
     });
 
     it('should detect when not in tmux', () => {
@@ -112,6 +114,8 @@ describe('Tmux Integration Tests', () => {
     afterEach(() => {
       process.env = originalEnv;
       mockExecSync.mockRestore();
+      // Clear tmux cache
+      tmuxUtils.clearTmuxCache();
     });
 
     it('should calculate responsive breakpoints for large panes', () => {
@@ -187,6 +191,8 @@ describe('Tmux Integration Tests', () => {
     afterEach(() => {
       process.env = originalEnv;
       mockExecSync.mockRestore();
+      // Clear tmux cache
+      tmuxUtils.clearTmuxCache();
     });
 
     it('should generate correct session storage key', () => {
@@ -297,6 +303,8 @@ describe('Tmux Integration Tests', () => {
     afterEach(() => {
       process.env = originalEnv;
       mockExecSync.mockRestore();
+      // Clear tmux cache
+      tmuxUtils.clearTmuxCache();
     });
 
     it('should handle malformed tmux output', () => {
