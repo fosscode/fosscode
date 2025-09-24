@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Bun (pinned version)
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.2.21
 
@@ -105,7 +105,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Bun (pinned version)
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.2.21
 
