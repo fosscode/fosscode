@@ -52,7 +52,7 @@
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "esbuild": "^0.25.10",
-    "eslint": "^8.0.0",
+    "eslint": "^9.36.0",
     "eslint-plugin-react": "^7.33.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "execa": "9.6.0",
