@@ -61,6 +61,10 @@ function App({
     totalTokens: 0,
   });
 
+  // Scrolling state for message history
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const maxVisibleMessages = 20; // Show last 20 messages by default
+
   // Custom hooks
   const fileSearch = useFileSearch();
   const commandHistory = useCommandHistory();
@@ -129,6 +133,11 @@ function App({
       'C-s': 'save-session',
       'C-l': 'clear-messages',
       'C-h': 'show-help',
+      'C-up': 'scroll-up',
+      'C-down': 'scroll-down',
+      'C-home': 'scroll-top',
+      'C-end': 'scroll-bottom',
+      'C-k': 'clear-screen',
     };
 
     tmux.setupKeyBindings(keyBindings);
@@ -175,7 +184,33 @@ function App({
             {
               role: 'assistant',
               content:
-                'Tmux Key Bindings:\n• Ctrl+T: Toggle mode\n• Ctrl+S: Save session\n• Ctrl+L: Clear messages\n• Ctrl+H: Show help',
+                'Tmux Key Bindings:\n• Ctrl+T: Toggle mode\n• Ctrl+S: Save session\n• Ctrl+L: Clear messages\n• Ctrl+K: Clear screen\n• Ctrl+H: Show help\n• Ctrl+Up/Down: Scroll messages\n• Ctrl+Home/End: Scroll to top/bottom',
+              timestamp: new Date(),
+            },
+          ]);
+          break;
+        case 'scroll-up':
+          setScrollOffset(prev =>
+            Math.min(prev + 1, Math.max(0, messages.length - maxVisibleMessages))
+          );
+          break;
+        case 'scroll-down':
+          setScrollOffset(prev => Math.max(prev - 1, 0));
+          break;
+        case 'scroll-top':
+          setScrollOffset(Math.max(0, messages.length - maxVisibleMessages));
+          break;
+        case 'scroll-bottom':
+          setScrollOffset(0);
+          break;
+        case 'clear-screen':
+          // Clear terminal screen using ANSI escape code
+          process.stdout.write('\x1b[2J\x1b[H');
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: 'Screen cleared. Use Ctrl+Up/Down to scroll through message history.',
               timestamp: new Date(),
             },
           ]);
@@ -235,6 +270,18 @@ function App({
             timestamp: new Date(),
           },
         ]);
+        return;
+      }
+
+      // Handle scrolling with Ctrl+Up/Down
+      if (key.ctrl && key.upArrow) {
+        setScrollOffset(prev =>
+          Math.min(prev + 1, Math.max(0, messages.length - maxVisibleMessages))
+        );
+        return;
+      }
+      if (key.ctrl && key.downArrow) {
+        setScrollOffset(prev => Math.max(prev - 1, 0));
         return;
       }
 
@@ -560,6 +607,8 @@ function App({
         error={error}
         isVerySmallScreen={isVerySmallScreen}
         showThinkingBlocks={showThinkingBlocks}
+        scrollOffset={scrollOffset}
+        maxVisibleMessages={maxVisibleMessages}
       />
 
       <FileSearch
@@ -588,6 +637,8 @@ function App({
         isVerySmallScreen={isVerySmallScreen}
         isSmallScreen={isSmallScreen}
         totalTokenUsage={totalTokenUsage}
+        scrollOffset={scrollOffset}
+        maxVisibleMessages={maxVisibleMessages}
       />
     </Box>
   );
