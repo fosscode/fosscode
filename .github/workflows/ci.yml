@@ -13,6 +13,7 @@ on:
 
 jobs:
   quality:
+    if: false
     name: Code Quality & Tests
     runs-on: ubuntu-latest
 

@@ -1,0 +1,3 @@
+update_configs:
+  - package_manager: 'npm_and_yarn'
+    directory: '/'
