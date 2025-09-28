@@ -108,6 +108,13 @@ program
     await themesCommand.execute(theme);
   });
 
+program
+  .command('version')
+  .description('Show version information')
+  .action(() => {
+    console.log(program.version());
+  });
+
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
