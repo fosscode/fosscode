@@ -10,6 +10,8 @@ interface AppFooterProps {
     completionTokens: number;
     totalTokens: number;
   };
+  scrollOffset?: number;
+  maxVisibleMessages?: number;
 }
 
 export function AppFooter({
@@ -17,6 +19,8 @@ export function AppFooter({
   isVerySmallScreen,
   isSmallScreen,
   totalTokenUsage,
+  scrollOffset = 0,
+  maxVisibleMessages = 20,
 }: AppFooterProps) {
   // Only show footer if there are messages or not on very small screen
   if (messagesLength === 0 && isVerySmallScreen) {
@@ -39,6 +43,21 @@ export function AppFooter({
 
   const tokenUsageText = formatTokenUsage();
 
+  const scrollInfo = () => {
+    if (messagesLength <= maxVisibleMessages || scrollOffset === 0) return null;
+
+    const totalScrollable = Math.max(0, messagesLength - maxVisibleMessages);
+    const currentPosition = totalScrollable - scrollOffset;
+
+    if (isVerySmallScreen) {
+      return `↑${currentPosition}/${totalScrollable}`;
+    }
+
+    return `Scrolled: ${currentPosition}/${totalScrollable} messages (Ctrl+↑↓ to scroll)`;
+  };
+
+  const scrollText = scrollInfo();
+
   return (
     <Box marginTop={isVerySmallScreen ? 2 : isSmallScreen ? 2 : 1}>
       {isVerySmallScreen ? (
@@ -58,6 +77,11 @@ export function AppFooter({
               : 'Type your message and press Enter to send, Ctrl+C to exit'}
           </FlashyText>
           {tokenUsageText && <FlashyText type="static">{tokenUsageText}</FlashyText>}
+          {scrollText && (
+            <FlashyText type="static" speed={400} colors={['yellow', 'white']}>
+              {scrollText}
+            </FlashyText>
+          )}
           {!isSmallScreen && messagesLength === 0 && (
             <FlashyText type="static">
               Commands: /verbose (toggle), /clear (clear), /compress (summarize), /themes (switch),
