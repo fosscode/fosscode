@@ -5,8 +5,8 @@ permissions:
 name: Publish
 
 on:
-  - release
-  - workflow_dispatch
+  release: {}
+  workflow_dispatch: {}
 
 jobs:
   publish:
