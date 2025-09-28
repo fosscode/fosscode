@@ -176,6 +176,7 @@ export async function handleCommand(
     provider: ProviderType;
     model: string;
     providerManager: ProviderManager;
+    setModel?: (model: string) => void;
   }
 ): Promise<CommandResult> {
   const timestamp = new Date();
@@ -192,6 +193,8 @@ export async function handleCommand(
             `🤖 *Available Commands:*\n\n` +
             `• /verbose - Toggle verbose output mode\n` +
             `• /themes - Switch between dark/light theme\n` +
+            `• /models - List available models for current provider\n` +
+            `• /model <name> - Switch to a specific model\n` +
             `• /clear, /new, /nw, /cl - Clear conversation history\n` +
             `• /mode, /thinking - Toggle between code and thinking mode\n` +
             `• /compress - Compress conversation history to save space\n` +
@@ -285,6 +288,45 @@ export async function handleCommand(
         },
       };
 
+    case '/models':
+      try {
+        const models = await currentState.providerManager.listModels(currentState.provider);
+        if (models.length === 0) {
+          return {
+            type: 'message',
+            message: {
+              role: 'assistant',
+              content: `No models available for ${currentState.provider} provider.`,
+              timestamp,
+            },
+          };
+        }
+
+        let content = `📋 Available models for ${currentState.provider}:\n\n`;
+        models.forEach(modelName => {
+          const isCurrent = modelName === currentState.model;
+          content += `${isCurrent ? '●' : '○'} ${modelName}${isCurrent ? ' (current)' : ''}\n`;
+        });
+
+        return {
+          type: 'message',
+          message: {
+            role: 'assistant',
+            content,
+            timestamp,
+          },
+        };
+      } catch (err) {
+        return {
+          type: 'message',
+          message: {
+            role: 'assistant',
+            content: `Failed to list models: ${err instanceof Error ? err.message : 'Unknown error'}`,
+            timestamp,
+          },
+        };
+      }
+
     case '/compress':
       if (currentState.messages.length === 0) {
         return {
@@ -343,7 +385,79 @@ Summary:`;
         };
       }
 
+    case '/model':
+      return {
+        type: 'message',
+        message: {
+          role: 'assistant',
+          content:
+            'Please specify a model name.\n\nUsage: `/model <model-name>`\n\nUse `/models` to see available models.',
+          timestamp,
+        },
+      };
+
     default:
+      // Handle /model command with arguments
+      if (normalizedCommand.startsWith('/model ')) {
+        const modelName = command.slice(7).trim(); // Remove '/model ' prefix
+        if (!modelName) {
+          return {
+            type: 'message',
+            message: {
+              role: 'assistant',
+              content:
+                'Please specify a model name.\n\nUsage: `/model <model-name>`\n\nUse `/models` to see available models.',
+              timestamp,
+            },
+          };
+        }
+
+        try {
+          // Validate that the model exists for the current provider
+          const availableModels = await currentState.providerManager.listModels(
+            currentState.provider
+          );
+          if (!availableModels.includes(modelName)) {
+            return {
+              type: 'message',
+              message: {
+                role: 'assistant',
+                content: `Model "${modelName}" is not available for ${currentState.provider} provider.\n\nUse \`/models\` to see available models.`,
+                timestamp,
+              },
+            };
+          }
+
+          // Switch to the new model
+          if (currentState.setModel) {
+            currentState.setModel(modelName);
+
+            // Update config
+            const configManager = new ConfigManager();
+            configManager.setConfig('lastSelectedModel', modelName);
+            configManager.setConfig('lastSelectedProvider', currentState.provider);
+          }
+
+          return {
+            type: 'message',
+            message: {
+              role: 'assistant',
+              content: `🔄 Switched to model: ${modelName}`,
+              timestamp,
+            },
+          };
+        } catch (err) {
+          return {
+            type: 'message',
+            message: {
+              role: 'assistant',
+              content: `Failed to switch model: ${err instanceof Error ? err.message : 'Unknown error'}`,
+              timestamp,
+            },
+          };
+        }
+      }
+
       // Handle MCP commands
       if (normalizedCommand.startsWith('/mcp')) {
         return await handleMCPCommand(command, timestamp);

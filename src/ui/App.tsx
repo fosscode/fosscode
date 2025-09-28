@@ -40,7 +40,7 @@ interface AppProps {
 
 function App({
   provider,
-  model,
+  model: initialModel,
   providerManager,
   chatLogger: _chatLogger,
   verbose = false,
@@ -54,6 +54,7 @@ function App({
   const [error, setError] = useState<string | null>(null);
   const [isVerbose, setIsVerbose] = useState(verbose);
   const [currentMode, setCurrentMode] = useState<'code' | 'thinking'>('code');
+  const [model, setModel] = useState(initialModel);
   const [totalTokenUsage, setTotalTokenUsage] = useState({
     promptTokens: 0,
     completionTokens: 0,
@@ -364,6 +365,7 @@ function App({
         provider,
         model,
         providerManager,
+        setModel,
       });
 
       if (commandResult.type === 'message') {
@@ -538,6 +540,7 @@ function App({
       promptHistory,
       toggleTheme,
       permissionManager,
+      setModel,
     ]
   );
 

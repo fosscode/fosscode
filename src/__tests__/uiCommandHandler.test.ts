@@ -153,6 +153,101 @@ describe('UI Command Handler', () => {
     });
   });
 
+  describe('/models command', () => {
+    it('should list available models for the current provider', async () => {
+      const mockModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'];
+      mockProviderManager.listModels.mockResolvedValue(mockModels);
+
+      const result: CommandResult = await handleCommand('/models', mockCurrentState);
+
+      expect(result.type).toBe('message');
+      expect(result.message?.role).toBe('assistant');
+      expect(result.message?.content).toContain('📋 Available models for openai:');
+      expect(result.message?.content).toContain('● gpt-3.5-turbo (current)');
+      expect(result.message?.content).toContain('○ gpt-4');
+      expect(result.message?.content).toContain('○ gpt-4-turbo');
+      expect(mockProviderManager.listModels).toHaveBeenCalledWith('openai');
+    });
+
+    it('should handle empty model list', async () => {
+      mockProviderManager.listModels.mockResolvedValue([]);
+
+      const result: CommandResult = await handleCommand('/models', mockCurrentState);
+
+      expect(result.type).toBe('message');
+      expect(result.message?.role).toBe('assistant');
+      expect(result.message?.content).toContain('No models available for openai provider.');
+    });
+
+    it('should handle listModels error', async () => {
+      mockProviderManager.listModels.mockRejectedValue(new Error('API Error'));
+
+      const result: CommandResult = await handleCommand('/models', mockCurrentState);
+
+      expect(result.type).toBe('message');
+      expect(result.message?.role).toBe('assistant');
+      expect(result.message?.content).toContain('Failed to list models: API Error');
+    });
+  });
+
+  describe('/model command', () => {
+    beforeEach(() => {
+      const mockModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'];
+      mockProviderManager.listModels.mockResolvedValue(mockModels);
+    });
+
+    it('should switch to a valid model', async () => {
+      const stateWithSetModel = { ...mockCurrentState, setModel: jest.fn() };
+
+      const result: CommandResult = await handleCommand('/model gpt-4', stateWithSetModel);
+
+      expect(result.type).toBe('message');
+      expect(result.message?.role).toBe('assistant');
+      expect(result.message?.content).toBe('🔄 Switched to model: gpt-4');
+      expect(stateWithSetModel.setModel).toHaveBeenCalledWith('gpt-4');
+      expect(mockConfigManager.setConfig).toHaveBeenCalledWith('lastSelectedModel', 'gpt-4');
+      expect(mockConfigManager.setConfig).toHaveBeenCalledWith('lastSelectedProvider', 'openai');
+    });
+
+    it('should handle model switch without setModel function', async () => {
+      const result: CommandResult = await handleCommand('/model gpt-4', mockCurrentState);
+
+      expect(result.type).toBe('message');
+      expect(result.message?.role).toBe('assistant');
+      expect(result.message?.content).toBe('🔄 Switched to model: gpt-4');
+    });
+
+    it('should reject invalid model', async () => {
+      const result: CommandResult = await handleCommand('/model invalid-model', mockCurrentState);
+
+      expect(result.type).toBe('message');
+      expect(result.message?.role).toBe('assistant');
+      expect(result.message?.content).toContain(
+        'Model "invalid-model" is not available for openai provider.'
+      );
+      expect(result.message?.content).toContain('Use `/models` to see available models.');
+    });
+
+    it('should handle empty model name', async () => {
+      const result: CommandResult = await handleCommand('/model', mockCurrentState);
+
+      expect(result.type).toBe('message');
+      expect(result.message?.role).toBe('assistant');
+      expect(result.message?.content).toContain('Please specify a model name.');
+      expect(result.message?.content).toContain('Usage: `/model <model-name>`');
+    });
+
+    it('should handle model switch error', async () => {
+      mockProviderManager.listModels.mockRejectedValue(new Error('API Error'));
+
+      const result: CommandResult = await handleCommand('/model gpt-4', mockCurrentState);
+
+      expect(result.type).toBe('message');
+      expect(result.message?.role).toBe('assistant');
+      expect(result.message?.content).toContain('Failed to switch model: API Error');
+    });
+  });
+
   describe('/help and /commands commands', () => {
     it('should return help message for /help command', async () => {
       const result: CommandResult = await handleCommand('/help', mockCurrentState);
@@ -162,6 +257,10 @@ describe('UI Command Handler', () => {
       expect(result.message?.content).toContain('🤖 *Available Commands:*');
       expect(result.message?.content).toContain('/verbose - Toggle verbose output mode');
       expect(result.message?.content).toContain('/themes - Switch between dark/light theme');
+      expect(result.message?.content).toContain(
+        '/models - List available models for current provider'
+      );
+      expect(result.message?.content).toContain('/model <name> - Switch to a specific model');
       expect(result.message?.content).toContain(
         '/clear, /new, /nw, /cl - Clear conversation history'
       );
