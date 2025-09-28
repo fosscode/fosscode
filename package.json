@@ -30,7 +30,7 @@
     "release:minor": "./scripts/release.sh minor",
     "release:major": "./scripts/release.sh major",
     "release": "./scripts/release.sh patch",
-    "publish": "./scripts/publish.sh"
+    "publish:manual": "./scripts/publish.sh"
   },
   "keywords": [
     "cli",
