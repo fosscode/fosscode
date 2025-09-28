@@ -8,14 +8,13 @@
     "fosscode": "dist/index.js"
   },
   "files": [
-    "dist/index.js",
-    "dist/yoga.wasm",
+    "dist/**/*",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node12 --outfile=dist/index.js --external:@anthropic-ai/sdk --external:openai --external:chalk --external:ink --external:react --external:yoga-wasm-web --format=esm && cp node_modules/yoga-wasm-web/dist/yoga.wasm dist/",
+    "build": "tsc && cp node_modules/yoga-wasm-web/dist/yoga.wasm dist/",
     "build:exe": "bun build src/binary.ts --target node --compile --outfile dist/fosscode",
     "build:docker": "docker build -t fosscode .",
     "typecheck": "tsc --noEmit",
