@@ -17,7 +17,7 @@ export function AttachedFilesIndicator({
 
   return (
     <Box marginBottom={1}>
-      <FlashyText type="static" speed={350} colors={['cyan', 'green', 'yellow']}>
+      <FlashyText type="static">
         {`📎 Attached: ${attachedFiles.map(f => f.path).join(', ')}`}
       </FlashyText>
     </Box>

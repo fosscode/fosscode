@@ -58,23 +58,12 @@ const MessageList = memo(function MessageList({
           }
         }
 
-        // Disable animations for large content to prevent flickering
-        const shouldAnimate = !isLargeMessage;
-
         return (
           <Box
             key={`${message.timestamp?.getTime() || index}-${tokenCount}`}
             marginBottom={isVerySmallScreen ? 0 : 1}
           >
-            <FlashyText
-              type={shouldAnimate ? 'static' : 'static'}
-              speed={message.role === 'user' ? 400 : 200}
-              colors={
-                message.role === 'user'
-                  ? ['green', 'lime', 'cyan']
-                  : ['blue', 'cyan', 'magenta', 'yellow']
-              }
-            >
+            <FlashyText type="static">
               {isVerySmallScreen
                 ? message.role === 'user'
                   ? '👤 '
@@ -103,9 +92,7 @@ const MessageList = memo(function MessageList({
 
       {error && (
         <Box>
-          <FlashyText type="static" speed={150} colors={['orange', 'yellow', 'green']}>
-            {`🚨 Error: ${error}`}
-          </FlashyText>
+          <FlashyText type="static">{`🚨 Error: ${error}`}</FlashyText>
         </Box>
       )}
     </Box>

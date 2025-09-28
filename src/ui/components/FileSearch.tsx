@@ -36,22 +36,16 @@ export function FileSearch({
         {`🔍 Search files: ${query || '<type to search>'}${isSearching ? ' ⏳' : ''}`}
       </FlashyText>
       {isSearching ? (
-        <FlashyText type="static" speed={200} colors={['yellow', 'cyan']}>
-          🔎 Searching...
-        </FlashyText>
+        <FlashyText type="static">🔎 Searching...</FlashyText>
       ) : results.length > 0 ? (
         <Box flexDirection="column" marginTop={1}>
           {renderedResults}
           {results.length > 5 && (
-            <FlashyText type="static" speed={300} colors={['gray', 'white']}>
-              {`... and ${results.length - 5} more`}
-            </FlashyText>
+            <FlashyText type="static">{`... and ${results.length - 5} more`}</FlashyText>
           )}
         </Box>
       ) : query ? (
-        <FlashyText type="static" speed={250} colors={['orange', 'yellow']}>
-          {`No files found matching "${query}"`}
-        </FlashyText>
+        <FlashyText type="static">{`No files found matching "${query}"`}</FlashyText>
       ) : (
         <FlashyText type="static" speed={180}>
           Start typing to search files...

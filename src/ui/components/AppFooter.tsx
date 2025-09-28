@@ -43,9 +43,7 @@ export function AppFooter({
     <Box marginTop={isVerySmallScreen ? 2 : isSmallScreen ? 2 : 1}>
       {isVerySmallScreen ? (
         <>
-          <FlashyText type="static" speed={400} colors={['gray', 'white']}>
-            Enter send • Ctrl+C exit
-          </FlashyText>
+          <FlashyText type="static">Enter send • Ctrl+C exit</FlashyText>
           {tokenUsageText && (
             <FlashyText type="static" speed={400} colors={['cyan', 'white']}>
               {tokenUsageText}
@@ -54,18 +52,14 @@ export function AppFooter({
         </>
       ) : (
         <>
-          <FlashyText type="static" speed={400} colors={['gray', 'white']}>
+          <FlashyText type="static">
             {isSmallScreen
               ? 'Enter to send, Ctrl+C to exit'
               : 'Type your message and press Enter to send, Ctrl+C to exit'}
           </FlashyText>
-          {tokenUsageText && (
-            <FlashyText type="static" speed={400} colors={['cyan', 'white']}>
-              {tokenUsageText}
-            </FlashyText>
-          )}
+          {tokenUsageText && <FlashyText type="static">{tokenUsageText}</FlashyText>}
           {!isSmallScreen && messagesLength === 0 && (
-            <FlashyText type="static" speed={300} colors={['cyan', 'magenta', 'yellow']}>
+            <FlashyText type="static">
               Commands: /verbose (toggle), /clear (clear), /compress (summarize), /themes (switch),
               /mode (toggle) | Tab to toggle mode | ↑↓ for history
             </FlashyText>
