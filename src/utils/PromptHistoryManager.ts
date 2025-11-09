@@ -71,7 +71,7 @@ export class PromptHistoryManager {
 
     // Don't add duplicate entries if the same prompt was just added
     const lastEntry = this.history[this.history.length - 1];
-    if (lastEntry && lastEntry.prompt === trimmedPrompt) {
+    if (lastEntry?.prompt === trimmedPrompt) {
       return;
     }
 
@@ -119,3 +119,5 @@ export class PromptHistoryManager {
     return this.history.slice(start).map(entry => entry.prompt);
   }
 }
+
+export const promptHistoryManager = new PromptHistoryManager();

@@ -53,7 +53,9 @@ export class E2ETestHelper {
       }
 
       const env: Record<string, string> = {
-        ...process.env,
+        ...Object.fromEntries(
+          Object.entries(process.env).filter(([_, value]) => value !== undefined)
+        ),
         FOSSCODE_PROVIDER: provider,
         NODE_ENV: 'test',
       };

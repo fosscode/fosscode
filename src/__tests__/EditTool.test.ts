@@ -11,7 +11,7 @@ describe('EditTool', () => {
     it('should create an EditTool instance with correct properties', () => {
       expect(editTool.name).toBe('edit');
       expect(editTool.description).toContain('Modify existing file content');
-      expect(editTool.parameters).toHaveLength(6);
+      expect(editTool.parameters).toHaveLength(10);
     });
 
     it('should have correct parameter definitions', () => {
@@ -37,6 +37,18 @@ describe('EditTool', () => {
 
       const encodingParam = editTool.parameters.find(p => p.name === 'encoding');
       expect(encodingParam?.defaultValue).toBe('utf-8');
+
+      const runLintParam = editTool.parameters.find(p => p.name === 'runLint');
+      expect(runLintParam?.defaultValue).toBe(false);
+
+      const fixLintParam = editTool.parameters.find(p => p.name === 'fixLint');
+      expect(fixLintParam?.defaultValue).toBe(false);
+
+      const runTestsParam = editTool.parameters.find(p => p.name === 'runTests');
+      expect(runTestsParam?.defaultValue).toBe(false);
+
+      const runCommitParam = editTool.parameters.find(p => p.name === 'runCommit');
+      expect(runCommitParam?.defaultValue).toBe(false);
     });
   });
 

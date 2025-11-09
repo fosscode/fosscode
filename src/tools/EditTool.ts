@@ -2,6 +2,7 @@ import * as fs from 'fs';
 /// <reference types="node" />
 import * as path from 'path';
 import * as os from 'os';
+import { execSync } from 'child_process';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { securityManager } from './SecurityManager.js';
 
@@ -54,6 +55,34 @@ export class EditTool implements Tool {
       required: false,
       defaultValue: 'utf-8',
     },
+    {
+      name: 'runLint',
+      type: 'boolean',
+      description: 'Run linting after editing (defaults to false)',
+      required: false,
+      defaultValue: false,
+    },
+    {
+      name: 'fixLint',
+      type: 'boolean',
+      description: 'Auto-fix linting issues if runLint is true (defaults to false)',
+      required: false,
+      defaultValue: false,
+    },
+    {
+      name: 'runTests',
+      type: 'boolean',
+      description: 'Run tests after editing (defaults to false)',
+      required: false,
+      defaultValue: false,
+    },
+    {
+      name: 'runCommit',
+      type: 'boolean',
+      description: 'Auto-commit changes after successful edit (defaults to false)',
+      required: false,
+      defaultValue: false,
+    },
   ];
 
   async execute(params: Record<string, any>): Promise<ToolResult> {
@@ -65,6 +94,10 @@ export class EditTool implements Tool {
         replaceAll = false,
         createBackup = true,
         encoding = 'utf-8',
+        runLint = false,
+        fixLint = false,
+        runTests = false,
+        runCommit = false,
       } = params;
 
       // Validate inputs
@@ -129,6 +162,78 @@ export class EditTool implements Tool {
       // Get file stats
       const stats = await fs.promises.stat(validatedPath);
 
+      // Run linting and testing if requested
+      let lintResult: string | null = null;
+      let testResult: string | null = null;
+      let commitResult: string | null = null;
+      let lintErrors = 0;
+      let testFailures = 0;
+
+      if (runLint || runTests) {
+        try {
+          if (runLint) {
+            const lintCommand = fixLint ? 'npm run lint -- --fix' : 'npm run lint';
+            const lintOutput = execSync(lintCommand, {
+              cwd: process.cwd(),
+              encoding: 'utf-8',
+              stdio: 'pipe',
+            });
+            lintResult = lintOutput;
+            // Count errors (rough count)
+            const errorMatches = lintOutput.match(/✖ (\d+) problems?/);
+            if (errorMatches) {
+              lintErrors = parseInt(errorMatches[1], 10);
+            }
+          }
+
+          if (runTests) {
+            const testOutput = execSync('npm run test', {
+              cwd: process.cwd(),
+              encoding: 'utf-8',
+              stdio: 'pipe',
+            });
+            testResult = testOutput;
+            // Count failures
+            const failureMatches = testOutput.match(/(\d+) failed/);
+            if (failureMatches) {
+              testFailures = parseInt(failureMatches[1], 10);
+            }
+          }
+        } catch (error) {
+          // If lint/test fails, capture the error output
+          if (runLint && !lintResult) {
+            lintResult = error instanceof Error ? error.message : 'Lint failed';
+            const errorMatches = lintResult.match(/✖ (\d+) problems?/);
+            if (errorMatches) {
+              lintErrors = parseInt(errorMatches[1], 10);
+            }
+          }
+          if (runTests && !testResult) {
+            testResult = error instanceof Error ? error.message : 'Test failed';
+            const failureMatches = testResult.match(/(\d+) failed/);
+            if (failureMatches) {
+              testFailures = parseInt(failureMatches[1], 10);
+            }
+          }
+        }
+      }
+
+      // Run git commit if requested
+      if (runCommit) {
+        try {
+          // Check if git repo
+          execSync('git status --porcelain', { cwd: process.cwd(), stdio: 'pipe' });
+          // Add the file
+          execSync(`git add "${validatedPath}"`, { cwd: process.cwd(), stdio: 'pipe' });
+          // Generate commit message
+          const commitMessage = `Update ${path.basename(validatedPath)}`;
+          execSync(`git commit -S -m "${commitMessage}"`, { cwd: process.cwd(), stdio: 'pipe' });
+          commitResult = `Committed with message: ${commitMessage}`;
+        } catch (error) {
+          commitResult = error instanceof Error ? error.message : 'Commit failed';
+        }
+      }
+
       return {
         success: true,
         data: {
@@ -141,6 +246,11 @@ export class EditTool implements Tool {
           backupCreated,
           backupPath: backupCreated ? path.relative(process.cwd(), backupPath) : null,
           encoding,
+          lintResult,
+          testResult,
+          commitResult,
+          lintErrors,
+          testFailures,
         },
         metadata: {
           fileSize: stats.size,

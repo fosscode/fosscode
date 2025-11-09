@@ -42,7 +42,7 @@ export class MCPProvider implements LLMProvider {
     try {
       // Get the last user message
       const lastMessage = messages[messages.length - 1];
-      if (!lastMessage || lastMessage.role !== 'user') {
+      if (lastMessage?.role !== 'user') {
         throw new Error('No user message found');
       }
 

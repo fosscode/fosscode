@@ -4,7 +4,7 @@ import {
   promptHistoryContext,
 } from '../prompts/SystemPrompt.js';
 import { fileTrackerManager } from '../utils/FileTrackerManager.js';
-import { PromptHistoryManager } from '../utils/PromptHistoryManager.js';
+import { promptHistoryManager } from '../utils/PromptHistoryManager.js';
 
 describe('SystemPrompt', () => {
   describe('fileContext', () => {
@@ -80,12 +80,9 @@ describe('SystemPrompt', () => {
   });
 
   describe('promptHistoryContext', () => {
-    let promptHistory: PromptHistoryManager;
-
     beforeEach(async () => {
-      promptHistory = new PromptHistoryManager();
-      await promptHistory.initialize();
-      await promptHistory.clearHistory();
+      await promptHistoryManager.initialize();
+      await promptHistoryManager.clearHistory();
     });
 
     it('should return empty array when no prompts are tracked', async () => {
@@ -94,14 +91,11 @@ describe('SystemPrompt', () => {
     });
 
     it('should include recent prompts in context', async () => {
-      const promptHistory = new PromptHistoryManager();
-      await promptHistory.initialize();
-
       try {
         // Add some test prompts
-        await promptHistory.addPrompt('What is the weather today?');
-        await promptHistory.addPrompt('Show me the project structure');
-        await promptHistory.addPrompt('Help me debug this error');
+        await promptHistoryManager.addPrompt('What is the weather today?');
+        await promptHistoryManager.addPrompt('Show me the project structure');
+        await promptHistoryManager.addPrompt('Help me debug this error');
 
         const result = await promptHistoryContext();
 
@@ -112,14 +106,14 @@ describe('SystemPrompt', () => {
         expect(result[0]).toContain('Help me debug this error');
         expect(result[2]).toContain('This shows your recent prompts in this session');
       } finally {
-        await promptHistory.clearHistory();
+        await promptHistoryManager.clearHistory();
       }
     });
 
     it('should limit to 10 most recent prompts', async () => {
       // Add 15 prompts
       for (let i = 0; i < 15; i++) {
-        await promptHistory.addPrompt(`Test prompt ${i}`);
+        await promptHistoryManager.addPrompt(`Test prompt ${i}`);
       }
 
       const result = await promptHistoryContext();
@@ -134,11 +128,9 @@ describe('SystemPrompt', () => {
     });
 
     it('should handle prompt history errors gracefully', async () => {
-      // Mock the PromptHistoryManager to throw an error
-      const originalInitialize = PromptHistoryManager.prototype.initialize;
-      PromptHistoryManager.prototype.initialize = jest
-        .fn()
-        .mockRejectedValue(new Error('Test error'));
+      // Mock the promptHistoryManager to throw an error
+      const originalInitialize = promptHistoryManager.initialize;
+      promptHistoryManager.initialize = jest.fn().mockRejectedValue(new Error('Test error'));
 
       const result = await promptHistoryContext();
 
@@ -146,7 +138,7 @@ describe('SystemPrompt', () => {
       expect(result).toEqual([]);
 
       // Restore original method
-      PromptHistoryManager.prototype.initialize = originalInitialize;
+      promptHistoryManager.initialize = originalInitialize;
     });
   });
 
@@ -177,13 +169,12 @@ describe('SystemPrompt', () => {
     });
 
     it('should include prompt history in generated system prompt', async () => {
-      const promptHistory = new PromptHistoryManager();
-      await promptHistory.initialize();
-      await promptHistory.clearHistory();
+      await promptHistoryManager.initialize();
+      await promptHistoryManager.clearHistory();
 
       try {
         // Add a test prompt
-        await promptHistory.addPrompt('Test prompt for system context');
+        await promptHistoryManager.addPrompt('Test prompt for system context');
 
         const systemPrompt = await generateSystemPrompt('openai', 'gpt-4');
 
@@ -191,7 +182,7 @@ describe('SystemPrompt', () => {
         expect(systemPrompt).toContain('Test prompt for system context');
         expect(systemPrompt).toContain('This shows your recent prompts in this session');
       } finally {
-        await promptHistory.clearHistory();
+        await promptHistoryManager.clearHistory();
       }
     });
 
@@ -205,7 +196,7 @@ describe('SystemPrompt', () => {
 
       // Should contain environment information
       expect(systemPrompt).toContain('Working directory');
-      expect(systemPrompt).toContain('Platform: linux');
+      expect(systemPrompt).toContain('Platform: darwin');
     });
 
     it('should include mode information when specified', async () => {

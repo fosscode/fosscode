@@ -1,4 +1,4 @@
-import { PromptHistoryManager } from '../utils/PromptHistoryManager.js';
+import { promptHistoryManager } from '../utils/PromptHistoryManager.js';
 import { fileTrackerManager } from '../utils/FileTrackerManager.js';
 import { generate as generateSystemPrompt } from '../prompts/SystemPrompt.js';
 import { initializeTools, getTool } from '../tools/init.js';
@@ -7,10 +7,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 describe('System Integration Tests', () => {
-  let promptHistory: PromptHistoryManager;
   let testDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create test directory
     testDir = path.join(process.cwd(), 'test-integration-dir');
     if (!fs.existsSync(testDir)) {
@@ -21,7 +20,8 @@ describe('System Integration Tests', () => {
     fs.writeFileSync(path.join(testDir, 'test1.txt'), 'Test content 1');
     fs.writeFileSync(path.join(testDir, 'test2.txt'), 'Test content 2');
 
-    promptHistory = new PromptHistoryManager();
+    await promptHistoryManager.initialize();
+    await promptHistoryManager.clearHistory();
   });
 
   afterEach(() => {
@@ -34,8 +34,8 @@ describe('System Integration Tests', () => {
   describe('End-to-End Context Integration', () => {
     it('should integrate prompt history into system prompt generation', async () => {
       // Add some prompts to history
-      await promptHistory.addPrompt('First test prompt');
-      await promptHistory.addPrompt('Second test prompt');
+      await promptHistoryManager.addPrompt('First test prompt');
+      await promptHistoryManager.addPrompt('Second test prompt');
 
       // Generate system prompt
       const systemPrompt = await generateSystemPrompt('openai', 'gpt-4');
@@ -64,7 +64,7 @@ describe('System Integration Tests', () => {
 
     it('should combine all context sources in system prompt', async () => {
       // Setup all context sources
-      await promptHistory.addPrompt('Integration test prompt');
+      await promptHistoryManager.addPrompt('Integration test prompt');
 
       const fileTracker = fileTrackerManager.getFileTracker();
       fileTracker.trackFileAccess(path.join(testDir, 'test1.txt'), 'read', 'read');
@@ -141,7 +141,7 @@ describe('System Integration Tests', () => {
   describe('Cross-Component Integration', () => {
     it('should maintain consistent state across components', async () => {
       // Setup initial state
-      await promptHistory.addPrompt('Initial prompt');
+      await promptHistoryManager.addPrompt('Initial prompt');
 
       const fileTracker = fileTrackerManager.getFileTracker();
       fileTracker.trackFileAccess(path.join(testDir, 'test1.txt'), 'read', 'read');
@@ -174,7 +174,7 @@ describe('System Integration Tests', () => {
       expect(result.success).toBe(false);
 
       // Verify system can still generate prompts and track files
-      await promptHistory.addPrompt('Error handling test');
+      await promptHistoryManager.addPrompt('Error handling test');
 
       const fileTracker = fileTrackerManager.getFileTracker();
       fileTracker.trackFileAccess(path.join(testDir, 'test1.txt'), 'read', 'read');

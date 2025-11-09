@@ -5,6 +5,7 @@ export { GrepTool } from './GrepTool.js';
 export { ReadTool } from './ReadTool.js';
 export { WriteTool } from './WriteTool.js';
 export { EditTool } from './EditTool.js';
+export { GitHubTool } from './GitHubTool.js';
 export { WebFetchTool } from './WebFetchTool.js';
 export { ListTool } from './ListTool.js';
 export { BashTool } from './BashTool.js';

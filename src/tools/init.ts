@@ -3,6 +3,7 @@ import { GrepTool } from './GrepTool.js';
 import { ReadTool } from './ReadTool.js';
 import { WriteTool } from './WriteTool.js';
 import { EditTool } from './EditTool.js';
+import { GitHubTool } from './GitHubTool.js';
 import { WebFetchTool } from './WebFetchTool.js';
 import { ListTool } from './ListTool.js';
 import { BashTool } from './BashTool.js';
@@ -31,6 +32,7 @@ export function initializeTools(verbose: boolean = false): void {
   toolRegistry.register(new ReadTool());
   toolRegistry.register(new WriteTool());
   toolRegistry.register(new EditTool());
+  toolRegistry.register(new GitHubTool());
   toolRegistry.register(new ListTool());
   toolRegistry.register(new GlobTool());
   toolRegistry.register(new MultieditTool());

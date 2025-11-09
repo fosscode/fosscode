@@ -42,7 +42,7 @@ export class ApprovalManager {
     const key = this.getApprovalKey(request);
 
     // Check persistent approvals
-    if (this.config.approvals && this.config.approvals.persistent[key] === 'always') {
+    if (this.config.approvals?.persistent[key] === 'always') {
       return false;
     }
 

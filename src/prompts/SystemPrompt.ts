@@ -4,7 +4,8 @@ import * as os from 'os';
 import * as fs from 'fs';
 import { listAvailableTools } from '../tools/init.js';
 import { fileTrackerManager } from '../utils/FileTrackerManager.js';
-import { PromptHistoryManager } from '../utils/PromptHistoryManager.js';
+import { promptHistoryManager } from '../utils/PromptHistoryManager.js';
+import { generateRepoMap, formatRepoMap } from '../utils/contextUtils.js';
 import { Message } from '../types/index.js';
 
 // Base system prompt for fosscode - CLI tool behavior
@@ -381,9 +382,8 @@ export function fileContext(): string[] {
 
 export async function promptHistoryContext(): Promise<string[]> {
   try {
-    const promptHistory = new PromptHistoryManager();
-    await promptHistory.initialize();
-    const history = promptHistory.getHistory();
+    await promptHistoryManager.initialize();
+    const history = promptHistoryManager.getHistory();
 
     if (history.length === 0) {
       return [];
@@ -408,6 +408,28 @@ export async function promptHistoryContext(): Promise<string[]> {
 }
 
 /**
+ * Generate repository map context for better codebase understanding
+ */
+async function repomapContext(): Promise<string[]> {
+  try {
+    const map = await generateRepoMap(process.cwd(), 2); // Limit depth for performance
+    const formatted = formatRepoMap(map);
+    if (formatted.trim()) {
+      return [
+        '## Repository Map',
+        'This is a hierarchical map of the codebase to help you understand the project structure:',
+        '```',
+        formatted,
+        '```',
+      ];
+    }
+  } catch (error) {
+    // Ignore errors in repomap generation
+  }
+  return [];
+}
+
+/**
  * Generate a complete system prompt for a provider
  */
 export async function generate(
@@ -422,11 +444,13 @@ export async function generate(
   const conversationInfo = messages ? conversationContext(messages) : [];
   const filesInfo = fileContext();
   const promptHistoryInfo = await promptHistoryContext();
+  const repoMapInfo = await repomapContext();
 
   const parts = [
     ...provider(providerID, modelID),
     ...environmentInfo,
     ...projectStructureInfo,
+    ...repoMapInfo,
     ...conversationInfo,
     ...filesInfo,
     ...promptHistoryInfo,
