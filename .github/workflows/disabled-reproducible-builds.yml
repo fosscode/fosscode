@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -74,7 +74,7 @@ jobs:
           SKIP_UPLOAD=1 ./scripts/build-binaries-reproducible.sh v0.0.0-ci-test
 
       - name: Archive reproducibility artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: reproducibility-debug-artifacts
@@ -102,7 +102,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -193,7 +193,7 @@ jobs:
           rm -f test-binary-1 test-binary-2
 
       - name: Archive platform artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: reproducibility-${{ matrix.os }}-artifacts

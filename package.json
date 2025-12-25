@@ -42,7 +42,7 @@
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
@@ -96,14 +96,14 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "0.64.0",
-    "@playwright/mcp": "0.0.40",
+    "@anthropic-ai/sdk": "0.68.0",
+    "@playwright/mcp": "0.0.46",
     "commander": "14.0.1",
     "gpt-tokenizer": "^3.0.1",
-    "grammy": "1.38.2",
+    "grammy": "1.38.3",
     "ink": "^6.3.0",
     "ink-spinner": "^5.0.0",
-    "openai": "5.23.1",
+    "openai": "6.8.1",
     "picocolors": "^1.1.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
