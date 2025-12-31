@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { securityManager } from './SecurityManager.js';
+import { getCheckpointManager } from '../utils/CheckpointManager.js';
 
 /**
  * File writing tool with atomic operations and backup support
@@ -62,6 +63,20 @@ export class WriteTool implements Tool {
       // Validate file path and permissions
       const validatedPath = await securityManager.validateFileOperation(filePath, 'write');
 
+      // Create checkpoint before modifying file
+      const checkpointManager = getCheckpointManager();
+      let checkpointId: string | undefined;
+      try {
+        checkpointId = await checkpointManager.createCheckpoint(
+          validatedPath,
+          'write',
+          `Write file: ${path.basename(validatedPath)}`
+        );
+      } catch {
+        // Don't fail the operation if checkpoint creation fails
+        console.debug('Failed to create checkpoint for write operation');
+      }
+
       // Check if file exists for backup
       let backupCreated = false;
       let backupPath = '';
@@ -103,6 +118,16 @@ export class WriteTool implements Tool {
       // Get file stats
       const stats = await fs.promises.stat(validatedPath);
 
+      // Update checkpoint with new content
+      if (checkpointId) {
+        try {
+          await checkpointManager.updateCheckpointWithNewContent(checkpointId, content);
+        } catch {
+          // Don't fail the operation if checkpoint update fails
+          console.debug('Failed to update checkpoint with new content');
+        }
+      }
+
       return {
         success: true,
         data: {
@@ -112,6 +137,7 @@ export class WriteTool implements Tool {
           backupPath: backupCreated ? path.relative(process.cwd(), backupPath) : null,
           encoding,
           created: !backupCreated, // If no backup was created, file is new
+          checkpointId,
         },
         metadata: {
           fileSize: stats.size,

@@ -12,11 +12,18 @@ import { MultieditTool } from './MultieditTool.js';
 import { PatchTool } from './PatchTool.js';
 import { LSPDiagnosticsTool } from './LSPDiagnosticsTool.js';
 import { LSPHoverTool } from './LSPHoverTool.js';
+import { LSPDefinitionTool } from './LSPDefinitionTool.js';
+import { LSPReferencesTool } from './LSPReferencesTool.js';
+import { LSPRenameTool } from './LSPRenameTool.js';
+import { LSPActionsTool } from './LSPActionsTool.js';
+import { LSPSymbolsTool } from './LSPSymbolsTool.js';
 import { WebSearchTool } from './WebSearchTool.js';
 import { TodoWriteTool, TodoReadTool } from './TodoTool.js';
 import { DuckDuckGoTool } from './DuckDuckGoTool.js';
 import { TestTool } from './TestTool.js';
 import { InvalidTool } from './InvalidTool.js';
+import { BrowserTool } from './BrowserTool.js';
+import { DiagramTool } from './DiagramTool.js';
 
 /**
  * Initialize and register all agent tools
@@ -39,6 +46,11 @@ export function initializeTools(verbose: boolean = false): void {
   toolRegistry.register(new PatchTool());
   toolRegistry.register(new LSPDiagnosticsTool());
   toolRegistry.register(new LSPHoverTool());
+  toolRegistry.register(new LSPDefinitionTool());
+  toolRegistry.register(new LSPReferencesTool());
+  toolRegistry.register(new LSPRenameTool());
+  toolRegistry.register(new LSPActionsTool());
+  toolRegistry.register(new LSPSymbolsTool());
   toolRegistry.register(new WebSearchTool());
 
   // Register system tools
@@ -57,6 +69,12 @@ export function initializeTools(verbose: boolean = false): void {
   // Register development and utility tools
   toolRegistry.register(new TestTool());
   toolRegistry.register(new InvalidTool());
+
+  // Register browser automation tool
+  toolRegistry.register(new BrowserTool());
+
+  // Register diagram generation tool
+  toolRegistry.register(new DiagramTool());
 
   if (verbose) {
     console.log(`✅ Registered ${toolRegistry.getToolCount()} tools:`);

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Box, useInput } from 'ink';
 import { ProviderManager } from '../providers/ProviderManager.js';
 import { Message, ProviderType } from '../types/index.js';
@@ -24,6 +24,7 @@ import { AppFooter } from './components/AppFooter.js';
 import { summarize } from '../utils/contextUtils.js';
 import { getContextLimit } from '../utils/contextLimits.js';
 import { PermissionManager } from '../utils/PermissionManager.js';
+import { getCheckpointManager } from '../utils/CheckpointManager.js';
 
 export { App };
 
@@ -64,6 +65,10 @@ function App({
   // Scrolling state for message history
   const [scrollOffset, setScrollOffset] = useState(0);
   const maxVisibleMessages = 20; // Show last 20 messages by default
+
+  // Quick undo state - track Esc+Esc for quick undo
+  const lastEscapeTime = useRef<number>(0);
+  const DOUBLE_ESCAPE_THRESHOLD = 500; // ms between Esc presses for quick undo
 
   // Custom hooks
   const fileSearch = useFileSearch();
@@ -282,6 +287,31 @@ function App({
       }
       if (key.ctrl && key.downArrow) {
         setScrollOffset(prev => Math.max(prev - 1, 0));
+        return;
+      }
+
+      // Handle Esc+Esc for quick undo (only when not in file search mode)
+      if (key.escape && !fileSearch.isFileSearchMode) {
+        const now = Date.now();
+        if (now - lastEscapeTime.current < DOUBLE_ESCAPE_THRESHOLD) {
+          // Double Esc detected - perform quick undo
+          const checkpointManager = getCheckpointManager();
+          checkpointManager.quickUndo().then(result => {
+            setMessages(prev => [
+              ...prev,
+              {
+                role: 'assistant',
+                content: result.success
+                  ? `Quick undo: ${result.message}`
+                  : `Undo failed: ${result.message}`,
+                timestamp: new Date(),
+              },
+            ]);
+          });
+          lastEscapeTime.current = 0; // Reset
+          return;
+        }
+        lastEscapeTime.current = now;
         return;
       }
 

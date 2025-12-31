@@ -7,6 +7,7 @@ import {
   getContextWarningMessage,
 } from '../../utils/contextUtils.js';
 import { ConfigManager } from '../../config/ConfigManager.js';
+import { ProcessedImage } from '../../utils/ImageHandler.js';
 
 export class SingleMessageHandler {
   private providerManager: ProviderManager;
@@ -28,6 +29,7 @@ export class SingleMessageHandler {
       showContext?: boolean;
       contextFormat?: string;
       contextThreshold?: number;
+      images?: ProcessedImage[];
     }
   ): Promise<void> {
     // Initialize logger and start session
@@ -51,10 +53,20 @@ export class SingleMessageHandler {
       await this.chatLogger.logThinkingStatus('Thinking...', false);
     }
 
+    // Build message content - include image info if present
+    let messageContent = message;
+    if (options.images && options.images.length > 0) {
+      const imageInfo = options.images
+        .map(img => `[Image: ${img.fileName} (${(img.sizeBytes / 1024).toFixed(1)}KB)]`)
+        .join('\n');
+      messageContent = `${imageInfo}\n\n${message}`;
+    }
+
     const chatMessage: Message = {
       role: 'user',
-      content: message,
+      content: messageContent,
       timestamp: new Date(),
+      ...(options.images && options.images.length > 0 && { images: options.images }),
     };
 
     // Log the message being sent

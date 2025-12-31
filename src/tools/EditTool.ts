@@ -5,6 +5,7 @@ import * as os from 'os';
 import { execSync } from 'child_process';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { securityManager } from './SecurityManager.js';
+import { getCheckpointManager } from '../utils/CheckpointManager.js';
 
 /**
  * Content replacement tool with precision editing capabilities
@@ -113,6 +114,20 @@ export class EditTool implements Tool {
         encoding: encoding as BufferEncoding,
       });
 
+      // Create checkpoint before modifying file
+      const checkpointManager = getCheckpointManager();
+      let checkpointId: string | undefined;
+      try {
+        checkpointId = await checkpointManager.createCheckpoint(
+          validatedPath,
+          'edit',
+          `Edit file: ${path.basename(validatedPath)} - replace "${oldString.substring(0, 30)}${oldString.length > 30 ? '...' : ''}"`
+        );
+      } catch {
+        // Don't fail the operation if checkpoint creation fails
+        console.debug('Failed to create checkpoint for edit operation');
+      }
+
       // Check if oldString exists in content
       const occurrences = this.countOccurrences(originalContent, oldString);
       if (occurrences === 0) {
@@ -158,6 +173,16 @@ export class EditTool implements Tool {
 
       // Generate and save diff information for VSCode extension
       await this.generateDiffInfo(validatedPath, originalContent, newContent);
+
+      // Update checkpoint with new content
+      if (checkpointId) {
+        try {
+          await checkpointManager.updateCheckpointWithNewContent(checkpointId, newContent);
+        } catch {
+          // Don't fail the operation if checkpoint update fails
+          console.debug('Failed to update checkpoint with new content');
+        }
+      }
 
       // Get file stats
       const stats = await fs.promises.stat(validatedPath);
@@ -251,6 +276,7 @@ export class EditTool implements Tool {
           commitResult,
           lintErrors,
           testFailures,
+          checkpointId,
         },
         metadata: {
           fileSize: stats.size,

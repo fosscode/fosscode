@@ -3,6 +3,7 @@ import * as path from 'path';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { securityManager } from './SecurityManager.js';
 import { GlobTool } from './GlobTool.js';
+import { getCheckpointManager } from '../utils/CheckpointManager.js';
 
 /**
  * Multi-file editing tool for bulk find-and-replace operations
@@ -189,11 +190,13 @@ export class MultieditTool implements Tool {
         file: string;
         matches: number;
         replacements: number;
-        preview?: string;
+        preview?: string | undefined;
+        checkpointId?: string | undefined;
       }> = [];
 
       let totalMatches = 0;
       let totalReplacements = 0;
+      const checkpointManager = getCheckpointManager();
 
       for (const file of filesToProcess.slice(0, maxFiles) as Array<{
         path: string;
@@ -241,12 +244,35 @@ export class MultieditTool implements Tool {
               preview: previewLines,
             });
           } else {
+            // Create checkpoint before modifying file
+            let checkpointId: string | undefined;
+            try {
+              checkpointId = await checkpointManager.createCheckpoint(
+                filePath,
+                'multiedit',
+                `Multi-edit: replace "${find.substring(0, 20)}${find.length > 20 ? '...' : ''}" in ${file.path}`
+              );
+            } catch {
+              console.debug('Failed to create checkpoint for multiedit operation');
+            }
+
             // Apply changes
             await fs.promises.writeFile(filePath, newContent, 'utf-8');
+
+            // Update checkpoint with new content
+            if (checkpointId) {
+              try {
+                await checkpointManager.updateCheckpointWithNewContent(checkpointId, newContent);
+              } catch {
+                console.debug('Failed to update checkpoint with new content');
+              }
+            }
+
             changes.push({
               file: file.path,
               matches: matchCount,
               replacements: replacementCount,
+              ...(checkpointId && { checkpointId }),
             });
             totalReplacements += replacementCount;
           }

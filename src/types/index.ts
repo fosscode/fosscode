@@ -59,6 +59,15 @@ export interface LLMConfig {
   mcpServerUrl?: string;
 }
 
+export interface MessageImage {
+  filePath: string;
+  fileName: string;
+  mimeType: string;
+  base64Data: string;
+  sizeBytes: number;
+  format: string;
+}
+
 export interface Message {
   role: 'user' | 'assistant' | 'system' | 'summary';
   content: string;
@@ -68,6 +77,7 @@ export interface Message {
     completionTokens: number;
     totalTokens: number;
   };
+  images?: MessageImage[];
 }
 
 export interface Conversation {
@@ -202,3 +212,70 @@ export interface MessageQueueState {
   queue: QueuedMessage[];
   currentMessage?: QueuedMessage;
 }
+
+// Background Task types for agent task management
+export type BackgroundTaskStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type BackgroundTaskPriority = 'low' | 'normal' | 'high';
+
+export interface BackgroundTaskConfig {
+  provider: ProviderType;
+  model: string;
+  verbose?: boolean;
+  timeout?: number;
+  maxRetries?: number;
+}
+
+export interface BackgroundTaskOutput {
+  timestamp: Date;
+  type: 'stdout' | 'stderr' | 'progress' | 'result';
+  content: string;
+}
+
+export interface BackgroundTask {
+  id: string;
+  name: string;
+  description: string;
+  status: BackgroundTaskStatus;
+  priority: BackgroundTaskPriority;
+  config: BackgroundTaskConfig;
+  parentTaskId?: string;
+  childTaskIds: string[];
+  createdAt: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  output: BackgroundTaskOutput[];
+  progress: number;
+  result?: any;
+  error?: string;
+  retryCount: number;
+}
+
+export interface SubagentConfig {
+  name: string;
+  description: string;
+  instructions: string;
+  provider: ProviderType;
+  model: string;
+  tools?: string[];
+  maxTokens?: number;
+  timeout?: number;
+}
+
+export interface TaskQueueState {
+  isProcessing: boolean;
+  maxConcurrent: number;
+  runningTasks: BackgroundTask[];
+  queuedTasks: BackgroundTask[];
+  completedTasks: BackgroundTask[];
+}
+
+export interface TaskQueueStats {
+  totalQueued: number;
+  totalRunning: number;
+  totalCompleted: number;
+  totalFailed: number;
+  isProcessing: boolean;
+}
+
+// Re-export skill types
+export * from './skills.js';

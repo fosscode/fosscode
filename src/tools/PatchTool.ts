@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Tool, ToolParameter, ToolResult } from '../types/index.js';
 import { securityManager } from './SecurityManager.js';
+import { getCheckpointManager } from '../utils/CheckpointManager.js';
 
 /**
  * Patch application tool for applying diff patches to files
@@ -111,8 +112,37 @@ export class PatchTool implements Tool {
         };
       }
 
+      // Create checkpoints for all files being patched
+      const checkpointManager = getCheckpointManager();
+      const checkpointIds: string[] = [];
+      for (const file of patchData) {
+        try {
+          const filePath = path.resolve(validatedPath, file.filename);
+          const checkpointId = await checkpointManager.createCheckpoint(
+            filePath,
+            'patch',
+            `Patch file: ${file.filename}`
+          );
+          checkpointIds.push(checkpointId);
+        } catch {
+          // Don't fail the operation if checkpoint creation fails
+          console.debug('Failed to create checkpoint for patch operation');
+        }
+      }
+
       // Apply the patch
       const applyResult = await this.applyPatch(patchData, validatedPath, createBackup, reverse);
+
+      // Update checkpoints with new content
+      for (let i = 0; i < patchData.length && i < checkpointIds.length; i++) {
+        try {
+          const filePath = path.resolve(validatedPath, patchData[i].filename);
+          const newContent = await fs.promises.readFile(filePath, 'utf-8');
+          await checkpointManager.updateCheckpointWithNewContent(checkpointIds[i], newContent);
+        } catch {
+          console.debug('Failed to update checkpoint with new content');
+        }
+      }
 
       return {
         success: true,
@@ -123,6 +153,7 @@ export class PatchTool implements Tool {
           backups: applyResult.backups,
           applied: true,
           reversed: reverse,
+          checkpointIds,
         },
         metadata: {
           operationTime: Date.now(),

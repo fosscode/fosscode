@@ -16,6 +16,7 @@ import { MCPManager } from '../mcp/index.js';
 
 import { PermissionManager } from '../utils/PermissionManager.js';
 import { fileTrackerManager } from '../utils/FileTrackerManager.js';
+import { ImageHandler, ProcessedImage } from '../utils/ImageHandler.js';
 
 export class ChatCommand {
   private configManager: ConfigManager;
@@ -23,6 +24,7 @@ export class ChatCommand {
   private chatLogger: ChatLogger;
   private messagingManager: MessagingPlatformManager;
   private mcpManager: MCPManager;
+  private imageHandler: ImageHandler;
   private conversationHistory: Map<string, Message[]> = new Map();
   private firstMessageSent: Map<string, boolean> = new Map();
 
@@ -40,6 +42,7 @@ export class ChatCommand {
     this.chatLogger = new ChatLogger();
     this.messagingManager = new MessagingPlatformManager();
     this.mcpManager = new MCPManager();
+    this.imageHandler = new ImageHandler({ verbose });
 
     // Register available messaging platforms
     this.messagingManager.registerPlatform(new TelegramPlatform());
@@ -70,6 +73,7 @@ export class ChatCommand {
       contextFormat?: string;
       contextThreshold?: number;
       plan?: boolean;
+      image?: string | string[];
     },
     permissionManager: PermissionManager
   ): Promise<void> {
@@ -143,10 +147,45 @@ export class ChatCommand {
       // Initialize file tracker for the new session
       fileTrackerManager.startNewSession();
 
+      // Process images if provided
+      let processedImages: ProcessedImage[] = [];
+      if (options.image) {
+        const imagePaths = Array.isArray(options.image) ? options.image : [options.image];
+
+        // Check if provider supports vision
+        if (!this.imageHandler.isVisionCapableProvider(options.provider!)) {
+          console.warn(pc.yellow(this.imageHandler.getVisionWarning(options.provider!, imagePaths.length)));
+        } else {
+          try {
+            processedImages = await this.imageHandler.processImages(imagePaths);
+            if (options.verbose && processedImages.length > 0) {
+              console.log(pc.green(`Processed ${processedImages.length} image(s)`));
+            }
+          } catch (error) {
+            console.error(pc.red(`Error processing images: ${error instanceof Error ? error.message : 'Unknown error'}`));
+          }
+        }
+      }
+
+      // Also detect and process images from the message text
+      if (this.imageHandler.isVisionCapableProvider(options.provider!)) {
+        const extracted = await this.imageHandler.extractImagesFromInput(message);
+        if (extracted.images.length > 0) {
+          processedImages = [...processedImages, ...extracted.images];
+          if (options.verbose) {
+            console.log(pc.green(`Auto-detected ${extracted.images.length} image(s) from message`));
+          }
+        }
+        if (extracted.errors.length > 0 && options.verbose) {
+          extracted.errors.forEach(err => console.warn(pc.yellow(`Image warning: ${err}`)));
+        }
+      }
+
       await this.singleMessageHandler.sendSingleMessage(message, {
         provider: options.provider!,
         model: options.model!,
         verbose: options.verbose ?? false,
+        images: processedImages,
         ...(options.showContext !== undefined && { showContext: options.showContext }),
         ...(options.contextFormat !== undefined && { contextFormat: options.contextFormat }),
         ...(options.contextThreshold !== undefined && {

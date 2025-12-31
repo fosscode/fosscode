@@ -13,6 +13,7 @@ import { ThemesCommand } from './commands/ThemesCommand.js';
 import { MCPCommand } from './commands/MCPCommand.js';
 import { ThinkingCommand } from './commands/ThinkingCommand.js';
 import { VSCodeCommand } from './commands/VSCodeCommand.js';
+import { ReviewCommand, ReviewMode } from './commands/ReviewCommand.js';
 import { ConfigManager } from './config/ConfigManager.js';
 import { ProviderManager } from './providers/ProviderManager.js';
 import { initializeTools } from './tools/init.js';
@@ -54,6 +55,10 @@ program
   .option('--show-context', 'Display context usage information')
   .option('--context-format <format>', 'Context display format (percentage, tokens, both)', 'both')
   .option('--plan', 'Run in plan mode (agent suggests changes but does not execute them)')
+  .option(
+    '-i, --image <paths...>',
+    'Include image files as context (supports PNG, JPG, GIF, WebP)'
+  )
   .action(async (message, options) => {
     try {
       // Initialize tools with verbose setting
@@ -138,6 +143,59 @@ program
   .action(async (action?: string) => {
     const vscodeCommand = new VSCodeCommand();
     await vscodeCommand.execute(action);
+  });
+
+program
+  .command('review')
+  .description('Review code changes using AI (supports --security, --performance, --style modes)')
+  .option('-m, --mode <mode>', 'Review mode: general, security, performance, style', 'general')
+  .option('-s, --security', 'Security-focused review (shorthand for --mode security)')
+  .option('-p, --performance', 'Performance-focused review (shorthand for --mode performance)')
+  .option('--style', 'Style-focused review (shorthand for --mode style)')
+  .option('--staged', 'Review staged changes only')
+  .option('--commit <sha>', 'Review a specific commit')
+  .option('-b, --branch <branch>', 'Compare against a specific base branch')
+  .option('--provider <provider>', 'LLM provider to use')
+  .option('--model <model>', 'Model to use for review')
+  .option('-v, --verbose', 'Enable verbose output')
+  .action(async (options) => {
+    try {
+      // Determine review mode
+      let mode: ReviewMode = 'general';
+      if (options.security) {
+        mode = 'security';
+      } else if (options.performance) {
+        mode = 'performance';
+      } else if (options.style) {
+        mode = 'style';
+      } else if (options.mode && ['general', 'security', 'performance', 'style'].includes(options.mode)) {
+        mode = options.mode as ReviewMode;
+      }
+
+      const reviewCommand = new ReviewCommand(configManager, providerManager);
+      const result = await reviewCommand.execute({
+        mode,
+        staged: options.staged,
+        commit: options.commit,
+        baseBranch: options.branch,
+        provider: options.provider,
+        model: options.model,
+        verbose: options.verbose,
+      });
+
+      reviewCommand.printResults(result);
+
+      // Exit with non-zero code if critical or high severity issues found
+      const hasCriticalOrHigh = result.findings.some(
+        f => f.severity === 'critical' || f.severity === 'high'
+      );
+      if (hasCriticalOrHigh) {
+        process.exit(1);
+      }
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+      process.exit(1);
+    }
   });
 
 program
