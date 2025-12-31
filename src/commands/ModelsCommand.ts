@@ -19,10 +19,10 @@ export class ModelsCommand {
 
       if (provider) {
         // Validate provider exists
-        if (!['openai', 'grok', 'lmstudio', 'openrouter', 'sonicfree', 'mock'].includes(provider)) {
+        if (!['openai', 'grok', 'lmstudio', 'openrouter', 'sonicfree', 'mcp', 'anthropic', 'mock'].includes(provider)) {
           console.error(pc.red(`Unknown provider: ${provider}`));
           console.log(
-            pc.yellow('Available providers: openai, grok, lmstudio, openrouter, sonicfree, mock')
+            pc.yellow('Available providers: openai, grok, lmstudio, openrouter, sonicfree, mcp, anthropic, mock')
           );
           process.exit(1);
         }
