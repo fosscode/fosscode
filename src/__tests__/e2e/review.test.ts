@@ -5,6 +5,7 @@
  * but mock the LLM provider to avoid API calls during testing.
  */
 
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, mock } from 'bun:test';
 import { ReviewCommand } from '../../commands/ReviewCommand';
 import { ProviderManager } from '../../providers/ProviderManager';
 import { ConfigManager } from '../../config/ConfigManager';
@@ -13,14 +14,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-// Mock the provider manager but not git operations
-jest.mock('../../providers/ProviderManager');
-jest.mock('../../config/ConfigManager');
-
 describe('Review Command Integration Tests', () => {
   let reviewCommand: ReviewCommand;
-  let mockProviderManager: jest.Mocked<ProviderManager>;
-  let mockConfigManager: jest.Mocked<ConfigManager>;
+  let mockProviderManager: {
+    sendMessage: ReturnType<typeof mock>;
+    initializeProvider: ReturnType<typeof mock>;
+  };
+  let mockConfigManager: {
+    getConfig: ReturnType<typeof mock>;
+    getProviderConfig: ReturnType<typeof mock>;
+  };
   let testDir: string;
   let originalCwd: string;
 
@@ -29,31 +32,26 @@ describe('Review Command Integration Tests', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
-
     // Create a temporary test directory
     testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'review-test-'));
 
     // Setup mock ConfigManager
     mockConfigManager = {
-      getConfig: jest.fn().mockReturnValue({
+      getConfig: mock(() => ({
         lastSelectedProvider: 'mock',
         lastSelectedModel: 'mock-model',
-      }),
-      getProviderConfig: jest.fn().mockReturnValue({}),
-    } as unknown as jest.Mocked<ConfigManager>;
+      })),
+      getProviderConfig: mock(() => ({})),
+    };
 
     // Setup mock ProviderManager
     mockProviderManager = {
-      sendMessage: jest.fn().mockResolvedValue({
+      sendMessage: mock(() => Promise.resolve({
         content: '[]',
         finishReason: 'stop',
-      }),
-      initializeProvider: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<ProviderManager>;
-
-    (ConfigManager as jest.Mock).mockImplementation(() => mockConfigManager);
-    (ProviderManager as jest.Mock).mockImplementation(() => mockProviderManager);
+      })),
+      initializeProvider: mock(() => Promise.resolve(undefined)),
+    };
 
     // Initialize git repo in test directory
     try {
@@ -72,7 +70,10 @@ describe('Review Command Integration Tests', () => {
     // Change to test directory
     process.chdir(testDir);
 
-    reviewCommand = new ReviewCommand(mockConfigManager, mockProviderManager);
+    reviewCommand = new ReviewCommand(
+      mockConfigManager as unknown as ConfigManager,
+      mockProviderManager as unknown as ProviderManager
+    );
   });
 
   afterEach(() => {
@@ -183,7 +184,7 @@ function slowFunction(arr: number[]) {
     });
 
     it('should use security-focused prompt for security mode', async () => {
-      mockProviderManager.sendMessage.mockResolvedValue({
+      mockProviderManager.sendMessage = mock(() => Promise.resolve({
         content: JSON.stringify([{
           severity: 'critical',
           category: 'secrets',
@@ -194,21 +195,22 @@ function slowFunction(arr: number[]) {
           suggestion: 'Use environment variables',
         }]),
         finishReason: 'stop',
-      });
+      }));
 
       const result = await reviewCommand.execute({ staged: true, mode: 'security' });
 
       expect(result.mode).toBe('security');
       expect(mockProviderManager.sendMessage).toHaveBeenCalled();
 
-      const systemPrompt = mockProviderManager.sendMessage.mock.calls[0][1][0].content;
+      const calls = (mockProviderManager.sendMessage as any).mock.calls;
+      const systemPrompt = calls[0][1][0].content;
       expect(systemPrompt).toContain('security-focused code reviewer');
       expect(systemPrompt).toContain('SQL injection');
       expect(systemPrompt).toContain('XSS');
     });
 
     it('should use performance-focused prompt for performance mode', async () => {
-      mockProviderManager.sendMessage.mockResolvedValue({
+      mockProviderManager.sendMessage = mock(() => Promise.resolve({
         content: JSON.stringify([{
           severity: 'high',
           category: 'complexity',
@@ -219,20 +221,21 @@ function slowFunction(arr: number[]) {
           suggestion: 'Optimize the algorithm',
         }]),
         finishReason: 'stop',
-      });
+      }));
 
       const result = await reviewCommand.execute({ staged: true, mode: 'performance' });
 
       expect(result.mode).toBe('performance');
 
-      const systemPrompt = mockProviderManager.sendMessage.mock.calls[0][1][0].content;
+      const calls = (mockProviderManager.sendMessage as any).mock.calls;
+      const systemPrompt = calls[0][1][0].content;
       expect(systemPrompt).toContain('performance-focused code reviewer');
       expect(systemPrompt).toContain('complexity');
       expect(systemPrompt).toContain('memory');
     });
 
     it('should use style-focused prompt for style mode', async () => {
-      mockProviderManager.sendMessage.mockResolvedValue({
+      mockProviderManager.sendMessage = mock(() => Promise.resolve({
         content: JSON.stringify([{
           severity: 'low',
           category: 'naming',
@@ -243,13 +246,14 @@ function slowFunction(arr: number[]) {
           suggestion: 'Rename to processArrayPairs',
         }]),
         finishReason: 'stop',
-      });
+      }));
 
       const result = await reviewCommand.execute({ staged: true, mode: 'style' });
 
       expect(result.mode).toBe('style');
 
-      const systemPrompt = mockProviderManager.sendMessage.mock.calls[0][1][0].content;
+      const calls = (mockProviderManager.sendMessage as any).mock.calls;
+      const systemPrompt = calls[0][1][0].content;
       expect(systemPrompt).toContain('code style reviewer');
       expect(systemPrompt).toContain('naming');
       expect(systemPrompt).toContain('formatting');
@@ -262,7 +266,7 @@ function slowFunction(arr: number[]) {
       fs.writeFileSync(testFile, 'const x = 1;\n');
       execSync('git add test.ts', { cwd: testDir, stdio: 'pipe' });
 
-      mockProviderManager.sendMessage.mockResolvedValue({
+      mockProviderManager.sendMessage = mock(() => Promise.resolve({
         content: JSON.stringify([
           { severity: 'critical', category: 'security', file: 'test.ts', line: 1, title: 'Critical Issue', description: 'Critical problem', suggestion: 'Fix it immediately' },
           { severity: 'high', category: 'bug', file: 'test.ts', line: 1, title: 'High Issue', description: 'High priority problem' },
@@ -270,7 +274,7 @@ function slowFunction(arr: number[]) {
           { severity: 'low', category: 'style', file: 'test.ts', title: 'Low Issue', description: 'Minor issue' },
         ]),
         finishReason: 'stop',
-      });
+      }));
 
       const result = await reviewCommand.execute({ staged: true });
       const formatted = reviewCommand.formatFindings(result);
@@ -288,10 +292,10 @@ function slowFunction(arr: number[]) {
       fs.writeFileSync(testFile, 'export const clean = true;\n');
       execSync('git add clean.ts', { cwd: testDir, stdio: 'pipe' });
 
-      mockProviderManager.sendMessage.mockResolvedValue({
+      mockProviderManager.sendMessage = mock(() => Promise.resolve({
         content: '[]',
         finishReason: 'stop',
-      });
+      }));
 
       const result = await reviewCommand.execute({ staged: true });
       const formatted = reviewCommand.formatFindings(result);
@@ -313,7 +317,7 @@ function slowFunction(arr: number[]) {
     });
 
     it('should use configured provider and model', async () => {
-      mockConfigManager.getConfig.mockReturnValue({
+      mockConfigManager.getConfig = mock(() => ({
         defaultProvider: 'openai',
         defaultModel: 'gpt-4',
         maxConversations: 10,
@@ -322,7 +326,7 @@ function slowFunction(arr: number[]) {
         cachedModels: {} as any,
         lastSelectedProvider: 'openai',
         lastSelectedModel: 'gpt-4',
-      });
+      }));
 
       const testFile = path.join(testDir, 'test.ts');
       fs.writeFileSync(testFile, 'const x = 1;\n');
@@ -346,14 +350,14 @@ function slowFunction(arr: number[]) {
 
       expect(mockProviderManager.initializeProvider).toHaveBeenCalledWith('anthropic');
       // Model should be passed to sendMessage
-      const sendMessageCall = mockProviderManager.sendMessage.mock.calls[0];
-      expect(sendMessageCall[2]).toBe('claude-3-opus');
+      const calls = (mockProviderManager.sendMessage as any).mock.calls;
+      expect(calls[0][2]).toBe('claude-3-opus');
     });
   });
 
   describe('Error handling', () => {
     it('should handle provider initialization errors', async () => {
-      mockProviderManager.initializeProvider.mockRejectedValue(new Error('Provider not configured'));
+      mockProviderManager.initializeProvider = mock(() => Promise.reject(new Error('Provider not configured')));
 
       const testFile = path.join(testDir, 'test.ts');
       fs.writeFileSync(testFile, 'const x = 1;\n');
@@ -366,7 +370,7 @@ function slowFunction(arr: number[]) {
     });
 
     it('should handle LLM API errors', async () => {
-      mockProviderManager.sendMessage.mockRejectedValue(new Error('API rate limit exceeded'));
+      mockProviderManager.sendMessage = mock(() => Promise.reject(new Error('API rate limit exceeded')));
 
       const testFile = path.join(testDir, 'test.ts');
       fs.writeFileSync(testFile, 'const x = 1;\n');
