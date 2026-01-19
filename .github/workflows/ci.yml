@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@v3.91.1
+        uses: trufflesecurity/trufflehog@v3.92.5
         with:
           path: ./
           git-url: file://.
